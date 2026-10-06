@@ -38,7 +38,7 @@ TymOS is a personal project that runs a real house every day. It is shared as-is
 
 ## Architecture
 
-![TymOS architecture](docs/architecture.svg?v=2)
+![TymOS architecture](docs/architecture-3.svg)
 
 ## Repository layout
 
