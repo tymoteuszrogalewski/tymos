@@ -39,8 +39,8 @@ TymOS is a personal project that runs a real house every day. It is shared as-is
 ## Architecture
 
 ```mermaid
-%%{init: {"flowchart": {"wrappingWidth": 400}}}%%
-flowchart LR
+%%{init: {"themeVariables": {"fontSize": "20px"}, "flowchart": {"wrappingWidth": 400, "nodeSpacing": 40, "rankSpacing": 70}}}%%
+flowchart TB
   subgraph REMOTE["Remote — Tailscale or any VPN"]
     iphone["iPhone"]
     mac["Mac"]
