@@ -1,0 +1,16 @@
+/* TymOS admin — tylko rzeczy specyficzne dla admin-list-view (tabela, detail).
+   Wszystko ogolne przeniesione do style.inc.css. */
+
+.admin-scope table { width:100%; border-collapse:collapse; font-size:13px; table-layout:fixed; }
+.admin-scope th { text-align:left; color:var(--text-dim); font-weight:500; font-size:11px; letter-spacing:0.05em; padding:8px 10px; border-bottom:1px solid var(--border); }
+.admin-scope td { padding:14px 10px; border-bottom:1px solid var(--border); }
+.admin-scope tr:hover { background:rgba(255,255,255,0.02); }
+
+/* Detail header (urzadzenia) */
+.admin-scope .detail-title { font-size:16px; margin-bottom:4px; }
+.admin-scope .detail-sub   { font-size:12px; color:var(--text-dim); margin-bottom:12px; }
+.admin-scope .field-row    { display:flex; align-items:center; gap:10px; padding:6px 0; border-bottom:1px solid var(--border); }
+.admin-scope .field-row:last-child { border-bottom:none; }
+.admin-scope .field-name   { flex:1; font-size:13px; }
+.admin-scope .field-type   { font-size:11px; color:var(--text-dim); width:80px; }
+.admin-scope .field-val    { font-size:13px; color:var(--accent); width:100px; text-align:right; }

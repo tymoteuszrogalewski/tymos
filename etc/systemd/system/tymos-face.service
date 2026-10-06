@@ -1,0 +1,17 @@
+[Unit]
+Description=TymOS Face Recognition Daemon
+After=network.target mariadb.service go2rtc.service
+Wants=mariadb.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/tymos
+ExecStart=/opt/tymos/venv-cv/bin/python3 -u /opt/tymos/daemons/face_daemon.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=tymos-face
+
+[Install]
+WantedBy=multi-user.target

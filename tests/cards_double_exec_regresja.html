@@ -1,0 +1,37 @@
+<!--
+  Regresja: dowod, ze stara sciezka wstawiania tresci karty wykonywala jej skrypt DWA RAZY.
+  jQuery `.html()` na elemencie bedacym w dokumencie samo ewaluuje bloki <script> i zostawia
+  je w DOM, a `execScripts()` odpalalo to samo cialo po raz drugi. Stad braly sie podwojne
+  sesje WHEP, podwojone nakladki na kadrze i osobne timery dla kazdej kopii.
+  Uruchomienie jak w cards_lifecycle.html.
+-->
+<!doctype html><html><body>
+<div id="card_x"><div class="card-sw"></div></div><pre id="out"></pre>
+<script src="../tymos/js/jquery.min.js"></script>
+<script>
+window.RUNS = 0;
+var CARD = '<div>x</div><script>window.RUNS++;<\/script>';
+// STARA wersja execScripts (przed poprawka) — nie usuwala wezla
+function execScriptsOld(c) { $(c).find('script').each(function(){ $('<script>').text($(this).text()).appendTo('body').remove(); }); }
+var el = document.getElementById('card_x'), sw = el.querySelector('.card-sw');
+
+// STARA sciezka: jQuery .html() na elemencie W DOKUMENCIE + execScripts
+$(sw).html(CARD);
+var afterHtml = window.RUNS;
+execScriptsOld(el);
+var afterExec = window.RUNS;
+
+// NOWA sciezka dla porownania
+window.RUNS = 0;
+$(sw).empty(); sw.innerHTML = CARD;
+var afterInner = window.RUNS;
+
+document.getElementById('out').textContent =
+    'STARE: po jQuery .html()      RUNS=' + afterHtml + '   <- jQuery samo ewaluowalo skrypt\n' +
+    'STARE: po execScripts()       RUNS=' + afterExec + '   <- to samo cialo drugi raz\n' +
+    'NOWE:  po innerHTML           RUNS=' + afterInner + '   <- innerHTML nie odpala nic\n' +
+    '\nWNIOSEK: ' + (afterHtml === 1 && afterExec === 2 && afterInner === 0
+        ? 'potwierdzone — stara sciezka wykonywala skrypt karty DWA razy, nowa zero razy przed execScripts'
+        : 'NIEPOTWIERDZONE');
+</script>
+</body></html>

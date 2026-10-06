@@ -1,0 +1,17 @@
+[Unit]
+Description=TymOS esphome-bridge
+After=network.target mosquitto.service mariadb.service
+Wants=mosquitto.service mariadb.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/tymos
+ExecStart=/opt/tymos/venv/bin/python3 -u /opt/tymos/daemons/bridge_esphome.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=tymos-esphome-bridge
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,8 @@
+# Blokuj bezposredni dostep do plikow .inc.php i config
+<FilesMatch "\.inc\.(php|sh|js|css)$">
+    Require all denied
+</FilesMatch>
+
+<Files "config.inc.php">
+    Require all denied
+</Files>

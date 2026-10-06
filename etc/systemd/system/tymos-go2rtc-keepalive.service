@@ -1,0 +1,16 @@
+[Unit]
+Description=TymOS go2rtc keepalive (trzyma streamy HD cieple)
+After=network.target go2rtc.service
+Wants=go2rtc.service
+
+[Service]
+Type=simple
+ExecStart=/opt/tymos/utils/go2rtc_keepalive.sh
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=tymos-go2rtc-keepalive
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,17 @@
+[Unit]
+Description=TymOS mqtt-listener
+After=network.target mosquitto.service mariadb.service
+Wants=mosquitto.service mariadb.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/tymos
+ExecStart=/opt/tymos/venv/bin/python3 -u /opt/tymos/daemons/tymos.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=tymos-mqtt-listener
+
+[Install]
+WantedBy=multi-user.target

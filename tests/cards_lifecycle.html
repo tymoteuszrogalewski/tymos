@@ -1,0 +1,84 @@
+<!--
+  Test cyklu zycia kart (tymos/index/cards.inc.js). NIE jest wgrywany na Pi — chodzi lokalnie.
+
+  Uruchomienie:
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless --disable-gpu \
+      --allow-file-access-from-files --dump-dom \
+      "file://$HOME/GIT/os-tymos/tests/cards_lifecycle.html" | grep -A99 'id="out"'
+
+  Sprawdza to, co narastalo latami jako recznie pisane obejscia w kartach:
+  skrypt karty wykonuje sie DOKLADNIE raz na wstawienie, wezel <script> nie potrafi wystrzelic
+  drugi raz przy przenoszeniu karty w DOM (swipe), a sprzatanie karty leci przed podmiana tresci
+  i przy sprzataniu calego #divMain. Odpalac po kazdej zmianie w cards.inc.js, swipe.inc.js
+  albo panels.inc.js.
+-->
+<!doctype html><html><body>
+<div id="divMain"><div id="card_x" class="tymos-card"><div class="card-sw"></div></div></div>
+<pre id="out"></pre>
+<script src="../tymos/js/jquery.min.js"></script>
+<script>
+// staby globali z panels.inc.js — testujemy tylko funkcje z cards.inc.js
+var cardTimers = {}, renderGen = 0, DEFAULT_REFRESH = 30000;
+window.RUNS = 0; window.CLEANED = 0;
+</script>
+<script src="../tymos/index/cards.inc.js"></script>
+<script>
+var log = [], fails = 0;
+function chk(name, cond, extra) { log.push((cond ? 'PASS  ' : 'FAIL  ') + name + (extra ? '   [' + extra + ']' : '')); if (!cond) fails++; }
+
+// HTML karty udajacej prawdziwa: liczy wykonania i rejestruje sprzatanie
+var CARD = '<div class="body">tresc</div><script>'
+    + 'window.RUNS++;'
+    + 'window.T = setInterval(function(){}, 1000);'
+    + 'cardOnUnload(function(){ window.CLEANED++; clearInterval(window.T); });'
+    + '<\/script>';
+
+var el = document.getElementById('card_x');
+var sw = el.querySelector('.card-sw');
+
+// --- 1. jedno wykonanie na jedno wstawienie
+cardSetHtml(sw, CARD); execScripts(el);
+chk('skrypt karty wykonany DOKLADNIE raz', window.RUNS === 1, 'RUNS=' + window.RUNS);
+chk('wezel <script> usuniety z DOM po wykonaniu', el.querySelectorAll('script').length === 0);
+chk('sprzatanie zarejestrowane', window.cardCleanup.length === 1);
+
+// --- 2. ponowne zaladowanie tej samej karty: sprzatanie starej PRZED podmiana
+cardRunCleanup(el);
+chk('sprzatanie odpalone przy podmianie', window.CLEANED === 1, 'CLEANED=' + window.CLEANED);
+chk('rejestr wyczyszczony po sprzataniu', window.cardCleanup.length === 0);
+cardSetHtml(sw, CARD); execScripts(el);
+chk('drugie zaladowanie = drugie wykonanie, nie czwarte', window.RUNS === 2, 'RUNS=' + window.RUNS);
+chk('w rejestrze znowu jeden wpis', window.cardCleanup.length === 1);
+
+// --- 3. PRZENIESIENIE karty w DOM (to robi swipe: detach + append) nie odpala skryptu
+cardSetHtml(sw, CARD);                        // bez execScripts — wezel zostaje nietkniety
+var before = window.RUNS;
+chk('wezel po innerHTML ma typ obcy dla silnika', sw.querySelector('script').type === 'text/tymos-card');
+var cell = sw.parentNode.removeChild(sw);
+el.appendChild(cell);                          // przenosiny
+chk('przeniesienie w DOM NIE odpalilo skryptu', window.RUNS === before, 'RUNS=' + window.RUNS);
+execScripts(el);
+chk('execScripts odpalil go raz po przenosinach', window.RUNS === before + 1, 'RUNS=' + window.RUNS);
+
+// --- 4. sprzatanie na poziomie panelu (renderMain) lapie karty w calym #divMain
+window.CLEANED = 0;
+cardRunCleanup(document.getElementById('divMain'));
+chk('sprzatanie z poziomu #divMain lapie karty w srodku', window.CLEANED >= 1, 'CLEANED=' + window.CLEANED);
+chk('rejestr pusty po sprzataniu panelu', window.cardCleanup.length === 0);
+
+// --- 5. wpis osierocony (element juz nie w DOM) tez jest sprzatany
+window.CLEANED = 0;
+cardOnCleanup(document.createElement('div'), function(){ window.CLEANED++; });
+cardRunCleanup(document.createElement('span'));   // inny root — ale wpis jest odlaczony
+chk('osierocony wpis sprzatany niezaleznie od roota', window.CLEANED === 1);
+
+// --- 6. blad w jednym sprzataniu nie blokuje pozostalych
+window.CLEANED = 0;
+cardOnCleanup(null, function(){ throw new Error('boom'); });
+cardOnCleanup(null, function(){ window.CLEANED++; });
+cardRunCleanup(null);
+chk('wyjatek w sprzataniu nie zatrzymuje reszty', window.CLEANED === 1);
+
+document.getElementById('out').textContent = log.join('\n') + '\n\nFAILS: ' + fails;
+</script>
+</body></html>

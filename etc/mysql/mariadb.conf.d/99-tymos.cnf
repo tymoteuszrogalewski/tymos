@@ -1,0 +1,11 @@
+[mysqld]
+# TymOS override — minimalizacja zapisow na microSD
+# Tryb 2: commit -> OS page cache (RAM) na kazdy commit
+# Fsync redo loga SD: co 30 sekund (vs default 1s)
+# Ryzyko: przy utracie pradu strata <=30s commitow (baza zostaje spojna)
+innodb_flush_log_at_trx_commit = 2
+innodb_flush_log_at_timeout    = 30
+
+# Buffer pool: 512 MB (default 128 MB). Pi ma 4 GB, zostaje ~1.5 GB wolnego.
+# Wiecej cache = mniej odczytow SD przy wykresach stat*.
+innodb_buffer_pool_size        = 512M

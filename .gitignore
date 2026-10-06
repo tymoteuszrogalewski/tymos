@@ -1,0 +1,23 @@
+__pycache__/
+*.pyc
+VERSION
+utils/scans/
+
+# Dane wrazliwe — wzor: tymos/config.example.inc.php
+tymos/config.inc.php
+
+# Generowane z etc/**/*.tpl przez scripts/render_etc.php (zawieraja hasla / IP)
+etc/apache2/tymos.conf
+etc/go2rtc/go2rtc.yaml
+etc/esphome/rekuperator-6800a8.yaml
+etc/apache2/ssl/
+
+# Miniaturki urzadzen ESPHome — nazwa zawiera IP urzadzenia (device_id z bridge_esphome.py)
+tymos/img/esphome_*.png
+
+# Na wszelki wypadek
+.DS_Store
+*.key
+*.pem
+*.sql
+*.sql.gz

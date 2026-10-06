@@ -1,0 +1,425 @@
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg:          #1a1a1a;
+  --topbar-bg:   #232323;
+  --submenu-bg:  #1e1e1e;
+  --card-bg:     #232323;
+  --border:      rgba(255,255,255,0.08);
+  --text:        #e1e1e1;
+  --text-dim:    #9a9a9a;
+  --accent:      #03a9f4;
+  --accent-bg:   rgba(3,169,244,0.13);
+  --green:       #4caf50;
+  --red:         #e74c3c;
+  --radius:      12px;
+  --topbar-h:    57px;
+  --submenu-h:   40px;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- TOP MENU ---- */
+#divMenu {
+  /* --sat: wstrzykiwane przez shell (index.php) gdy UI leci w iframe — env() w ramce zwraca 0 */
+  height: calc(var(--topbar-h) + var(--sat, env(safe-area-inset-top)));
+  background: var(--topbar-bg);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: var(--sat, env(safe-area-inset-top)) 10px 0;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.menu-item {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--text-dim);
+  transition: background 0.15s, color 0.15s;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.menu-item:active { background: rgba(255,255,255,0.05); }
+.menu-item.active {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+.menu-item-push { margin-left: auto; }
+
+/* HOME chodzi BEZ gornego paska — te 48 px + notch dostaja widgety. Menu wraca hamburgerem
+   z lewego gornego rogu kamery (card_camera_parking). Poza HOME pasek jest zawsze, zeby bylo
+   czym wrocic. Odstep pod notchem przejmuje wtedy divMain, bo padding safe-area siedzial w pasku. */
+body.menu-off #divMenu { display: none; }
+/* Odstep pod notchem przejmuje ten pasek, ktory jest akurat na gorze: zakladki (poza HOME)
+   albo sama tresc (HOME, gdzie zakladek nie ma). */
+body.menu-off:not(.subm-on) #divMain { padding-top: var(--sat, env(safe-area-inset-top)); }
+body.menu-off.subm-on #divSubMenu {
+  padding-top: var(--sat, env(safe-area-inset-top));
+  height: calc(var(--submenu-h) + var(--sat, env(safe-area-inset-top)));
+}
+
+/* ---- SUBMENU ---- */
+#divSubMenu {
+  height: var(--submenu-h);
+  background: var(--submenu-bg);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 4px;
+  flex-shrink: 0;
+}
+#divSubMenu.hidden { display: none; }
+
+.tab-item {
+  height: 30px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.tab-item:active { background: rgba(255,255,255,0.05); }
+.tab-item.active {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+/* ---- MAIN ---- */
+#divMain {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Gora i dol 0, boki 2 px: na iPadzie kazdy piksel wysokosci to wykres, ale karty stykajace
+     sie z lewa i prawa krawedzia wygladaly na uciete. 2 px wystarcza, zeby zaokraglenia
+     mialy sie o co oprzec, i nic realnie nie zabiera.
+     Notch NIE traci ochrony — padding-top z safe-area siedzi w regulach `body.menu-off`
+     i `.subm-on` nizej i nadpisuje to zero, gdy pasek menu jest schowany. */
+  padding: 0 2px;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+#divMain::-webkit-scrollbar { width: 3px; }
+#divMain::-webkit-scrollbar-track { background: transparent; }
+#divMain::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
+
+/* ---- OKNO NAD PANELEM (winShow/winHide w cards.inc.js, 2026-09-04) ----
+   Szyba przykrywa cale UI lacznie z menu i blokuje klikanie; okno to ISTNIEJACY element karty,
+   ktory na czas pokazu dostaje .win. !important, bo rozwijane divy maja tlo/margines/padding inline
+   (byly robione jako wstawki w karcie, nie jako okna). Szerokosc nadaje JS (szerokosc widgetu). */
+#winGlass { display:none; position:fixed; inset:0; z-index:500; background:rgba(60,60,60,0.62); }
+.win {
+  position:fixed !important; z-index:501; left:50%; top:50%; transform:translate(-50%,-50%);
+  max-height:calc(100% - 24px); overflow-y:auto !important; overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  margin:0 !important; padding:6px 10px 10px !important;
+  background:var(--card-bg) !important; border:1px solid rgba(255,255,255,0.14);
+  border-radius:var(--radius); box-shadow:0 12px 48px rgba(0,0,0,0.65);
+}
+/* X: sticky, wiec przy przewijaniu dlugiego okna zostaje w rogu; margin-left:auto = prawy rog */
+.win-x {
+  position:sticky; top:0; z-index:2; display:block; margin:0 -4px 2px auto;
+  width:30px; height:30px; border:none; border-radius:15px; background:rgba(255,255,255,0.08);
+  color:#c8c8c8; font-size:22px; line-height:30px; text-align:center; cursor:pointer;
+  -webkit-tap-highlight-color:transparent; touch-action:manipulation;
+}
+.win-x:active { background:rgba(255,255,255,0.18); }
+
+/* ---- SECTIONS / CARDS ---- */
+.tymos-section {
+  display: grid;
+  /* 4 px — tyle samo, co miedzy kartami w kolumnie (panels.inc.js). Odstepy widgetow byly
+     rozjechane na cztery wartosci (4 / 6 / 8 / 12) i nad diagramem reku wychodzila inna
+     szpara niz pod nim. */
+  gap: 4px;
+  justify-items: start;
+  margin-bottom: 4px;
+}
+
+.tymos-card {
+  background: none;
+  border: none;
+  border-radius: var(--radius);
+  /* 0 dla WSZYSTKICH kart. Wczesniej bylo 3 px, a kamery jechaly z osobnym `noPad` — stad rozny
+     odstep od krawedzi (12+0 vs 12+3), widoczny golym okiem. Po zrownaniu `noPad` stracil sens
+     i zostal usuniety (2026-08-29). */
+  padding: 0;
+  min-height: 44px;
+  overflow: hidden;
+  width: 100%;
+}
+
+/* ---- WSPOLNE KOMPONENTY KART (skonsolidowane 2026-08-29) ----
+   Te reguly byly wczesniej kopiowane inline po kartach: card_woda powstala 2026-08-23 przez
+   wyjecie sekcji z card_klimat i zabrala ze soba komplet CSS, a przyciski przelaczania widoku
+   dorobily sie trzech identycznych kopii (pstryk_load / reku_flow / temps). Skutek byl taki,
+   ze zmiana naglowka w jednej karcie nie szla do drugiej i OGRZEWANIE rozjechalo sie
+   z PODLEWANIEM. Nazwy klas zostaly bez zmian — grupujemy selektory, zeby nie ruszac HTML i JS. */
+
+/* kontener sekcji + naglowek kategorii */
+.klm, .wda { display:flex; flex-direction:column; gap:4px; }   /* sekcje w karcie = ten sam odstep co miedzy kartami */
+.klm-cat, .wda-cat, .rkf { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:8px 12px 6px; }
+/* Skrajne wiersze karty wody wciagaja swoje puste pole dotyku w padding karty: napis siada
+   tam, gdzie naglowek OGRZEWANIA, a palec dalej ma pelne 44 px. Bez tego pierwszy wiersz
+   startowal 26 px od krawedzi (8 padding + 4 wiersz + 12 przycisk) zamiast 10 px. */
+.wda-cat > .klm-r:first-child { margin-top:-12px; }
+.wda-cat > .klm-r:last-child  { margin-bottom:-10px; }
+.rkf { padding:8px 10px 6px; }   /* diagram potrzebuje wezszych bokow i nizszego dolu niz wiersze */
+.klm-cat-h, .wda-cat-h { display:flex; align-items:center; gap:7px; font-size:11px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:#7fb0ff; margin:2px 0 8px; }
+.klm-cat-h .ic, .wda-cat-h .ic { font-size:14px; }
+
+/* wiersz: etykieta + kontrolka */
+.klm-r   { display:flex; align-items:center; gap:12px; padding:4px 0; }
+.klm-lbl { flex:1; font-size:14px; color:#ddd; min-width:0; }
+.klm-sec { padding-left:14px; color:#bbb; font-size:13px; }
+.klm-sub { font-size:11px; color:#777; font-family:ui-monospace,Menlo,monospace; font-weight:400; padding:0 0 5px; }
+
+/* przelacznik segmentowy */
+.seg { display:flex; flex:0 0 auto; width:340px; max-width:62%; background:#262626; border-radius:9px; overflow:hidden; }
+.seg-btn { flex:1; padding:9px 6px; font-size:12px; line-height:1; color:#b0b0b0; text-align:center; cursor:pointer; background:transparent; border:none; border-left:1px solid rgba(0,0,0,0.35); white-space:nowrap; position:relative; -webkit-tap-highlight-color:transparent; }
+.seg-btn:first-child { border-left:none; }
+.seg-btn.on { background:var(--accent,#3aa0ff); color:#fff; font-weight:600; }
+.seg-btn.cur::after { content:''; position:absolute; left:50%; bottom:4px; transform:translateX(-50%); width:5px; height:5px; border-radius:50%; background:var(--accent,#3aa0ff); }
+.seg-btn.on.cur::after { background:#fff; opacity:.9; }
+.seg-btn[disabled] { opacity:.3; cursor:default; }
+
+/* przycisk-ikona w naglowku kategorii (gear, raporty). padding 5 px ujednolicony —
+   #irr-gear mial 0 i ikona siedziala inaczej niz w klimacie, przy mniejszym polu dotyku */
+#piec-gear, #piec-rap, #irr-gear { margin-left:auto; background:none; border:none; padding:5px; cursor:pointer; color:#6b6b6b; display:flex; align-items:center; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+#piec-gear.on, #piec-rap.on, #irr-gear.on { color:#7fb0ff; }
+
+/* panel rozwijany spod przycisku w naglowku */
+#piec-cfg, #piec-rap-box, #irr-cfg { margin-top:10px; border-top:1px solid rgba(255,255,255,0.06); padding-top:10px; }
+
+/* przyciski przelaczania widoku (zakladki wykresow) */
+.pl-vbtn, .rkf-vbtn, .tc-vbtn { background:#2a2a2a; border:none; border-radius:6px; color:#7799cc; cursor:pointer; padding:4px 12px; font-size:12px; -webkit-tap-highlight-color:transparent; }
+.pl-vbtn.on, .rkf-vbtn.on, .tc-vbtn.on { background:#1c3350; color:#9cf; }
+.card-sw { width: 100%; }
+
+/* Thermostat widget */
+.therm-wrap{display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center;background:rgba(255,255,255,0.04);border-radius:10px;padding:14px}
+.therm-name{font-size:11px;font-weight:600;letter-spacing:1px;color:var(--text-dim)}
+.therm-curr{font-size:36px;font-weight:300;color:#e1e1e1;line-height:1}
+.therm-curr span{font-size:16px;color:#9a9a9a}
+.therm-lbl{font-size:11px;color:#666;margin-top:-4px}
+.therm-row{display:flex;align-items:center;gap:10px}
+.therm-btn{background:#2a2a2a;border:none;border-radius:6px;color:#7799cc;cursor:pointer;width:38px;height:38px;font-size:22px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;user-select:none;flex-shrink:0;touch-action:manipulation}
+.therm-btn:active{background:#333;transform:scale(0.93)}
+.therm-val{font-size:24px;font-weight:300;min-width:48px;text-align:center}
+
+.card-title {
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+
+.card-loading {
+  color: var(--text-dim);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-loading::after {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.08);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.card-error { color: #e74c3c; font-size: 12px; }
+
+/* =================================================================
+   SHARED UTILITIES — uzywac zamiast inline style=""
+   ================================================================= */
+
+/* ---- LAYOUT ---- */
+.row-flex       { display:flex; gap:8px; align-items:center; }
+.row-flex.wrap  { flex-wrap:wrap; }
+.row-between    { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+.row-end        { display:flex; justify-content:flex-end; gap:4px; }
+.stack-8        { display:flex; flex-direction:column; gap:8px; }
+
+/* ---- TYPOGRAPHY ---- */
+.section-h      { font-size:15px; font-weight:600; margin:24px 0 12px; }
+.section-sh     { font-size:13px; color:var(--text-dim); margin-bottom:10px; }
+.hint           { font-size:11px; color:var(--text-dim); }
+.value-accent   { color:var(--accent); font-size:13px; }
+.link-accent    { cursor:pointer; font-size:13px; color:var(--accent); text-decoration:none; }
+.link-accent:hover { text-decoration:underline; }
+
+.logic-sep      { font-size:13px; font-weight:500; color:#f9a825; text-align:center; margin:6px 0; }
+.logic-sep.sm   { font-size:11px; margin:2px 0; font-weight:400; }
+
+/* ---- BUTTONS (globalne, nie scoped do .admin-scope) ---- */
+.btn            { padding:10px 20px; border:none; border-radius:8px; font-size:14px; cursor:pointer; transition:background 0.15s; }
+.btn-sm         { padding:8px 16px; font-size:13px; }
+.btn-accent     { background:var(--accent); color:#fff; }
+.btn-accent:hover  { background:#0288d1; }
+.btn-danger     { background:var(--red); color:#fff; }
+.btn-danger:hover  { background:#c0392b; }
+.btn-green      { background:var(--green); color:#fff; }
+.btn-ghost      { background:rgba(255,255,255,0.08); color:var(--text); }
+.btn + .btn     { margin-left:8px; }
+
+/* ---- PILL BUTTON (tap-friendly, roleta/fan/tryb) ---- */
+.pill-btn       { flex:1; padding:10px 4px; border:none; border-radius:10px; cursor:pointer;
+                  background:#2a2a2a; color:#9a9a9a; display:flex; align-items:center;
+                  justify-content:center; gap:4px; transition:background 0.15s,color 0.15s;
+                  -webkit-tap-highlight-color:transparent; touch-action:manipulation; user-select:none; }
+.pill-btn:active { opacity:0.75; }
+.pill-btn.active { background:var(--accent); color:#fff; }
+.pill-btn.icon   { flex:0 0 auto; min-width:44px; padding:8px 10px; font-size:16px; line-height:1; }
+
+/* ---- STATE INDICATORS ---- */
+.led-chip       { display:inline-block; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:600; border:1px solid transparent; }
+.led-chip.on    { color:var(--green); background:rgba(76,175,80,0.15); border-color:var(--green); }
+.led-chip.off   { color:var(--red);   background:rgba(244,67,54,0.15); border-color:var(--red); }
+
+.state-pill     { display:inline-block; padding:4px 14px; border-radius:6px; font-size:14px; font-weight:600; border:1px solid; }
+.state-pill.on      { color:var(--green);    background:rgba(76,175,80,0.15);  border-color:var(--green); }
+.state-pill.off     { color:var(--red);      background:rgba(244,67,54,0.15);  border-color:var(--red); }
+.state-pill.neutral { color:var(--text-dim); background:rgba(128,128,128,0.15); border-color:var(--text-dim); }
+
+/* ---- TOGGLE SWITCH (globalne) ---- */
+.toggle         { position:relative; display:inline-block; width:36px; min-width:36px; height:20px; cursor:pointer; vertical-align:middle; }
+.toggle input   { display:none; }
+.toggle span    { position:absolute; inset:0; background:rgba(255,255,255,0.1); border-radius:10px; transition:background 0.2s; }
+.toggle span::after { content:''; position:absolute; width:16px; height:16px; border-radius:50%; background:#fff; top:2px; left:2px; transition:transform 0.2s; }
+.toggle input:checked + span { background:var(--accent); }
+.toggle input:checked + span::after { transform:translateX(16px); }
+
+/* ---- FORM ELEMENTS (globalne) ---- */
+input::placeholder, select::placeholder, textarea::placeholder {
+  color:rgba(255,255,255,0.2); opacity:1;
+}
+
+.input-std, .select-std {
+  background:rgba(255,255,255,0.06); border:none; color:var(--text);
+  border-radius:10px; padding:12px 14px; font-size:16px; line-height:1.4;
+  outline:none; box-sizing:border-box;
+}
+.input-std:focus, .select-std:focus { outline:1px solid rgba(255,255,255,0.15); }
+
+.input-heading {
+  font-size:18px; background:transparent; border:none;
+  border-bottom:1px solid var(--border); color:var(--text);
+  padding:8px 0; width:100%; outline:none;
+}
+
+/* form-group / form-row (globalne, bylo tylko w admin-scope) */
+.form-group        { margin-bottom:10px; }
+.form-group label  { display:block; font-size:11px; color:var(--text-dim); margin-bottom:3px; letter-spacing:0.03em; }
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group select {
+  background:rgba(255,255,255,0.06); border:none; color:var(--text);
+  border-radius:10px; padding:12px 14px; font-size:16px; line-height:1.4;
+  outline:none; box-sizing:border-box;
+}
+.form-group input:focus, .form-group select:focus { outline:1px solid rgba(255,255,255,0.15); }
+.form-group select {
+  -webkit-appearance:none; appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239a9a9a' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 12px center; padding-right:30px;
+}
+.form-row          { display:flex; gap:10px; align-items:flex-start; }
+.form-row.end      { align-items:flex-end; }
+
+.section-label     { font-size:15px; font-weight:500; color:var(--text); margin-bottom:8px; }
+.section-label span{ font-weight:400; color:var(--text-dim); font-size:13px; }
+
+.action-section    { padding:12px 0; border-bottom:1px solid var(--border); }
+.action-section:last-of-type { border-bottom:none; }
+
+/* Search (globalne) */
+.search-wrap       { position:relative; display:block; width:100%; }
+.search-wrap input { width:100%; padding-right:36px; }
+.search-clear      { position:absolute; right:10px; top:50%; transform:translateY(-50%); width:20px; height:20px; cursor:pointer; display:none; border-radius:50%; background:rgba(255,255,255,0.1); line-height:20px; text-align:center; font-size:13px; color:var(--text-dim); transition:background 0.15s, color 0.15s; }
+.search-clear:hover{ background:rgba(255,255,255,0.2); color:var(--text); }
+.search-wrap input:not(:placeholder-shown) ~ .search-clear,
+.search-wrap .search-clear.visible { display:block; }
+
+/* Utilities */
+.w-full            { width:100%; }
+.flex-1            { flex:1; }
+.nowrap            { white-space:nowrap; }
+
+.code-block        { background:rgba(255,255,255,0.08); padding:4px 8px; border-radius:4px; font-size:12px; display:block; font-family:ui-monospace,Menlo,Consolas,monospace; }
+
+/* ---- BADGE (maly chip w tabelach) ---- */
+.badge     { display:inline-block; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:600; }
+.badge-on  { background:rgba(76,175,80,0.15); color:var(--green); }
+.badge-off { background:rgba(255,255,255,0.05); color:var(--text-dim); }
+
+/* ---- RENAME (uzywane w devices detail) ---- */
+.rename-btn   { cursor:pointer; color:var(--text-dim); font-size:14px; transition:color 0.15s; vertical-align:middle; }
+.rename-btn:hover { color:var(--accent); }
+.rename-input { font-size:16px; background:rgba(255,255,255,0.06); border:1px solid var(--accent); border-radius:8px; color:var(--text); padding:6px 10px; outline:none; width:100%; max-width:400px; }
+
+/* ---- SEARCHABLE SELECT (builder + dropdowny) ---- */
+.ss-wrap   { position:relative; width:100%; margin-bottom:8px; }
+.form-row .ss-wrap, .form-group .ss-wrap { margin-bottom:0; }
+.ss-input  { width:100%; background:rgba(255,255,255,0.06); border:none; border-radius:10px; color:var(--text); padding:12px 32px 12px 14px; font-size:16px; line-height:1.4; outline:none; cursor:pointer; box-sizing:border-box; }
+.ss-input:focus { outline:1px solid rgba(255,255,255,0.15); cursor:text; }
+.ss-arrow  { position:absolute; right:10px; top:50%; width:10px; height:6px; margin-top:-3px; pointer-events:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239a9a9a'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-size:10px 6px; }
+.ss-drop   { display:none; position:absolute; left:0; right:0; top:100%; margin-top:2px; background:#2a2a2a; border:1px solid rgba(255,255,255,0.12); border-radius:var(--radius); max-height:220px; overflow-y:auto; z-index:100; }
+.ss-drop.open { display:block; }
+.ss-opt    { padding:8px 12px; cursor:pointer; font-size:13px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ss-opt:hover, .ss-opt.active { background:var(--accent-bg); color:var(--accent); }
+.ss-opt.dim { color:var(--text-dim); }
+
+/* Builder area inputs/selects (poza form-group, ale styl jak .form-group input) */
+#triggers_area input[type="text"], #triggers_area input[type="number"],
+#conditions_area input[type="text"], #conditions_area input[type="number"],
+#triggers_area select, #conditions_area select, #actions_area select {
+  background:rgba(255,255,255,0.06); border:none; color:var(--text); border-radius:10px; padding:12px 14px; font-size:16px; line-height:1.4; outline:none; box-sizing:border-box;
+}
+#triggers_area select, #conditions_area select, #actions_area select {
+  -webkit-appearance:none; appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239a9a9a' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:30px;
+}
+input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { filter:invert(0.6); }
+
+/* ---- DETAIL CARD / SUB-CARD (globalne) ---- */
+.detail-card    { background:var(--card-bg); border-radius:var(--radius); padding:16px; margin-bottom:12px; border:1px solid var(--border); }
+.sub-card       { background:rgba(255,255,255,0.04); border-radius:10px; padding:14px; margin-bottom:8px; }
+
+/* ---- MOVE/REMOVE TOOLBAR (▲ ▼ ✕) ---- */
+.move-btn       { cursor:pointer; background:rgba(255,255,255,0.06); color:var(--text-dim); border:none; border-radius:6px; width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; user-select:none; }
+.move-btn:active { opacity:0.6; }
+.move-btn.danger { background:rgba(244,67,54,0.15); color:var(--red); }
+.item-toolbar   { display:flex; gap:4px; align-items:center; }
