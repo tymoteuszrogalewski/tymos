@@ -12,6 +12,8 @@ TymOS was born after 30 days with Home Assistant and the feeling that I wanted *
 
 **This is not a ready-to-use product.** There is no installer and no official update channel. TymOS is meant to be **used as-is with your own AI agent**: clone it, let the agent adapt it to your environment, and develop it further for your own needs. Treat my future commits as a stream of new ideas — your agent can pick them up and implement them in your own version quickly.
 
+Installing TymOS on your own hardware with an AI agent takes just a few minutes: point the agent to this repository URL, ask it to study the project, then give it a few details — the IP address of the target device, where your database lives, and so on. See [Use it with your AI agent](#use-it-with-your-ai-agent) for a ready-to-paste prompt.
+
 > Code comments and UI texts are in Polish.
 
 ![TymOS kiosk panel](docs/panel.png)
