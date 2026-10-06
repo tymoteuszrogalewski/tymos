@@ -38,64 +38,7 @@ TymOS is a personal project that runs a real house every day. It is shared as-is
 
 ## Architecture
 
-```mermaid
-%%{init: {"themeVariables": {"fontSize": "54px"}, "flowchart": {"wrappingWidth": 800, "nodeSpacing": 50, "rankSpacing": 90}}}%%
-flowchart TB
-  subgraph CLOUD["Internet"]
-    tg["Telegram Bot API"]
-    prices["Pstryk API · TGE<br/>energy prices"]
-    energa["Energa Operator<br/>meter data"]
-    meteo["Open-Meteo<br/>weather"]
-  end
-
-  subgraph REMOTE["Remote — Tailscale or any VPN"]
-    iphone["iPhone"]
-    mac["Mac"]
-  end
-
-  subgraph HOME["Home LAN"]
-    router["Router + PoE switch"]
-    ipad["iPad<br/>wall kiosk"]
-
-    subgraph PI["Raspberry Pi — TymOS"]
-      web["Apache + PHP<br/>kiosk · admin · API · actions"]
-      db[("MariaDB")]
-      mqtt["Mosquitto<br/>MQTT"]
-      z2m["Zigbee2MQTT"]
-      daemons["Python daemons<br/>rules engine · bridges<br/>face recognition"]
-      go2rtc["go2rtc"]
-    end
-
-    coord["SLZB-06<br/>Zigbee coordinator, PoE"]
-    zigbee["Zigbee devices<br/>smart plugs with power metering<br/>switches and lights · blind controllers<br/>temperature / humidity · motion<br/>door / window · water leak<br/>irrigation valves"]
-    esp["ESP32 + ESPHome"]
-    reku["Zehnder ComfoAir Q<br/>ventilation"]
-    meter["Pstryk energy meter"]
-    cams["Cameras Tapo C325WB · C320WS<br/>Reolink PoE doorbell"]
-  end
-
-  CLOUD <--> router
-  router <--> PI
-  HOME -.-|VPN| REMOTE
-  ipad <-->|HTTPS · WebRTC| PI
-
-  z2m <-->|TCP| coord
-  coord <-->|Zigbee| zigbee
-  mqtt <--> z2m
-  daemons <--> mqtt
-  daemons <--> db
-  web <--> db
-  web <--> mqtt
-
-  daemons <-->|ESPHome API| esp
-  esp <-->|CAN| reku
-  daemons <--- |BleBox API| meter
-  go2rtc <---|RTSP| cams
-  daemons <---|ONVIF events| cams
-
-  classDef default font-size:54px,stroke-width:3px
-  linkStyle default stroke-width:3px
-```
+![TymOS architecture](docs/architecture.svg)
 
 ## Repository layout
 

@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1350" width="1600" height="1350" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif">
+  <style>
+    text { font-size: 26px; text-anchor: middle; fill: #1f2328; }
+    .b { font-weight: 700; }
+    .g { font-size: 30px; font-weight: 700; }
+    .l { font-size: 22px; fill: #1f2328; }
+    .bg { fill: #ffffff; }
+    .box { fill: #ffffff; stroke: #1f2328; stroke-width: 3; }
+    .lbl { fill: #eaeef2; }
+    .ln { fill: none; stroke: #57606a; stroke-width: 4; }
+    .dash { stroke-dasharray: 12 8; }
+    .gc { fill: #fbefff; stroke: #bf8fd8; stroke-width: 3; }
+    .gr { fill: #e6f6ee; stroke: #6cc19a; stroke-width: 3; }
+    .gh { fill: #fff5e8; stroke: #e0b070; stroke-width: 3; }
+    .gp { fill: #e8f4ff; stroke: #6aa8e0; stroke-width: 3; }
+    #a path { fill: #57606a; }
+    @media (prefers-color-scheme: dark) {
+      text, .l { fill: #e6edf3; }
+      .bg { fill: #0d1117; }
+      .box { fill: #161b22; stroke: #c9d1d9; }
+      .lbl { fill: #30363d; }
+      .ln { stroke: #8b949e; }
+      #a path { fill: #8b949e; }
+      .gc { fill: #2a1d33; stroke: #8c5fa8; }
+      .gr { fill: #13291f; stroke: #3f8f6a; }
+      .gh { fill: #2b2116; stroke: #a37a45; }
+      .gp { fill: #13233a; stroke: #4a7fb5; }
+    }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z"/></marker>
+  </defs>
+  <rect class="bg" width="1600" height="1350" rx="20"/>
+  <rect class="gc" x="20" y="20" width="1000" height="200" rx="16"/>
+  <text x="520.0" y="60" class="g">Internet</text>
+  <rect class="box" x="45" y="90" width="220" height="100" rx="10"/>
+  <text x="155.0" y="132" class="b">Telegram</text>
+  <text x="155.0" y="166">Bot API</text>
+  <rect class="box" x="290" y="90" width="220" height="100" rx="10"/>
+  <text x="400.0" y="132" class="b">Pstryk · TGE</text>
+  <text x="400.0" y="166">energy prices</text>
+  <rect class="box" x="535" y="90" width="220" height="100" rx="10"/>
+  <text x="645.0" y="132" class="b">Energa</text>
+  <text x="645.0" y="166">meter data</text>
+  <rect class="box" x="780" y="90" width="220" height="100" rx="10"/>
+  <text x="890.0" y="132" class="b">Open-Meteo</text>
+  <text x="890.0" y="166">weather</text>
+  <rect class="gr" x="1060" y="20" width="520" height="200" rx="16"/>
+  <text x="1320.0" y="60" class="g">Remote — Tailscale / any VPN</text>
+  <rect class="box" x="1090" y="90" width="210" height="100" rx="10"/>
+  <text x="1195.0" y="149" class="b">iPhone</text>
+  <rect class="box" x="1340" y="90" width="210" height="100" rx="10"/>
+  <text x="1445.0" y="149" class="b">Mac</text>
+  <rect class="gh" x="20" y="270" width="1560" height="1060" rx="16"/>
+  <text x="800.0" y="310" class="g">Home LAN</text>
+  <rect class="box" x="50" y="320" width="280" height="90" rx="10"/>
+  <text x="190.0" y="357" class="b">Router</text>
+  <text x="190.0" y="391">PoE switch</text>
+  <rect class="box" x="1250" y="320" width="280" height="90" rx="10"/>
+  <text x="1390.0" y="357" class="b">iPad</text>
+  <text x="1390.0" y="391">wall kiosk</text>
+  <rect class="gp" x="40" y="470" width="1520" height="360" rx="16"/>
+  <text x="800.0" y="510" class="g">Raspberry Pi — TymOS</text>
+  <rect class="box" x="50" y="530" width="280" height="90" rx="10"/>
+  <text x="190.0" y="567" class="b">Apache + PHP</text>
+  <text x="190.0" y="601">web · actions</text>
+  <rect class="box" x="390" y="530" width="280" height="90" rx="10"/>
+  <text x="530.0" y="567" class="b">Mosquitto</text>
+  <text x="530.0" y="601">MQTT</text>
+  <rect class="box" x="740" y="530" width="280" height="90" rx="10"/>
+  <text x="880.0" y="584" class="b">Zigbee2MQTT</text>
+  <rect class="box" x="1270" y="530" width="240" height="90" rx="10"/>
+  <text x="1390.0" y="584" class="b">go2rtc</text>
+  <path class="box" d="M50,705 a140,22 0 0,1 280,0 v80 a140,22 0 0,1 -280,0 z"/>
+  <path class="box" d="M50,705 a140,22 0 0,0 280,0" fill="none"/>
+  <text x="190" y="762" class="b">MariaDB</text>
+  <rect class="box" x="390" y="690" width="280" height="120" rx="10"/>
+  <text x="530.0" y="725" class="b">Python daemons</text>
+  <text x="530.0" y="759">rules · bridges</text>
+  <text x="530.0" y="793">face recognition</text>
+  <rect class="box" x="50" y="920" width="280" height="90" rx="10"/>
+  <text x="190.0" y="957" class="b">Pstryk</text>
+  <text x="190.0" y="991">energy meter</text>
+  <rect class="box" x="390" y="920" width="280" height="90" rx="10"/>
+  <text x="530.0" y="957" class="b">ESP32</text>
+  <text x="530.0" y="991">ESPHome</text>
+  <rect class="box" x="390" y="1080" width="280" height="90" rx="10"/>
+  <text x="530.0" y="1117" class="b">Zehnder</text>
+  <text x="530.0" y="1151">ComfoAir Q</text>
+  <rect class="box" x="740" y="920" width="280" height="90" rx="10"/>
+  <text x="880.0" y="957" class="b">SLZB-06</text>
+  <text x="880.0" y="991">Zigbee coordinator</text>
+  <rect class="box" x="700" y="1080" width="460" height="230" rx="10"/>
+  <text x="930.0" y="1119" class="b">Zigbee devices</text>
+  <text x="930.0" y="1153">smart plugs with power metering</text>
+  <text x="930.0" y="1187">switches · lights · blinds</text>
+  <text x="930.0" y="1221">temp / humidity · motion</text>
+  <text x="930.0" y="1255">door / window · water leak</text>
+  <text x="930.0" y="1289">irrigation valves</text>
+  <rect class="box" x="1230" y="920" width="320" height="120" rx="10"/>
+  <text x="1390.0" y="955" class="b">Cameras</text>
+  <text x="1390.0" y="989">Tapo C325WB · C320WS</text>
+  <text x="1390.0" y="1023">Reolink doorbell</text>
+  <polyline class="ln" points="190,220 190,320" marker-start="url(#a)" marker-end="url(#a)"/>
+  <polyline class="ln" points="190,410 190,470" marker-start="url(#a)" marker-end="url(#a)"/>
+  <polyline class="ln dash" points="1180,220 1180,470" marker-start="url(#a)" marker-end="url(#a)"/>
+  <rect class="lbl" x="1152.0" y="362" width="56" height="34" rx="6"/>
+  <text x="1180" y="387" class="l">VPN</text>
+  <polyline class="ln" points="1390,410 1390,470" marker-start="url(#a)" marker-end="url(#a)"/>
+  <rect class="lbl" x="1296.0" y="427" width="188" height="34" rx="6"/>
+  <text x="1390" y="452" class="l">HTTPS · WebRTC</text>
+  <polyline class="ln" points="330,575 390,575" marker-start="url(#a)" marker-end="url(#a)"/>
+  <polyline class="ln" points="670,575 740,575" marker-start="url(#a)" marker-end="url(#a)"/>
+  <polyline class="ln" points="190,620 190,683" marker-start="url(#a)" marker-end="url(#a)"/>
+  <polyline class="ln" points="530,620 530,690" marker-start="url(#a)" marker-end="url(#a)"/>
+  <polyline class="ln" points="330,750 390,750" marker-start="url(#a)" marker-end="url(#a)"/>
+  <polyline class="ln" points="880,620 880,920" marker-start="url(#a)" marker-end="url(#a)"/>
+  <rect class="lbl" x="852.0" y="852" width="56" height="34" rx="6"/>
+  <text x="880" y="877" class="l">TCP</text>
+  <polyline class="ln" points="880,1010 880,1080" marker-start="url(#a)" marker-end="url(#a)"/>
+  <rect class="lbl" x="834.0" y="1027" width="92" height="34" rx="6"/>
+  <text x="880" y="1052" class="l">Zigbee</text>
+  <polyline class="ln" points="530,810 530,920" marker-start="url(#a)" marker-end="url(#a)"/>
+  <rect class="lbl" x="454.0" y="852" width="152" height="34" rx="6"/>
+  <text x="530" y="877" class="l">ESPHome API</text>
+  <polyline class="ln" points="530,1010 530,1080" marker-start="url(#a)" marker-end="url(#a)"/>
+  <rect class="lbl" x="502.0" y="1027" width="56" height="34" rx="6"/>
+  <text x="530" y="1052" class="l">CAN</text>
+  <polyline class="ln" points="450,810 450,870 190,870 190,920" marker-start="url(#a)" marker-end="url(#a)"/>
+  <rect class="lbl" x="230.0" y="852" width="140" height="34" rx="6"/>
+  <text x="300" y="877" class="l">BleBox API</text>
+  <polyline class="ln" points="1390,620 1390,920" marker-start="url(#a)" marker-end="url(#a)"/>
+  <rect class="lbl" x="1356.0" y="852" width="68" height="34" rx="6"/>
+  <text x="1390" y="877" class="l">RTSP</text>
+  <polyline class="ln" points="670,770 1300,770 1300,920" marker-start="url(#a)" marker-end="url(#a)"/>
+  <rect class="lbl" x="1028.0" y="752" width="164" height="34" rx="6"/>
+  <text x="1110" y="777" class="l">ONVIF events</text>
+</svg>
