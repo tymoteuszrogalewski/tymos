@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1350" width="1600" height="1350" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1670" width="1600" height="1670" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif">
   <style>
     text { font-size: 26px; text-anchor: middle; fill: #1f2328; }
     .b { font-weight: 700; }
@@ -6,6 +6,7 @@
     .l { font-size: 22px; fill: #1f2328; }
     .bg { fill: #ffffff; }
     .box { fill: #ffffff; stroke: #1f2328; stroke-width: 3; }
+    .ic { fill: none; stroke: #0969da; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
     .lbl { fill: #eaeef2; }
     .ln { fill: none; stroke: #57606a; stroke-width: 4; }
     .dash { stroke-dasharray: 12 8; }
@@ -18,6 +19,7 @@
       text, .l { fill: #e6edf3; }
       .bg { fill: #0d1117; }
       .box { fill: #161b22; stroke: #c9d1d9; }
+      .ic { stroke: #58a6ff; }
       .lbl { fill: #30363d; }
       .ln { stroke: #8b949e; }
       #a path { fill: #8b949e; }
@@ -29,110 +31,149 @@
   </style>
   <defs>
     <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z"/></marker>
+    <symbol id="telegram" viewBox="0 0 24 24" class="ic"><path d="M22 3 L2 11 l7 3 l3 7 z M9 14 L22 3"/></symbol>
+    <symbol id="bolt" viewBox="0 0 24 24" class="ic"><path d="M13 2 L4 14 h7 l-1 8 l9-12 h-7 z"/></symbol>
+    <symbol id="chart" viewBox="0 0 24 24" class="ic"><path d="M3 21 h18 M6 17 v-5 M11 17 v-9 M16 17 v-6 M21 17 v-12"/></symbol>
+    <symbol id="sun" viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="4"/><path d="M12 2 v3 M12 19 v3 M2 12 h3 M19 12 h3 M5 5 l2 2 M17 17 l2 2 M5 19 l2-2 M17 7 l2-2"/></symbol>
+    <symbol id="phone" viewBox="0 0 24 24" class="ic"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18 h2"/></symbol>
+    <symbol id="laptop" viewBox="0 0 24 24" class="ic"><rect x="4" y="5" width="16" height="11" rx="1"/><path d="M2 19 h20"/></symbol>
+    <symbol id="router" viewBox="0 0 24 24" class="ic"><rect x="2" y="13" width="20" height="7" rx="2"/><path d="M7 13 V6 M17 13 V6 M6 16.5 h1 M10 16.5 h1"/></symbol>
+    <symbol id="tablet" viewBox="0 0 24 24" class="ic"><rect x="3" y="2" width="18" height="20" rx="2"/><path d="M11 18.5 h2"/></symbol>
+    <symbol id="globe" viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="10"/><ellipse cx="12" cy="12" rx="4" ry="10"/><path d="M2 12 h20"/></symbol>
+    <symbol id="hub" viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="3"/><circle cx="4" cy="5" r="2"/><circle cx="20" cy="5" r="2"/><circle cx="12" cy="21" r="2"/><path d="M6 6 l4 4 M18 6 l-4 4 M12 15 v4"/></symbol>
+    <symbol id="swap" viewBox="0 0 24 24" class="ic"><path d="M3 8 h16 l-4-4 M21 16 H5 l4 4"/></symbol>
+    <symbol id="video" viewBox="0 0 24 24" class="ic"><rect x="2" y="6" width="13" height="12" rx="2"/><path d="M15 10 l7-4 v12 l-7-4 z"/></symbol>
+    <symbol id="db" viewBox="0 0 24 24" class="ic"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5 v14 c0 1.7 3.6 3 8 3 s8-1.3 8-3 V5 M4 12 c0 1.7 3.6 3 8 3 s8-1.3 8-3"/></symbol>
+    <symbol id="gear" viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="3.5"/><circle cx="12" cy="12" r="8" stroke-width="4" stroke-dasharray="3.1 3.2"/></symbol>
+    <symbol id="meter" viewBox="0 0 24 24" class="ic"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M13 6 L8 13 h4 l-1 5 l5-7 h-4 z"/></symbol>
+    <symbol id="chip" viewBox="0 0 24 24" class="ic"><rect x="6" y="6" width="12" height="12" rx="1"/><path d="M9 2 v4 M15 2 v4 M9 18 v4 M15 18 v4 M2 9 h4 M2 15 h4 M18 9 h4 M18 15 h4"/></symbol>
+    <symbol id="fan" viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="1.5"/><path d="M12 10.5 C10 6 13 4 15 5 C16 7 14 9 12 10.5 M13.3 12.8 C18 13 18.5 16.5 17 18 C15 18 13.5 15.5 13.3 12.8 M10.7 12.8 C8 16.5 5 15.5 4.5 13.5 C5.5 11.5 8.5 11.5 10.7 12.8"/></symbol>
+    <symbol id="radio" viewBox="0 0 24 24" class="ic"><circle cx="12" cy="12" r="2"/><path d="M8 8 a5.5 5.5 0 0 0 0 8 M16 8 a5.5 5.5 0 0 1 0 8 M5 5 a10 10 0 0 0 0 14 M19 5 a10 10 0 0 1 0 14"/></symbol>
+    <symbol id="plug" viewBox="0 0 24 24" class="ic"><path d="M9 2 v5 M15 2 v5 M5 7 h14 v4 a7 7 0 0 1 -14 0 z M12 18 v4"/></symbol>
+    <symbol id="camera" viewBox="0 0 24 24" class="ic"><rect x="2" y="7" width="20" height="14" rx="2"/><circle cx="12" cy="14" r="4"/><path d="M8 7 l2-3 h4 l2 3"/></symbol>
   </defs>
-  <rect class="bg" width="1600" height="1350" rx="20"/>
-  <rect class="gc" x="20" y="20" width="1000" height="200" rx="16"/>
+  <rect class="bg" width="1600" height="1670" rx="20"/>
+  <rect class="gc" x="20" y="20" width="1000" height="240" rx="16"/>
   <text x="520.0" y="60" class="g">Internet</text>
-  <rect class="box" x="45" y="90" width="220" height="100" rx="10"/>
-  <text x="155.0" y="132" class="b">Telegram</text>
-  <text x="155.0" y="166">Bot API</text>
-  <rect class="box" x="290" y="90" width="220" height="100" rx="10"/>
-  <text x="400.0" y="132" class="b">Pstryk · TGE</text>
-  <text x="400.0" y="166">energy prices</text>
-  <rect class="box" x="535" y="90" width="220" height="100" rx="10"/>
-  <text x="645.0" y="132" class="b">Energa</text>
-  <text x="645.0" y="166">meter data</text>
-  <rect class="box" x="780" y="90" width="220" height="100" rx="10"/>
-  <text x="890.0" y="132" class="b">Open-Meteo</text>
-  <text x="890.0" y="166">weather</text>
-  <rect class="gr" x="1060" y="20" width="520" height="200" rx="16"/>
+  <rect class="box" x="45" y="80" width="220" height="155" rx="10"/>
+  <use href="#telegram" x="131.0" y="96" width="48" height="48"/>
+  <text x="155.0" y="182" class="b">Telegram</text>
+  <text x="155.0" y="216">Bot API</text>
+  <rect class="box" x="290" y="80" width="220" height="155" rx="10"/>
+  <use href="#bolt" x="376.0" y="96" width="48" height="48"/>
+  <text x="400.0" y="182" class="b">Pstryk · TGE</text>
+  <text x="400.0" y="216">energy prices</text>
+  <rect class="box" x="535" y="80" width="220" height="155" rx="10"/>
+  <use href="#chart" x="621.0" y="96" width="48" height="48"/>
+  <text x="645.0" y="182" class="b">Energa</text>
+  <text x="645.0" y="216">meter data</text>
+  <rect class="box" x="780" y="80" width="220" height="155" rx="10"/>
+  <use href="#sun" x="866.0" y="96" width="48" height="48"/>
+  <text x="890.0" y="182" class="b">Open-Meteo</text>
+  <text x="890.0" y="216">weather</text>
+  <rect class="gr" x="1060" y="20" width="520" height="240" rx="16"/>
   <text x="1320.0" y="60" class="g">Remote — Tailscale / any VPN</text>
-  <rect class="box" x="1090" y="90" width="210" height="100" rx="10"/>
-  <text x="1195.0" y="149" class="b">iPhone</text>
-  <rect class="box" x="1340" y="90" width="210" height="100" rx="10"/>
-  <text x="1445.0" y="149" class="b">Mac</text>
-  <rect class="gh" x="20" y="270" width="1560" height="1060" rx="16"/>
-  <text x="800.0" y="310" class="g">Home LAN</text>
-  <rect class="box" x="50" y="320" width="280" height="90" rx="10"/>
-  <text x="190.0" y="357" class="b">Router</text>
-  <text x="190.0" y="391">PoE switch</text>
-  <rect class="box" x="1250" y="320" width="280" height="90" rx="10"/>
-  <text x="1390.0" y="357" class="b">iPad</text>
-  <text x="1390.0" y="391">wall kiosk</text>
-  <rect class="gp" x="40" y="470" width="1520" height="360" rx="16"/>
-  <text x="800.0" y="510" class="g">Raspberry Pi — TymOS</text>
-  <rect class="box" x="50" y="530" width="280" height="90" rx="10"/>
-  <text x="190.0" y="567" class="b">Apache + PHP</text>
-  <text x="190.0" y="601">web · actions</text>
-  <rect class="box" x="390" y="530" width="280" height="90" rx="10"/>
-  <text x="530.0" y="567" class="b">Mosquitto</text>
-  <text x="530.0" y="601">MQTT</text>
-  <rect class="box" x="740" y="530" width="280" height="90" rx="10"/>
-  <text x="880.0" y="584" class="b">Zigbee2MQTT</text>
-  <rect class="box" x="1270" y="530" width="240" height="90" rx="10"/>
-  <text x="1390.0" y="584" class="b">go2rtc</text>
-  <path class="box" d="M50,705 a140,22 0 0,1 280,0 v80 a140,22 0 0,1 -280,0 z"/>
-  <path class="box" d="M50,705 a140,22 0 0,0 280,0" fill="none"/>
-  <text x="190" y="762" class="b">MariaDB</text>
-  <rect class="box" x="390" y="690" width="280" height="120" rx="10"/>
-  <text x="530.0" y="725" class="b">Python daemons</text>
-  <text x="530.0" y="759">rules · bridges</text>
-  <text x="530.0" y="793">face recognition</text>
-  <rect class="box" x="50" y="920" width="280" height="90" rx="10"/>
-  <text x="190.0" y="957" class="b">Pstryk</text>
-  <text x="190.0" y="991">energy meter</text>
-  <rect class="box" x="390" y="920" width="280" height="90" rx="10"/>
-  <text x="530.0" y="957" class="b">ESP32</text>
-  <text x="530.0" y="991">ESPHome</text>
-  <rect class="box" x="390" y="1080" width="280" height="90" rx="10"/>
-  <text x="530.0" y="1117" class="b">Zehnder</text>
-  <text x="530.0" y="1151">ComfoAir Q</text>
-  <rect class="box" x="740" y="920" width="280" height="90" rx="10"/>
-  <text x="880.0" y="957" class="b">SLZB-06</text>
-  <text x="880.0" y="991">Zigbee coordinator</text>
-  <rect class="box" x="700" y="1080" width="460" height="230" rx="10"/>
-  <text x="930.0" y="1119" class="b">Zigbee devices</text>
-  <text x="930.0" y="1153">smart plugs with power metering</text>
-  <text x="930.0" y="1187">switches · lights · blinds</text>
-  <text x="930.0" y="1221">temp / humidity · motion</text>
-  <text x="930.0" y="1255">door / window · water leak</text>
-  <text x="930.0" y="1289">irrigation valves</text>
-  <rect class="box" x="1230" y="920" width="320" height="120" rx="10"/>
-  <text x="1390.0" y="955" class="b">Cameras</text>
-  <text x="1390.0" y="989">Tapo C325WB · C320WS</text>
-  <text x="1390.0" y="1023">Reolink doorbell</text>
-  <polyline class="ln" points="190,220 190,320" marker-start="url(#a)" marker-end="url(#a)"/>
-  <polyline class="ln" points="190,410 190,470" marker-start="url(#a)" marker-end="url(#a)"/>
-  <polyline class="ln dash" points="1180,220 1180,470" marker-start="url(#a)" marker-end="url(#a)"/>
-  <rect class="lbl" x="1152.0" y="362" width="56" height="34" rx="6"/>
-  <text x="1180" y="387" class="l">VPN</text>
-  <polyline class="ln" points="1390,410 1390,470" marker-start="url(#a)" marker-end="url(#a)"/>
-  <rect class="lbl" x="1296.0" y="427" width="188" height="34" rx="6"/>
-  <text x="1390" y="452" class="l">HTTPS · WebRTC</text>
-  <polyline class="ln" points="330,575 390,575" marker-start="url(#a)" marker-end="url(#a)"/>
-  <polyline class="ln" points="670,575 740,575" marker-start="url(#a)" marker-end="url(#a)"/>
-  <polyline class="ln" points="190,620 190,683" marker-start="url(#a)" marker-end="url(#a)"/>
-  <polyline class="ln" points="530,620 530,690" marker-start="url(#a)" marker-end="url(#a)"/>
-  <polyline class="ln" points="330,750 390,750" marker-start="url(#a)" marker-end="url(#a)"/>
-  <polyline class="ln" points="880,620 880,920" marker-start="url(#a)" marker-end="url(#a)"/>
-  <rect class="lbl" x="852.0" y="852" width="56" height="34" rx="6"/>
-  <text x="880" y="877" class="l">TCP</text>
-  <polyline class="ln" points="880,1010 880,1080" marker-start="url(#a)" marker-end="url(#a)"/>
-  <rect class="lbl" x="834.0" y="1027" width="92" height="34" rx="6"/>
-  <text x="880" y="1052" class="l">Zigbee</text>
-  <polyline class="ln" points="530,810 530,920" marker-start="url(#a)" marker-end="url(#a)"/>
-  <rect class="lbl" x="454.0" y="852" width="152" height="34" rx="6"/>
-  <text x="530" y="877" class="l">ESPHome API</text>
-  <polyline class="ln" points="530,1010 530,1080" marker-start="url(#a)" marker-end="url(#a)"/>
-  <rect class="lbl" x="502.0" y="1027" width="56" height="34" rx="6"/>
-  <text x="530" y="1052" class="l">CAN</text>
-  <polyline class="ln" points="450,810 450,870 190,870 190,920" marker-start="url(#a)" marker-end="url(#a)"/>
-  <rect class="lbl" x="230.0" y="852" width="140" height="34" rx="6"/>
-  <text x="300" y="877" class="l">BleBox API</text>
-  <polyline class="ln" points="1390,620 1390,920" marker-start="url(#a)" marker-end="url(#a)"/>
-  <rect class="lbl" x="1356.0" y="852" width="68" height="34" rx="6"/>
-  <text x="1390" y="877" class="l">RTSP</text>
-  <polyline class="ln" points="670,770 1300,770 1300,920" marker-start="url(#a)" marker-end="url(#a)"/>
-  <rect class="lbl" x="1028.0" y="752" width="164" height="34" rx="6"/>
-  <text x="1110" y="777" class="l">ONVIF events</text>
+  <rect class="box" x="1090" y="80" width="210" height="155" rx="10"/>
+  <use href="#phone" x="1171.0" y="96" width="48" height="48"/>
+  <text x="1195.0" y="198" class="b">iPhone</text>
+  <rect class="box" x="1340" y="80" width="210" height="155" rx="10"/>
+  <use href="#laptop" x="1421.0" y="96" width="48" height="48"/>
+  <text x="1445.0" y="198" class="b">Mac</text>
+  <rect class="gh" x="20" y="310" width="1560" height="1340" rx="16"/>
+  <text x="800.0" y="350" class="g">Home LAN</text>
+  <rect class="box" x="50" y="360" width="280" height="150" rx="10"/>
+  <use href="#router" x="166.0" y="376" width="48" height="48"/>
+  <text x="190.0" y="459" class="b">Router</text>
+  <text x="190.0" y="493">PoE switch</text>
+  <rect class="box" x="1250" y="360" width="280" height="150" rx="10"/>
+  <use href="#tablet" x="1366.0" y="376" width="48" height="48"/>
+  <text x="1390.0" y="459" class="b">iPad</text>
+  <text x="1390.0" y="493">wall kiosk</text>
+  <rect class="gp" x="40" y="570" width="1520" height="440" rx="16"/>
+  <text x="800.0" y="610" class="g">Raspberry Pi — TymOS</text>
+  <rect class="box" x="50" y="630" width="280" height="150" rx="10"/>
+  <use href="#globe" x="166.0" y="646" width="48" height="48"/>
+  <text x="190.0" y="729" class="b">Apache + PHP</text>
+  <text x="190.0" y="763">web · actions</text>
+  <rect class="box" x="390" y="630" width="280" height="150" rx="10"/>
+  <use href="#hub" x="506.0" y="646" width="48" height="48"/>
+  <text x="530.0" y="729" class="b">Mosquitto</text>
+  <text x="530.0" y="763">MQTT</text>
+  <rect class="box" x="740" y="630" width="280" height="150" rx="10"/>
+  <use href="#swap" x="856.0" y="646" width="48" height="48"/>
+  <text x="880.0" y="746" class="b">Zigbee2MQTT</text>
+  <rect class="box" x="1270" y="630" width="240" height="150" rx="10"/>
+  <use href="#video" x="1366.0" y="646" width="48" height="48"/>
+  <text x="1390.0" y="746" class="b">go2rtc</text>
+  <rect class="box" x="50" y="820" width="280" height="170" rx="10"/>
+  <use href="#db" x="166.0" y="836" width="48" height="48"/>
+  <text x="190.0" y="946" class="b">MariaDB</text>
+  <rect class="box" x="390" y="820" width="280" height="170" rx="10"/>
+  <use href="#gear" x="506.0" y="836" width="48" height="48"/>
+  <text x="530.0" y="912" class="b">Python daemons</text>
+  <text x="530.0" y="946">rules · bridges</text>
+  <text x="530.0" y="980">face recognition</text>
+  <rect class="box" x="50" y="1110" width="280" height="150" rx="10"/>
+  <use href="#meter" x="166.0" y="1126" width="48" height="48"/>
+  <text x="190.0" y="1209" class="b">Pstryk</text>
+  <text x="190.0" y="1243">energy meter</text>
+  <rect class="box" x="390" y="1110" width="280" height="150" rx="10"/>
+  <use href="#chip" x="506.0" y="1126" width="48" height="48"/>
+  <text x="530.0" y="1209" class="b">ESP32</text>
+  <text x="530.0" y="1243">ESPHome</text>
+  <rect class="box" x="390" y="1330" width="280" height="150" rx="10"/>
+  <use href="#fan" x="506.0" y="1346" width="48" height="48"/>
+  <text x="530.0" y="1429" class="b">Zehnder</text>
+  <text x="530.0" y="1463">ComfoAir Q</text>
+  <rect class="box" x="740" y="1110" width="280" height="150" rx="10"/>
+  <use href="#radio" x="856.0" y="1126" width="48" height="48"/>
+  <text x="880.0" y="1209" class="b">SLZB-06</text>
+  <text x="880.0" y="1243">Zigbee coordinator</text>
+  <rect class="box" x="700" y="1330" width="460" height="290" rx="10"/>
+  <use href="#plug" x="906.0" y="1346" width="48" height="48"/>
+  <text x="930.0" y="1431" class="b">Zigbee devices</text>
+  <text x="930.0" y="1465">smart plugs with power metering</text>
+  <text x="930.0" y="1499">switches · lights · blinds</text>
+  <text x="930.0" y="1533">temp / humidity · motion</text>
+  <text x="930.0" y="1567">door / window · water leak</text>
+  <text x="930.0" y="1601">irrigation valves</text>
+  <rect class="box" x="1230" y="1110" width="320" height="180" rx="10"/>
+  <use href="#camera" x="1366.0" y="1126" width="48" height="48"/>
+  <text x="1390.0" y="1207" class="b">Cameras</text>
+  <text x="1390.0" y="1241">Tapo C325WB · C320WS</text>
+  <text x="1390.0" y="1275">Reolink doorbell</text>
+  <polyline class="ln" points="190,260 190,360" marker-start="url(#a)" marker-end="url(#a)"/>
+  <polyline class="ln" points="190,510 190,570" marker-start="url(#a)" marker-end="url(#a)"/>
+  <polyline class="ln dash" points="1180,260 1180,570" marker-start="url(#a)" marker-end="url(#a)"/>
+  <rect class="lbl" x="1152.0" y="422" width="56" height="34" rx="6"/>
+  <text x="1180" y="447" class="l">VPN</text>
+  <polyline class="ln" points="1390,510 1390,570" marker-start="url(#a)" marker-end="url(#a)"/>
+  <rect class="lbl" x="1296.0" y="522" width="188" height="34" rx="6"/>
+  <text x="1390" y="547" class="l">HTTPS · WebRTC</text>
+  <polyline class="ln" points="330,705 390,705" marker-start="url(#a)" marker-end="url(#a)"/>
+  <polyline class="ln" points="670,705 740,705" marker-start="url(#a)" marker-end="url(#a)"/>
+  <polyline class="ln" points="190,780 190,820" marker-start="url(#a)" marker-end="url(#a)"/>
+  <polyline class="ln" points="530,780 530,820" marker-start="url(#a)" marker-end="url(#a)"/>
+  <polyline class="ln" points="330,905 390,905" marker-start="url(#a)" marker-end="url(#a)"/>
+  <polyline class="ln" points="880,780 880,1110" marker-start="url(#a)" marker-end="url(#a)"/>
+  <rect class="lbl" x="852.0" y="1042" width="56" height="34" rx="6"/>
+  <text x="880" y="1067" class="l">TCP</text>
+  <polyline class="ln" points="880,1260 880,1330" marker-start="url(#a)" marker-end="url(#a)"/>
+  <rect class="lbl" x="834.0" y="1277" width="92" height="34" rx="6"/>
+  <text x="880" y="1302" class="l">Zigbee</text>
+  <polyline class="ln" points="530,990 530,1110" marker-start="url(#a)" marker-end="url(#a)"/>
+  <rect class="lbl" x="454.0" y="1042" width="152" height="34" rx="6"/>
+  <text x="530" y="1067" class="l">ESPHome API</text>
+  <polyline class="ln" points="530,1260 530,1330" marker-start="url(#a)" marker-end="url(#a)"/>
+  <rect class="lbl" x="502.0" y="1277" width="56" height="34" rx="6"/>
+  <text x="530" y="1302" class="l">CAN</text>
+  <polyline class="ln" points="450,990 450,1060 190,1060 190,1110" marker-start="url(#a)" marker-end="url(#a)"/>
+  <rect class="lbl" x="230.0" y="1042" width="140" height="34" rx="6"/>
+  <text x="300" y="1067" class="l">BleBox API</text>
+  <polyline class="ln" points="1390,780 1390,1110" marker-start="url(#a)" marker-end="url(#a)"/>
+  <rect class="lbl" x="1356.0" y="1042" width="68" height="34" rx="6"/>
+  <text x="1390" y="1067" class="l">RTSP</text>
+  <polyline class="ln" points="670,950 1300,950 1300,1110" marker-start="url(#a)" marker-end="url(#a)"/>
+  <rect class="lbl" x="1028.0" y="932" width="164" height="34" rx="6"/>
+  <text x="1110" y="957" class="l">ONVIF events</text>
 </svg>
