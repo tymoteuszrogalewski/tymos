@@ -1,33 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1670" width="1600" height="1670" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif">
   <style>
-    text { font-size: 26px; text-anchor: middle; fill: #1f2328; }
+    text { font-size: 26px; text-anchor: middle; fill: #e6edf3; }
     .b { font-weight: 700; }
     .g { font-size: 30px; font-weight: 700; }
-    .l { font-size: 22px; fill: #1f2328; }
-    .bg { fill: #ffffff; }
-    .box { fill: #ffffff; stroke: #1f2328; stroke-width: 3; }
-    .ic { fill: none; stroke: #0969da; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-    .lbl { fill: #eaeef2; }
-    .ln { fill: none; stroke: #57606a; stroke-width: 4; }
+    .l { font-size: 22px; }
+    .bg { fill: #0d1117; }
+    .box { fill: #161b22; stroke: #c9d1d9; stroke-width: 3; }
+    .ic { fill: none; stroke: #58a6ff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .lbl { fill: #30363d; }
+    .ln { fill: none; stroke: #8b949e; stroke-width: 4; }
     .dash { stroke-dasharray: 12 8; }
-    .gc { fill: #fbefff; stroke: #bf8fd8; stroke-width: 3; }
-    .gr { fill: #e6f6ee; stroke: #6cc19a; stroke-width: 3; }
-    .gh { fill: #fff5e8; stroke: #e0b070; stroke-width: 3; }
-    .gp { fill: #e8f4ff; stroke: #6aa8e0; stroke-width: 3; }
-    #a path { fill: #57606a; }
-    @media (prefers-color-scheme: dark) {
-      text, .l { fill: #e6edf3; }
-      .bg { fill: #0d1117; }
-      .box { fill: #161b22; stroke: #c9d1d9; }
-      .ic { stroke: #58a6ff; }
-      .lbl { fill: #30363d; }
-      .ln { stroke: #8b949e; }
-      #a path { fill: #8b949e; }
-      .gc { fill: #2a1d33; stroke: #8c5fa8; }
-      .gr { fill: #13291f; stroke: #3f8f6a; }
-      .gh { fill: #2b2116; stroke: #a37a45; }
-      .gp { fill: #13233a; stroke: #4a7fb5; }
-    }
+    .gc { fill: #2a1d33; stroke: #8c5fa8; stroke-width: 3; }
+    .gr { fill: #13291f; stroke: #3f8f6a; stroke-width: 3; }
+    .gh { fill: #2b2116; stroke: #a37a45; stroke-width: 3; }
+    .gp { fill: #13233a; stroke: #4a7fb5; stroke-width: 3; }
+    #a path { fill: #8b949e; }
   </style>
   <defs>
     <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z"/></marker>
