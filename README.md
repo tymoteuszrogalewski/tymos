@@ -1,5 +1,7 @@
 # TymOS
 
+> **Fully coded by Claude AI** — not a single line of code was written manually by a human. The human part was the ideas, the requirements and the direction; Claude wrote all the code.
+
 DIY home automation running on a Raspberry Pi — Zigbee devices, heating and hot-water buffer, ventilation, cameras, alarm and dynamic energy prices, all in one **super lightweight and super fast** PHP + Python stack.
 
 TymOS was born after 30 days with Home Assistant and the feeling that I wanted *something more*: lighter, faster, simpler — just better for my house. It has been running a real house every day since.
