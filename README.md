@@ -39,7 +39,7 @@ TymOS is a personal project that runs a real house every day. It is shared as-is
 ## Architecture
 
 ```mermaid
-%%{init: {"themeVariables": {"fontSize": "36px"}, "flowchart": {"wrappingWidth": 800, "nodeSpacing": 50, "rankSpacing": 90}}}%%
+%%{init: {"themeVariables": {"fontSize": "54px"}, "flowchart": {"wrappingWidth": 800, "nodeSpacing": 50, "rankSpacing": 90}}}%%
 flowchart TB
   subgraph CLOUD["Internet"]
     tg["Telegram Bot API"]
@@ -93,7 +93,7 @@ flowchart TB
   go2rtc <---|RTSP| cams
   daemons <---|ONVIF events| cams
 
-  classDef default font-size:36px,stroke-width:3px
+  classDef default font-size:54px,stroke-width:3px
   linkStyle default stroke-width:3px
 ```
 
