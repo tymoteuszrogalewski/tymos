@@ -6,6 +6,10 @@ TymOS is a personal project that runs a real house every day. It is shared as-is
 
 > Code comments and UI texts are in Polish.
 
+![TymOS kiosk panel](docs/panel.jpg)
+
+*Wall-mounted kiosk panel: cameras, doorbell, weather, ventilation flow, dynamic energy prices, heating, garden.*
+
 ## What it does
 
 - **Zigbee** — all devices through Zigbee2MQTT; readings stored in MariaDB, availability monitoring and automatic network recovery
@@ -68,6 +72,27 @@ The generated files are git-ignored.
 ## Database
 
 `schema.sql` — MariaDB structure without data (core tables + one example of the per-device `device<ID>` / `stat<ID>` tables, which the code creates automatically).
+
+## Use it with your AI agent
+
+TymOS is built for one specific house and one specific setup. As it is, it will not fit everyone's needs — and that is fine. What it gives you is a large set of **working, battle-tested solutions**: scripts, automations, device bridges, UI cards and ideas. The intended way to use it is together with an AI coding agent (Claude Code or any other) that adapts it to *your* environment.
+
+Paste this into your agent:
+
+```
+Study the project https://github.com/tymoteuszrogalewski/tymos
+(README, schema.sql, tymos/config.example.inc.php, scripts/restore.sh, etc/).
+Then help me install and adapt it on my server. Before installing anything, ask me about:
+- the target server and directory,
+- the web server (Apache / nginx) and PHP version,
+- the database (MariaDB / MySQL): host, user, password, database name,
+- MQTT broker and Zigbee coordinator,
+- which features I actually want (Zigbee, cameras, energy prices, heating, alarm, Telegram...).
+Install only what is needed, fill in tymos/config.inc.php with my values,
+and adapt the code to my devices.
+```
+
+The agent can then install packages, create the database from `schema.sql`, prepare the config and services — step by step, with your approval.
 
 ## Installation
 
