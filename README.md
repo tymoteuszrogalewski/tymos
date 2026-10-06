@@ -4,7 +4,7 @@
 
 DIY home automation running on a Raspberry Pi — Zigbee devices, heating and hot-water buffer, ventilation, cameras, alarm and dynamic energy prices, all in one **super lightweight and super fast** PHP + Python stack.
 
-### Works with: Zigbee · Sonoff · TP-Link Tapo · Tuya · Reolink · ONVIF cameras · SMLIGHT SLZB-06 · ESPHome · Zehnder ComfoAir Q · BleBox · Pstryk · Energa · TGE · Telegram · Tailscale · iPad kiosk
+<h3>Works with:<br>Zigbee · Sonoff · TP-Link Tapo · Tuya · Reolink · ONVIF cameras · SMLIGHT SLZB-06 · ESPHome · Zehnder ComfoAir Q · BleBox · Pstryk · Energa · TGE · Telegram · Tailscale · iPad kiosk</h3>
 
 TymOS was born after 30 days with Home Assistant and the feeling that I wanted *something more*: lighter, faster, simpler — just better for my house. It has been running a real house every day since.
 
