@@ -39,14 +39,22 @@ TymOS is a personal project that runs a real house every day. It is shared as-is
 ## Architecture
 
 ```mermaid
-%%{init: {"themeVariables": {"fontSize": "20px"}, "flowchart": {"wrappingWidth": 400, "nodeSpacing": 40, "rankSpacing": 70}}}%%
+%%{init: {"themeVariables": {"fontSize": "36px"}, "flowchart": {"wrappingWidth": 800, "nodeSpacing": 50, "rankSpacing": 90}}}%%
 flowchart TB
+  subgraph CLOUD["Internet"]
+    tg["Telegram Bot API"]
+    prices["Pstryk API · TGE<br/>energy prices"]
+    energa["Energa Operator<br/>meter data"]
+    meteo["Open-Meteo<br/>weather"]
+  end
+
   subgraph REMOTE["Remote — Tailscale or any VPN"]
     iphone["iPhone"]
     mac["Mac"]
   end
 
   subgraph HOME["Home LAN"]
+    router["Router + PoE switch"]
     ipad["iPad<br/>wall kiosk"]
 
     subgraph PI["Raspberry Pi — TymOS"]
@@ -64,35 +72,29 @@ flowchart TB
     reku["Zehnder ComfoAir Q<br/>ventilation"]
     meter["Pstryk energy meter"]
     cams["Cameras Tapo C325WB · C320WS<br/>Reolink PoE doorbell"]
-    router["Router + PoE switch"]
   end
 
-  subgraph CLOUD["Internet"]
-    tg["Telegram Bot API"]
-    prices["Pstryk API · TGE<br/>energy prices"]
-    energa["Energa Operator<br/>meter data"]
-    meteo["Open-Meteo<br/>weather"]
-  end
-
-  REMOTE -.->|VPN| web
+  CLOUD <--> router
+  router <--> PI
+  HOME -.-|VPN| REMOTE
   ipad <-->|HTTPS · WebRTC| PI
 
-  zigbee <-->|Zigbee| coord
-  coord <-->|TCP| z2m
-  z2m <--> mqtt
-  mqtt <--> daemons
+  z2m <-->|TCP| coord
+  coord <-->|Zigbee| zigbee
+  mqtt <--> z2m
+  daemons <--> mqtt
   daemons <--> db
   web <--> db
   web <--> mqtt
 
-  reku <-->|CAN| esp
-  esp <-->|ESPHome API| daemons
-  meter -->|BleBox API| daemons
-  cams -->|RTSP| go2rtc
-  cams -->|ONVIF events| daemons
+  daemons <-->|ESPHome API| esp
+  esp <-->|CAN| reku
+  daemons <--- |BleBox API| meter
+  go2rtc <---|RTSP| cams
+  daemons <---|ONVIF events| cams
 
-  PI <--> router
-  router <--> CLOUD
+  classDef default font-size:36px,stroke-width:3px
+  linkStyle default stroke-width:3px
 ```
 
 ## Repository layout
