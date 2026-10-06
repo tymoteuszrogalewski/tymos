@@ -65,8 +65,16 @@ php scripts/render_etc.php           # write the files
 
 The generated files are git-ignored.
 
+## Database
+
+`schema.sql` — MariaDB structure without data (core tables + one example of the per-device `device<ID>` / `stat<ID>` tables, which the code creates automatically).
+
 ## Installation
 
 TymOS expects to live in `/opt/tymos` on a Debian / Raspberry Pi OS host. `scripts/restore.sh` documents the full setup (packages, services, cron) and is the best reference for now.
 
 A step-by-step guide for a fresh install is planned.
+
+## License
+
+MIT — see [LICENSE](LICENSE).

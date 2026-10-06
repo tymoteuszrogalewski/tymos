@@ -20,4 +20,5 @@ tymos/img/esphome_*.png
 *.key
 *.pem
 *.sql
+!schema.sql
 *.sql.gz
