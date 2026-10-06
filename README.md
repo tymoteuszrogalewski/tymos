@@ -1,8 +1,16 @@
 # TymOS
 
-DIY home automation running on a Raspberry Pi — Zigbee devices, heating and hot-water buffer, ventilation, cameras, alarm and dynamic energy prices, all in one lightweight PHP + Python stack.
+DIY home automation running on a Raspberry Pi — Zigbee devices, heating and hot-water buffer, ventilation, cameras, alarm and dynamic energy prices, all in one **super lightweight and super fast** PHP + Python stack.
 
-TymOS is a personal project that runs a real house every day. It is shared as-is: as inspiration, a source of working examples, or a base for your own system.
+TymOS was born after 30 days with Home Assistant and the feeling that I wanted *something more*: lighter, faster, simpler — just better for my house. It has been running a real house every day since.
+
+**Small footprint:**
+
+- ~1.3 MB of source code (~26k lines of PHP, Python and JS) — no frameworks, no containers, no add-on store
+- ~1.3 GB MariaDB for 66 devices with about 4 months of full history (every reading kept)
+- runs comfortably on a Raspberry Pi next to Zigbee2MQTT, Mosquitto and go2rtc
+
+**This is not a ready-to-use product.** There is no installer and no official update channel. TymOS is meant to be **used as-is with your own AI agent**: clone it, let the agent adapt it to your environment, and develop it further for your own needs. Treat my future commits as a stream of new ideas — your agent can pick them up and implement them in your own version quickly.
 
 > Code comments and UI texts are in Polish.
 
