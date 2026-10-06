@@ -6,7 +6,7 @@ TymOS is a personal project that runs a real house every day. It is shared as-is
 
 > Code comments and UI texts are in Polish.
 
-![TymOS kiosk panel](docs/panel.jpg)
+![TymOS kiosk panel](docs/panel.png)
 
 *Wall-mounted kiosk panel: cameras, doorbell, weather, ventilation flow, dynamic energy prices, heating, garden.*
 
