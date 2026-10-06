@@ -36,6 +36,65 @@ TymOS is a personal project that runs a real house every day. It is shared as-is
 | Video | go2rtc |
 | Integrations | ESPHome, BleBox, ONVIF, Telegram Bot API, Open-Meteo, Pstryk |
 
+## Architecture
+
+```mermaid
+%%{init: {"flowchart": {"wrappingWidth": 400}}}%%
+flowchart LR
+  subgraph REMOTE["Remote — Tailscale or any VPN"]
+    iphone["iPhone"]
+    mac["Mac"]
+  end
+
+  subgraph HOME["Home LAN"]
+    ipad["iPad<br/>wall kiosk"]
+
+    subgraph PI["Raspberry Pi — TymOS"]
+      web["Apache + PHP<br/>kiosk · admin · API · actions"]
+      db[("MariaDB")]
+      mqtt["Mosquitto<br/>MQTT"]
+      z2m["Zigbee2MQTT"]
+      daemons["Python daemons<br/>rules engine · bridges<br/>face recognition"]
+      go2rtc["go2rtc"]
+    end
+
+    coord["SLZB-06<br/>Zigbee coordinator, PoE"]
+    zigbee["Zigbee devices<br/>smart plugs with power metering<br/>switches and lights · blind controllers<br/>temperature / humidity · motion<br/>door / window · water leak<br/>irrigation valves"]
+    esp["ESP32 + ESPHome"]
+    reku["Zehnder ComfoAir Q<br/>ventilation"]
+    meter["Pstryk energy meter"]
+    cams["Cameras Tapo C325WB · C320WS<br/>Reolink PoE doorbell"]
+    router["Router + PoE switch"]
+  end
+
+  subgraph CLOUD["Internet"]
+    tg["Telegram Bot API"]
+    prices["Pstryk API · TGE<br/>energy prices"]
+    energa["Energa Operator<br/>meter data"]
+    meteo["Open-Meteo<br/>weather"]
+  end
+
+  REMOTE -.->|VPN| web
+  ipad <-->|HTTPS · WebRTC| PI
+
+  zigbee <-->|Zigbee| coord
+  coord <-->|TCP| z2m
+  z2m <--> mqtt
+  mqtt <--> daemons
+  daemons <--> db
+  web <--> db
+  web <--> mqtt
+
+  reku <-->|CAN| esp
+  esp <-->|ESPHome API| daemons
+  meter -->|BleBox API| daemons
+  cams -->|RTSP| go2rtc
+  cams -->|ONVIF events| daemons
+
+  PI <--> router
+  router <--> CLOUD
+```
+
 ## Repository layout
 
 ```
