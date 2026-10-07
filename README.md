@@ -100,6 +100,25 @@ Some parts of TymOS are also published as small, independent repositories — ea
 - **[blebox-energy-meter](https://github.com/tymoteuszrogalewski/blebox-energy-meter)** — local (LAN, no cloud) reader for the BleBox 3-phase energy meter, e.g. the Pstryk meter: power, voltage and current per phase every few seconds into MySQL/MariaDB or CSV
 - **[zehnder-comfoair-q-esp32](https://github.com/tymoteuszrogalewski/zehnder-comfoair-q-esp32)** — control a Zehnder ComfoAir Q ventilation unit with an ESP32 and CAN bus (ESPHome): stable config with fixes, permanent fan speeds, PHP control over REST, hardware guide with photos
 
+## Bridges — how non-Zigbee devices join in
+
+Inside TymOS every device speaks the same language: a **JSON message on MQTT**. Zigbee devices do it out of the box through Zigbee2MQTT. Everything else gets a small **bridge** — a Python daemon that talks to the device in its own way and publishes the result to MQTT. The main listener (`daemons/tymos.py`) then saves the data and the rules engine sees it, exactly like a Zigbee sensor.
+
+| Bridge | Devices | How it works |
+|---|---|---|
+| **ESPHome** (`bridge_esphome.py`) | ESP32 / ESP8266 with ESPHome, e.g. the ventilation unit | Every 10 s it opens the ESPHome web server event stream (`/events`), reads the full state snapshot, closes the connection and publishes it to `tymos/esphome/<device>`. Short connections instead of one long stream: a Wi-Fi drop never hangs the bridge. One thread per device. Commands go straight to the ESPHome REST API (buttons, switches). |
+| **BleBox** (`bridge_blebox.py`) | BleBox devices, e.g. the 3-phase energy meter | Every 10 s it reads `http://<device>/state`, converts the raw units (0.1 V, mA, mHz, Wh) and publishes power, voltage, current and energy per phase and in total to `tymos/blebox/<device>`. |
+| **ONVIF** (`bridge_onvif.py`) | IP cameras and the video doorbell | Subscribes to camera events (motion, person, vehicle, doorbell ring). The camera pushes each event to a small HTTP server in the bridge (port 8585), so alerts are instant — no polling. Subscriptions are renewed every 8 minutes. Events go to `tymos/onvif/camera/<name>`. The video itself goes through go2rtc. |
+
+All bridges share the same habits:
+
+- **Auto-discovery** — a new device appears in the admin panel by itself.
+- **You choose what to record** — only the fields you switch on in the panel go to the database.
+- **Live reload** — changes made in the panel are picked up without a restart.
+- **Calm about short outages** — one or two failed reads are ignored; an error is logged after 3 failures in a row.
+
+**Adding a new kind of device** means writing one more small bridge that reads the device and publishes JSON to MQTT. Nothing else in TymOS has to change.
+
 ## Repository layout
 
 ```
