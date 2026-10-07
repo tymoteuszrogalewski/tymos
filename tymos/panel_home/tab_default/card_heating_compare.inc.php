@@ -52,7 +52,7 @@ if ($view === 'yearly') {
         $labels_e[] = number_format($ce_eff, 0) . "\npln\n" . number_format($avg_per_kwh, 2) . "\n/kWh";
         $labels_p[] = number_format($cp, 0) . ' zł';
     }
-    $title = 'Koszt grzania bufora · miesiące <span style="opacity:.6;font-size:.75em">(zawiera aboG11f)</span>';
+    $title = 'Prąd vs Pellet (szacunek) · miesiące <span style="opacity:.6;font-size:.75em">(zawiera aboG11f)</span>';
     $x_label = '';
 } else {
     // --- Bieżący miesiąc ---
@@ -92,7 +92,7 @@ if ($view === 'yearly') {
         $ce_d[$d]  = $ce + $abo_share;
         $cp_d[$d]  = $cp;
     }
-    $title = 'Koszt grzania bufora · dni <span style="opacity:.6;font-size:.75em">(zawiera aboG11f)</span>';
+    $title = 'Prąd vs Pellet (szacunek) · dni <span style="opacity:.6;font-size:.75em">(zawiera aboG11f)</span>';
 }
 
 // Temperatura zewnetrzna z tym.device_temp_humid.taras_temp
