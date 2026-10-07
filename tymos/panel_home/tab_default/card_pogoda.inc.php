@@ -8,7 +8,8 @@
  * nie zagluszaly sie nawzajem:
  *   tlo        — zachmurzenie (jasne = slonce, ciemne = chmury), noc dodatkowo przyciemniona
  *   linia      — temperatura, czerwona, bez wasow min/max
- *   slupki     — opad mm/h, zielone, od dolu
+ *   slupki     — opad mm/h, zielone, od dolu; czesc sniegowa slupka biala (gora), nad najwiekszym
+ *                sniegiem doby platek ❄
  *   pasek      — wiatr, kolor wg predkosci (ta sama technika, co pasek mocy nad wykresem cen)
  *   strzalki   — kierunek wiatru, co 3 h pod paskiem
  * Nad wykresem podsumowanie doby wielkimi cyframi: na pytanie „cieplo czy zimno" ma odpowiadac
@@ -17,7 +18,7 @@
  * Wykres ZAWSZE zaczyna sie od dzisiejszej polnocy i nie przesuwa sie z godzina.
  */
 $rows = [];
-$r = $db->query("SELECT ts, temp, clouds, wind, gust, wdir, precip, pprob,
+$r = $db->query("SELECT ts, temp, clouds, wind, gust, wdir, precip, snow, pprob,
                         UNIX_TIMESTAMP(fetched_at) AS fa
                  FROM weather_hourly
                  WHERE ts >= CURDATE() AND ts < CURDATE() + INTERVAL 2 DAY
@@ -180,11 +181,27 @@ function tempAt($byTs, $date, $time) {
   // czyli slupek nie do odroznienia od zera — user porownywal widget z ICM i widzial „brak
   // deszczu" przy realnej mzawce. Pierwiastek podnosi 0,2 mm do ~22% wysokosci, a 4 mm dalej
   // sieduje na 100%: male opady widac, duze sie nie przesterowuja.
+  // SNIEG: `snow` to cm swiezego sniegu, `precip` caly opad w mm wody (7 cm sniegu = 10 mm wody).
+  // Udzial sniegu = woda ze sniegu / caly opad -> taka czesc slupka od gory jest biala. Deszcz ze
+  // sniegiem daje slupek dzielony: zielony dol, bialy gora. Platek ❄ nad najwiekszym sniegiem doby.
+  $snowTop = [];   // dzien => [indeks, cm]
+  foreach ($rows as $i => $x) {
+      $s = (float)($x['snow'] ?? 0); if ($s <= 0) continue;
+      $dz = substr($x['ts'], 0, 10);
+      if (!isset($snowTop[$dz]) || $s > $snowTop[$dz][1]) $snowTop[$dz] = [$i, $s];
+  }
+  $snowIdx = array_column($snowTop, 0);
   foreach ($rows as $i => $x):
       $p = (float)$x['precip']; if ($p <= 0) continue;
-      $bh = max(4, sqrt(min(1.0, $p / 4.0)) * ($H_PLOT * 0.62)); ?>
-    <rect x="<?= round($xOf($i) + 1, 1) ?>" y="<?= round($Y_PLOT + $H_PLOT - $bh, 1) ?>"
-          width="<?= max(2, round($colW - 2, 1)) ?>" height="<?= round($bh, 1) ?>" fill="#22c55e" opacity=".92"/>
+      $bh = max(4, sqrt(min(1.0, $p / 4.0)) * ($H_PLOT * 0.62));
+      $sh = $bh * min(1.0, ((float)($x['snow'] ?? 0) / 0.7) / $p);
+      $bx = round($xOf($i) + 1, 1); $bw = max(2, round($colW - 2, 1)); $by = $Y_PLOT + $H_PLOT - $bh; ?>
+    <rect x="<?= $bx ?>" y="<?= round($by, 1) ?>" width="<?= $bw ?>" height="<?= round($bh, 1) ?>" fill="#22c55e" opacity=".92"/>
+    <?php if ($sh > 0): ?>
+    <rect x="<?= $bx ?>" y="<?= round($by, 1) ?>" width="<?= $bw ?>" height="<?= round($sh, 1) ?>" fill="#f1f5f9" opacity=".95"/>
+    <?php endif; if (in_array($i, $snowIdx, true)): ?>
+    <text x="<?= round($bx + $bw / 2, 1) ?>" y="<?= round($by - 3, 1) ?>" text-anchor="middle" font-size="11" fill="#f1f5f9">❄</text>
+    <?php endif; ?>
   <?php endforeach; ?>
 
   <?php // granica doby

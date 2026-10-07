@@ -189,6 +189,7 @@ CREATE TABLE `weather_hourly` (
   `gust` decimal(4,1) DEFAULT NULL,
   `wdir` smallint(5) unsigned DEFAULT NULL,
   `precip` decimal(4,1) DEFAULT NULL,
+  `snow` decimal(4,1) DEFAULT NULL,
   `pprob` tinyint(3) unsigned DEFAULT NULL,
   `fetched_at` datetime NOT NULL,
   PRIMARY KEY (`ts`)

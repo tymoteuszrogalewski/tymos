@@ -18,6 +18,11 @@
  * (ICON-EU) i dwa rozdzielajace konwekcje (ICON-D2 2,2 km, DMI HARMONIE 2 km). GFS odrzucony jako
  * najgrubszy (13 km). Model bez danej godziny (koniec horyzontu) jest po prostu pomijany.
  *
+ * SNIEG (2026-10-07): `snow` = mediana `snowfall` z tych samych pieciu modeli, w CENTYMETRACH swiezego
+ * sniegu (open-meteo: 7 cm sniegu = 10 mm wody). `precip` dalej zawiera CALY opad w mm wody, wiec
+ * karta liczy z obu udzial sniegu w slupku. Nie przetestowane na prawdziwej zimie — sprawdzic przy
+ * pierwszym sniegu.
+ *
  * `pprob` NIE JEST prawdopodobienstwem z modelu — `ukmo_seamless` w ogole go nie zwraca (null).
  * Trzymamy tam **ZGODNOSC MODELI**: procent modeli, ktore w tej godzinie daja >= 0,1 mm. To nasz
  * odpowiednik panelu „szansa opadu" z ICM. Karta tego jeszcze nie rysuje.
@@ -42,7 +47,7 @@ const BAZA = 'ukmo_seamless';
 const OPAD_MODELE = ['ukmo_seamless', 'icon_eu', 'icon_d2', 'ecmwf_ifs025', 'dmi_harmonie_arome_europe'];
 const URL = 'https://api.open-meteo.com/v1/forecast'
           . '?latitude=' . LAT . '&longitude=' . LON
-          . '&hourly=temperature_2m,cloud_cover,wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation'
+          . '&hourly=temperature_2m,cloud_cover,wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation,snowfall'
           . '&daily=temperature_2m_min,temperature_2m_max,sunrise,sunset'
           . '&timezone=Europe%2FWarsaw&forecast_days=2&models=' . 'ukmo_seamless,icon_eu,icon_d2,ecmwf_ifs025,dmi_harmonie_arome_europe';
 
@@ -96,14 +101,28 @@ function opadMediana($h, $i) {
     return [round($med, 1), (int)round(100 * $zgoda / $c)];
 }
 
+// Mediana swiezego sniegu (cm) z OPAD_MODELE dla jednej godziny — jak opadMediana, bez zgodnosci.
+function sniegMediana($h, $i) {
+    $v = [];
+    foreach (OPAD_MODELE as $m) {
+        $col = 'snowfall_' . $m;
+        if (isset($h[$col][$i]) && $h[$col][$i] !== null) $v[] = (float)$h[$col][$i];
+    }
+    if (!$v) return null;
+    sort($v);
+    $c = count($v);
+    return round(($c % 2) ? $v[intdiv($c, 2)] : ($v[$c / 2 - 1] + $v[$c / 2]) / 2, 1);
+}
+
 // REPLACE, nie INSERT: kolejny przebieg NADPISUJE te same godziny nowa prognoza. O to chodzi —
 // prognoza na 18:00 wyglada inaczej o 8 rano niz o 15, a my chcemy zawsze najswiezsza.
-$st = $db->prepare("REPLACE INTO weather_hourly (ts,temp,clouds,wind,gust,wdir,precip,pprob,fetched_at)
-                    VALUES (?,?,?,?,?,?,?,?,?)");
+$st = $db->prepare("REPLACE INTO weather_hourly (ts,temp,clouds,wind,gust,wdir,precip,snow,pprob,fetched_at)
+                    VALUES (?,?,?,?,?,?,?,?,?,?)");
 $opadSum = [];   // suma medianowego opadu per doba — zastepuje `precipitation_sum` z API
 for ($i = 0; $i < $n; $i++) {
     $ts = str_replace('T', ' ', $h['time'][$i]) . ':00';
     [$precip, $pprob] = opadMediana($h, $i);
+    $snow    = sniegMediana($h, $i);
     $temp    = $h['temperature_2m_' . BAZA][$i];
     $clouds  = $h['cloud_cover_' . BAZA][$i];
     $wind    = $h['wind_speed_10m_' . BAZA][$i];
@@ -114,8 +133,8 @@ for ($i = 0; $i < $n; $i++) {
     // TYPY W bind_param SA KRYTYCZNE: `precip` to milimetry z jednym miejscem po przecinku, wiec
     // musi byc 'd'. Do 2026-09-02 stalo tu 'i' i KAZDA mzawka (0,1-0,4 mm/h) wpadala do bazy jako
     // 0.0 — widget rysowal czysta pogode, gdy ICM pokazywal opad. Kolejnosc typow:
-    // ts s | temp d | clouds i | wind d | gust d | wdir i | precip d | pprob i | fetched_at s
-    $st->bind_param('sdiddidis', $ts, $temp, $clouds, $wind, $gust, $wdir, $precip, $pprob, $now);
+    // ts s | temp d | clouds i | wind d | gust d | wdir i | precip d | snow d | pprob i | fetched_at s
+    $st->bind_param('sdiddiddis', $ts, $temp, $clouds, $wind, $gust, $wdir, $precip, $snow, $pprob, $now);
     $st->execute();
 }
 $st->close();
