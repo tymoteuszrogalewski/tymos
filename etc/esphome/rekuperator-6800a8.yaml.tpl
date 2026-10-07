@@ -74,6 +74,12 @@ fan:
     on_turn_on: !remove
     on_turn_off: !remove
 
+# API natywne: TymOS go NIE uzywa (gada przez REST /events i /button). Domyslnie ESPHome restartuje
+# urzadzenie, gdy przez 15 min nie polaczy sie zaden klient API — przez to ESP restartowal sie
+# dokladnie co 15 min (zmierzone 2026-10-07 po uptime). 0s = nigdy.
+api:
+  reboot_timeout: 0s
+
 wifi:
   power_save_mode: none
   fast_connect: true
