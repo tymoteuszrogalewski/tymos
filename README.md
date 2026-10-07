@@ -65,6 +65,7 @@ Installing TymOS on your own hardware with an AI agent takes just a few minutes:
 
 <table>
 <tr><td width="50%" valign="top"><img src="docs/features/telegram.png" width="100%"></td><td width="50%" valign="top"><b>Telegram</b> — camera alerts with a snapshot and a short video clip. Face recognition says who it is (with confidence), or marks the person as unknown; the message also shows the camera, detection details and processing time.<br><br>The same bot sends alarm notifications, device failures (missing readings, offline sensors), with separate normal and alert channels and night quiet hours.</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/features/telegram-doorbell.png" width="100%"></td><td width="50%" valign="top"><b>Doorbell ring</b> — when someone rings, the alert channel gets a doorbell snapshot plus the parking camera view, with a link that opens TymOS straight to the doorbell call — answer from anywhere.</td></tr>
 </table>
 
 ### Admin panel
