@@ -10,8 +10,8 @@ TymOS was born after 30 days with Home Assistant and the feeling that I wanted *
 
 **Small footprint:**
 
-- ~1.3 MB of source code (~26k lines of PHP, Python and JS) — no frameworks, no containers, no add-on store
-- ~1.3 GB MariaDB for 66 devices with about 4 months of full history (every reading kept)
+- About 1.3 MB of source code (about 26k lines of PHP, Python and JS) — no frameworks, no containers, no add-on store
+- About 1.3 GB MariaDB for 66 devices with about 4 months of full history (every reading kept)
 - runs comfortably on a Raspberry Pi next to Zigbee2MQTT, Mosquitto and go2rtc
 
 **This is not a ready-to-use product.** There is no installer and no official update channel. TymOS is meant to be **used as-is with your own AI agent**: clone it, let the agent adapt it to your environment, and develop it further for your own needs. Treat my future commits as a stream of new ideas — your agent can pick them up and implement them in your own version quickly.
