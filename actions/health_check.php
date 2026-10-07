@@ -36,19 +36,8 @@ while ($a = $res->fetch_assoc()) {
 
     $tag = "akcja#{$id} '{$name}'";
 
-    // 1. Spojnosc trigger_type vs trigger_config
-    $hasCron = false;
-    foreach ($triggers as $tr) {
-        if (($tr['type'] ?? '') === 'cron') { $hasCron = true; break; }
-    }
-    if ($tt === 'cron' && !$hasCron) {
-        tymos_log('WARN', "{$tag}: trigger_type='cron' ale brak 'cron' typu w trigger_config");
-        $issues++;
-    }
-    if ($tt !== 'cron' && $hasCron) {
-        tymos_log('WARN', "{$tag}: zawiera 'cron' trigger ale trigger_type='{$tt}' — akcja nie odpali sie przez scheduler!");
-        $issues++;
-    }
+    // 1. (usuniete) Spojnosc trigger_type vs trigger_config — daemon odpala akcje wg trigger_config,
+    //    trigger_type sluzy tylko do wyswietlania, wiec niezgodnosc nie blokuje akcji (falszywe alarmy).
 
     // 2. Cron expression sanity (5 pol)
     foreach ($triggers as $i => $tr) {
