@@ -49,6 +49,27 @@ Installing TymOS on your own hardware with an AI agent takes just a few minutes:
 | Video | go2rtc |
 | Integrations | ESPHome, BleBox, ONVIF, Telegram Bot API, Open-Meteo, Pstryk |
 
+## Screenshots
+
+### Kiosk panel
+
+<table>
+<tr><td width="50%" valign="top"><img src="docs/features/camera-parking.jpg" width="100%"><br><sub><b>Cameras</b> — live view (WebRTC) with weather overlay, alarm shields and camera switcher</sub></td><td width="50%" valign="top"><img src="docs/features/doorbell.png" width="100%"><br><sub><b>Video doorbell</b> — answer with two-way audio, mute the chime</sub></td></tr>
+<tr><td width="50%" valign="top"><img src="docs/features/ventilation.png" width="100%"><br><sub><b>Ventilation</b> — live heat-recovery flow: supply / extract / outdoor / exhaust temperature and humidity, fan speed, bypass, frost protection</sub></td><td width="50%" valign="top"><img src="docs/features/heating.png" width="100%"><br><sub><b>Heating</b> — room thermostats with current and target temperature</sub></td></tr>
+<tr><td width="50%" valign="top"><img src="docs/features/climate-chart.png" width="100%"><br><sub><b>Climate chart</b> — indoor, sun and shade temperature, humidity, free-cooling and coolers</sub></td><td width="50%" valign="top"><img src="docs/features/weather.png" width="100%"><br><sub><b>Weather</b> — 48-hour forecast: temperature, cloud cover, wind direction, day and night</sub></td></tr>
+<tr><td width="50%" valign="top"><img src="docs/features/season-settings.png" width="100%"><br><sub><b>Season settings</b> — heating / cooling / off, pellet boiler, underfloor heating, pellet cost and the price threshold for electric heaters</sub></td><td width="50%" valign="top"><img src="docs/features/irrigation.png" width="100%"><br><sub><b>Irrigation</b> — zones, duration, days, morning / evening runs, frost skip</sub></td></tr>
+<tr><td width="50%" valign="top"><img src="docs/features/waste-calendar.png" width="100%"><br><sub><b>Waste collection calendar</b> — colour-coded pickup days, edited with one tap</sub></td><td width="50%" valign="top"><img src="docs/features/room-tile.png" width="100%"><br><sub><b>Room tile</b> — temperature, humidity and blind control</sub></td></tr>
+</table>
+
+### Admin panel
+
+<table>
+<tr><td width="50%" valign="top"><img src="docs/features/admin-devices.png" width="100%"><br><sub><b>Devices</b> — all Zigbee, camera, ESPHome and BleBox devices with live state</sub></td><td width="50%" valign="top"><img src="docs/features/admin-device-detail.png" width="100%"><br><sub><b>Device detail</b> — control, which fields to record, raw data</sub></td></tr>
+<tr><td width="50%" valign="top"><img src="docs/features/admin-actions.png" width="100%"><br><sub><b>Actions</b> — the rules engine: every automation with its last run</sub></td><td width="50%" valign="top"><img src="docs/features/admin-action-editor.png" width="100%"><br><sub><b>Action editor</b> — when / if / then, no code needed</sub></td></tr>
+<tr><td width="50%" valign="top"><img src="docs/features/admin-helpers.png" width="100%"><br><sub><b>Helpers</b> — global variables used by automations</sub></td><td width="50%" valign="top"><img src="docs/features/admin-system.png" width="100%"><br><sub><b>System</b> — daemon status and restart</sub></td></tr>
+<tr><td width="50%" valign="top"><img src="docs/features/admin-batteries.png" width="100%"><br><sub><b>Batteries</b> — battery level of every wireless sensor</sub></td><td width="50%" valign="top"><img src="docs/features/admin-sounds.png" width="100%"><br><sub><b>Voice announcements</b> — messages played on the wall tablet</sub></td></tr>
+</table>
+
 ## Architecture
 
 ![TymOS architecture](docs/architecture-4.svg)
