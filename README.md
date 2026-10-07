@@ -59,6 +59,7 @@ Installing TymOS on your own hardware with an AI agent takes just a few minutes:
 Some parts of TymOS are also published as small, independent repositories — easy to use without the whole system:
 
 - **[energa-mojlicznik](https://github.com/tymoteuszrogalewski/energa-mojlicznik)** — hourly electricity usage import from Energa Operator "Mój Licznik" into MySQL/MariaDB or CSV (import, PV export, full history)
+- **[pstryk-api](https://github.com/tymoteuszrogalewski/pstryk-api)** — hourly dynamic electricity prices, usage and costs from the Pstryk API into MySQL/MariaDB or CSV (today + tomorrow, cheap hours, PV, full history)
 
 ## Repository layout
 
