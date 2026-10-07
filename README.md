@@ -54,6 +54,12 @@ Installing TymOS on your own hardware with an AI agent takes just a few minutes:
 
 ![TymOS architecture](docs/architecture-4.svg)
 
+## Standalone modules
+
+Some parts of TymOS are also published as small, independent repositories — easy to use without the whole system:
+
+- **[energa-mojlicznik](https://github.com/tymoteuszrogalewski/energa-mojlicznik)** — hourly electricity usage import from Energa Operator "Mój Licznik" into MySQL/MariaDB or CSV (import, PV export, full history)
+
 ## Repository layout
 
 ```
