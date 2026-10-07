@@ -61,6 +61,13 @@ Installing TymOS on your own hardware with an AI agent takes just a few minutes:
 <tr><td width="100%" colspan="2" valign="top"><img src="docs/features/weather.png" width="100%"><br><sub><b>Weather</b> — 48-hour forecast: temperature, cloud cover, wind direction, day and night</sub></td></tr>
 </table>
 
+### Energy
+
+<table>
+<tr><td width="50%" valign="top"><img src="docs/features/energy-prices.png" width="100%"><br><sub><b>Dynamic prices</b> — hourly prices for today (green cheap, red expensive), tomorrow's prices (white line; dashed = forecast from the power exchange before the supplier publishes them) and the house usage (blue dashed line)</sub></td>
+<td width="50%" valign="top"><img src="docs/features/heating-cost-estimate.png" width="100%"><br><sub><b>What-if estimates</b> — the real monthly cost of heating hot water with electric heaters at the cheapest hours, compared with an <b>estimate</b> of what the same heat would cost with the pellet boiler at today's pellet price. Build your own "what would it cost if…" charts from the data you already collect.</sub></td></tr>
+</table>
+
 ### Notifications
 
 <table>
