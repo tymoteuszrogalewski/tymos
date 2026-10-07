@@ -64,7 +64,7 @@ Installing TymOS on your own hardware with an AI agent takes just a few minutes:
 ### Notifications
 
 <table>
-<tr><td width="50%" valign="top"><img src="docs/features/telegram.png" width="100%"></td><td width="50%" valign="top"><b>Telegram</b> — camera alerts with a snapshot and a short video clip. Face recognition says who it is (with confidence), or marks the person as unknown; the message also shows the camera, detection details and processing time.<br><br>The same bot sends alarm notifications, device failures (missing readings, offline sensors) and daily reports, with separate normal and alert channels and night quiet hours.</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/features/telegram.png" width="100%"></td><td width="50%" valign="top"><b>Telegram</b> — camera alerts with a snapshot and a short video clip. Face recognition says who it is (with confidence), or marks the person as unknown; the message also shows the camera, detection details and processing time.<br><br>The same bot sends alarm notifications, device failures (missing readings, offline sensors), with separate normal and alert channels and night quiet hours.</td></tr>
 </table>
 
 ### Admin panel
