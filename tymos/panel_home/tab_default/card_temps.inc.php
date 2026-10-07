@@ -238,6 +238,7 @@ endif; // card_expanded()
     <button class="tc-vbtn" data-tc="temp">Temperatury</button>
     <button class="tc-vbtn" data-tc="split">Rozbicie</button>
     <button class="tc-vbtn" data-tc="pellet">Pellet</button>
+    <button class="tc-vbtn" data-tc="compare">Prąd vs Pellet</button>
   </div>
   <div id="card_tc_rep" class="sw-zone" style="position:relative;display:none;">
     <div class="card-sw"><div style="text-align:center;color:#666;font-size:12px;padding:30px 0;">…</div></div>
@@ -303,16 +304,20 @@ endif; // card_expanded()
       bufor: (function(){ var a = []; for (var i = 7; i >= 0; i--)
                   a.push({panel:'home', tab:'default', card:'bufor', params:{days_back: i}}); return a; })(),
       split: [{panel:'home', tab:'default', card:'buffer_split', params:{}}],
-      // Pellet: koszty i porownanie z pradem — jedna lista pod swipe'em
+      // Pellet: FAKTYCZNE koszty (spalony pellet + grzalki), miesiace i lata
       pellet: [
           {panel:'home', tab:'default', card:'pellet_month',    params:{}},
-          {panel:'home', tab:'default', card:'pellet_year',     params:{}},
+          {panel:'home', tab:'default', card:'pellet_year',     params:{}}
+      ],
+      // Prad vs Pellet: SZACUNKI — ile kosztowaloby grzanie pelletem wg dzisiejszej ceny sklepowej
+      // (2026-10-07: wydzielone z „Pellet", bo faktyczne i szacunkowe wykresy mieszaly sie w jednym swipe)
+      compare: [
           {panel:'home', tab:'default', card:'heating_compare', params:{hc_view:'monthly'}},
           {panel:'home', tab:'default', card:'heating_compare', params:{hc_view:'yearly'}},
           {panel:'home', tab:'default', card:'energia_total',   params:{}}
       ]
   };
-  var TC_START = { bufor: 7, split: 0, pellet: 0 };
+  var TC_START = { bufor: 7, split: 0, pellet: 0, compare: 0 };
 
   function tcTab(name) {
       window.tcTab = name;
