@@ -8,7 +8,7 @@
  * nie zagluszaly sie nawzajem:
  *   tlo        — zachmurzenie (jasne = slonce, ciemne = chmury), noc dodatkowo przyciemniona
  *   linia      — temperatura, czerwona, bez wasow min/max
- *   slupki     — opad mm/h, niebieskie, od dolu
+ *   slupki     — opad mm/h, zielone, od dolu
  *   pasek      — wiatr, kolor wg predkosci (ta sama technika, co pasek mocy nad wykresem cen)
  *   strzalki   — kierunek wiatru, co 3 h pod paskiem
  * Nad wykresem podsumowanie doby wielkimi cyframi: na pytanie „cieplo czy zimno" ma odpowiadac
