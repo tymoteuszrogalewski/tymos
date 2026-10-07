@@ -55,7 +55,7 @@ const NIGHT_FROM   = 22;    // godzina, od ktorej obowiazuje cisza
 const NIGHT_TO     = 6;     // godzina, o ktorej cisza sie konczy
 const NIGHT_MARGIN = 1.0;   // ile stopni nad komfortem uznajemy jeszcze za "wystarczajaco dobrze"
 function fresh($tab, $col, $max = FRESH_MIN) {
-    $age = val("SELECT TIMESTAMPDIFF(MINUTE, MAX(ts), NOW()) FROM {$tab} WHERE {$col} IS NOT NULL");
+    $age = val("SELECT TIMESTAMPDIFF(MINUTE, ts, NOW()) FROM {$tab} WHERE {$col} IS NOT NULL ORDER BY ts DESC LIMIT 1");
     if ($age === null || (int)$age > $max) return null;
     return val("SELECT {$col} FROM {$tab} WHERE {$col} IS NOT NULL ORDER BY ts DESC LIMIT 1");
 }
@@ -146,7 +146,7 @@ $fcAvail = (val("SELECT available FROM devices WHERE id=1044") === '1');
 // T_out = cien (dev10 realne powietrze) swiezy <1h, fallback reku outdoor (dev527)
 // dev10 jest bateryjny na slabej galezi mesha — zmierzony rekord normalnej przerwy 208 min,
 // wiec prog 4 h (przy 1 h gasilby free-cooling srednio raz w tygodniu bez powodu).
-$cienRow = $db->query("SELECT temperature, UNIX_TIMESTAMP(ts) AS ts FROM device10 WHERE temperature IS NOT NULL ORDER BY ts DESC LIMIT 1")->fetch_assoc();
+$cienRow = $db->query("SELECT temperature, UNIX_TIMESTAMP(ts) AS ts FROM device10 WHERE temperature IS NOT NULL ORDER BY device10.ts DESC LIMIT 1")->fetch_assoc();
 $Tout = ($cienRow && (time() - (int)$cienRow['ts'] < 240 * 60)) ? (float)$cienRow['temperature'] : null;
 if ($Tout === null) { $t = val("SELECT outdoor_air_temperature FROM device527 WHERE outdoor_air_temperature IS NOT NULL ORDER BY ts DESC LIMIT 1"); $Tout = is_numeric($t) ? (float)$t : null; }
 

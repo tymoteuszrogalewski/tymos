@@ -145,7 +145,7 @@ if (!$state) {
         exit(0);
     }
 
-    $ageOut = $db->query("SELECT TIMESTAMPDIFF(MINUTE, MAX(ts), NOW()) AS a FROM device10 WHERE temperature IS NOT NULL")->fetch_assoc()['a'] ?? null;
+    $ageOut = $db->query("SELECT TIMESTAMPDIFF(MINUTE, ts, NOW()) AS a FROM device10 WHERE temperature IS NOT NULL ORDER BY ts DESC LIMIT 1")->fetch_assoc()['a'] ?? null;
     if ($ageOut === null || (int)$ageOut > $OUT_MAX_AGE) {
         logMsg($db, "Brak swiezej temp dworu (" . ($ageOut === null ? 'brak danych' : "{$ageOut} min") . ") - nie podlewam");
         exit(0);

@@ -103,8 +103,8 @@ function reku_fan($mode, $curFan = null) {
 }
 
 // --- czujniki zewnetrzne: MIN ze swiezych (dev527 outdoor + Patio dev10). ---
-$row_reku  = $db->query("SELECT outdoor_air_temperature AS t, UNIX_TIMESTAMP(ts) AS ts FROM device527 WHERE outdoor_air_temperature IS NOT NULL ORDER BY ts DESC LIMIT 1")->fetch_assoc();
-$row_taras = $db->query("SELECT temperature AS t, UNIX_TIMESTAMP(ts) AS ts FROM device10 WHERE temperature IS NOT NULL ORDER BY ts DESC LIMIT 1")->fetch_assoc();
+$row_reku  = $db->query("SELECT outdoor_air_temperature AS t, UNIX_TIMESTAMP(ts) AS ts FROM device527 WHERE outdoor_air_temperature IS NOT NULL ORDER BY device527.ts DESC LIMIT 1")->fetch_assoc();
+$row_taras = $db->query("SELECT temperature AS t, UNIX_TIMESTAMP(ts) AS ts FROM device10 WHERE temperature IS NOT NULL ORDER BY device10.ts DESC LIMIT 1")->fetch_assoc();
 
 $now = time();
 $cands = [];

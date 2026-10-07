@@ -51,7 +51,7 @@ if ($db) {
     $res = $db->query("
         SELECT HOUR(ts) AS h, full_price_pstryk_est
         FROM energa
-        WHERE DATE(ts) = DATE_ADD('$dateParam', INTERVAL 1 DAY)
+        WHERE ts >= DATE_ADD('$dateParam', INTERVAL 1 DAY) AND ts < DATE_ADD('$dateParam', INTERVAL 2 DAY)
         ORDER BY h
     ");
     while ($row = $res->fetch_assoc()) {
@@ -63,7 +63,7 @@ if ($db) {
     $res = $db->query("
         SELECT HOUR(ts) AS h, full_price_pstryk
         FROM energa
-        WHERE DATE(ts) = DATE_ADD('$dateParam', INTERVAL 1 DAY)
+        WHERE ts >= DATE_ADD('$dateParam', INTERVAL 1 DAY) AND ts < DATE_ADD('$dateParam', INTERVAL 2 DAY)
         ORDER BY h
     ");
     while ($row = $res->fetch_assoc()) {

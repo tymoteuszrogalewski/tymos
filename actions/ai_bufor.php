@@ -185,7 +185,7 @@ foreach ([3, 1] as $gid) {
     if ($przerwy === 0) { $grzejeCiagle = true; break; }
 }
 if ($grzejeCiagle) {
-    $ageTop = val("SELECT TIMESTAMPDIFF(MINUTE, MAX(ts), NOW()) FROM device12 WHERE temperature IS NOT NULL");
+    $ageTop = val("SELECT TIMESTAMPDIFF(MINUTE, ts, NOW()) FROM device12 WHERE temperature IS NOT NULL ORDER BY ts DESC LIMIT 1");
     if ($ageTop === null || (int)$ageTop > NOGAIN_MIN) {
         lockout("brak odczytu temperatury bufora podczas grzania",
                 "Grzałki pracują od co najmniej " . NOGAIN_MIN . " min, a czujnik góry bufora milczy od "

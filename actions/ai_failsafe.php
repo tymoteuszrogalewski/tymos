@@ -72,7 +72,7 @@ $TARGETS = [
 
 // Wiek odczytu w minutach; null = tabela pusta / brak takiej kolumny = traktujemy jak brak kontaktu.
 function sensorAge($s) {
-    $a = val("SELECT TIMESTAMPDIFF(MINUTE, MAX(ts), NOW()) FROM {$s['tab']} WHERE {$s['col']} IS NOT NULL");
+    $a = val("SELECT TIMESTAMPDIFF(MINUTE, ts, NOW()) FROM {$s['tab']} WHERE {$s['col']} IS NOT NULL ORDER BY ts DESC LIMIT 1");
     return ($a === null) ? null : (int)$a;
 }
 function fmtAge($m) {
