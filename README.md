@@ -115,7 +115,7 @@ All bridges share the same habits:
 - **Auto-discovery** — a new device appears in the admin panel by itself.
 - **You choose what to record** — only the fields you switch on in the panel go to the database.
 - **Live reload** — changes made in the panel are picked up without a restart.
-- **Calm about short outages** — a lost connection is simply retried on the next round; the BleBox bridge logs an error only after 3 failed reads in a row.
+- **Calm about short outages** — a lost connection is simply retried on the next round; the ESPHome and BleBox bridges log a problem only after several failed reads in a row, and log again when the device is back.
 
 **Adding a new kind of device** means writing one more small bridge that reads the device and publishes JSON to MQTT. Nothing else in TymOS has to change.
 
