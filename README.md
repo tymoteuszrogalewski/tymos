@@ -2,7 +2,7 @@
 
 > **Fully coded by Claude AI** — not a single line of code was written manually by a human. The human part was the ideas, the requirements and the direction; Claude wrote all the code.
 
-DIY home automation running on a Raspberry Pi — Zigbee devices, heating and hot-water buffer, ventilation, cameras, alarm and dynamic energy prices, all in one **super lightweight and super fast** PHP + Python stack.
+Super-fast, lightweight smart home for Raspberry Pi with secure VPN access: Zigbee devices, heating, hot-water buffer, ventilation, cameras, alarm and dynamic energy prices in one panel.
 
 <h3>Works with:<br>Zigbee · Sonoff · TP-Link Tapo · Tuya · Reolink · ONVIF cameras · SMLIGHT SLZB-06 · ESPHome · Zehnder ComfoAir Q · BleBox · Pstryk · Energa · TGE · Telegram · Tailscale · iPad kiosk</h3>
 
