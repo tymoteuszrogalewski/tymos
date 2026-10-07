@@ -36,6 +36,7 @@ Installing TymOS on your own hardware with an AI agent takes just a few minutes:
 - **Blinds & lights** — sun-position-based blind control, motion lights, multi-click switches
 - **Notifications** — Telegram (normal + alert channel, night quiet hours) and voice announcements on a wall tablet
 - **Kiosk UI** — fast single-page panel for a wall-mounted iPad, plus an admin panel (devices, actions, helpers, logs, sounds, system)
+- **Tuya & TP-Link Tapo** — also supported (Wi-Fi plugs and devices); not used in this house at the moment, but they worked well in the early setup
 
 ## Stack
 
