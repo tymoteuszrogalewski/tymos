@@ -77,6 +77,15 @@ Installing TymOS on your own hardware with an AI agent takes just a few minutes:
 <tr><td width="50%" valign="top"><img src="docs/features/admin-batteries.png" width="100%"><br><sub><b>Batteries</b> — battery level of every wireless sensor</sub></td><td width="50%" valign="top"><img src="docs/features/admin-sounds.png" width="100%"><br><sub><b>Voice announcements</b> — messages played on the wall tablet</sub></td></tr>
 </table>
 
+## Hardware in the house
+
+<table>
+<tr><td width="50%" valign="top"><img src="docs/hardware/raspberry-pi.jpg" width="100%"><br><sub><b>Raspberry Pi 5</b> — runs everything: web panel, database, MQTT, Zigbee2MQTT, go2rtc and the Python daemons</sub></td><td width="50%" valign="top"><img src="docs/hardware/energy-meter.jpg" width="100%"><br><sub><b>Energy meter</b> — 3-phase BleBox meter (supplied by Pstryk) on the DIN rail, read locally every few seconds</sub></td></tr>
+<tr><td width="50%" valign="top"><img src="docs/hardware/irrigation-box.jpg" width="100%"><br><sub><b>Irrigation box</b> — two 4-channel Zigbee relays drive 8 garden valve sections</sub></td><td width="50%" valign="top"><img src="docs/hardware/irrigation-relay.jpg" width="100%"><br><sub><b>Zigbee relay</b> — Tuya ZG-005-RF, 4 channels with NO/NC contacts, 85–250 V</sub></td></tr>
+</table>
+
+The ventilation module (ESP32 + CAN on a Zehnder ComfoAir Q) has its own repository with a full hardware guide — see [Standalone modules](#standalone-modules).
+
 ## Architecture
 
 ![TymOS architecture](docs/architecture-4.svg)
