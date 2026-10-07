@@ -176,7 +176,7 @@ Paste this into your agent:
 
 ```
 Study the project https://github.com/tymoteuszrogalewski/tymos
-(README, schema.sql, tymos/config.example.inc.php, scripts/restore.sh, etc/).
+(README, docs/INSTALL.md, schema.sql, tymos/config.example.inc.php, etc/).
 Then help me install and adapt it on my server. Before installing anything, ask me about:
 - the target server and directory,
 - the web server (Apache / nginx) and PHP version,
@@ -191,9 +191,9 @@ The agent can then install packages, create the database from `schema.sql`, prep
 
 ## Installation
 
-TymOS expects to live in `/opt/tymos` on a Debian / Raspberry Pi OS host. `scripts/restore.sh` documents the full setup (packages, services, cron) and is the best reference for now.
+**[Step-by-step installation guide → docs/INSTALL.md](docs/INSTALL.md)**
 
-A step-by-step guide for a fresh install is planned.
+Fresh Raspberry Pi / Debian 13 → working TymOS: packages, configuration, database, MQTT, web panel with HTTPS, daemons, Zigbee2MQTT, and optional cameras (go2rtc), Tailscale VPN and ESPHome.
 
 ## License
 
