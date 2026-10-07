@@ -59,6 +59,7 @@ Some parts of TymOS are also published as small, independent repositories — ea
 
 - **[energa-mojlicznik](https://github.com/tymoteuszrogalewski/energa-mojlicznik)** — hourly electricity usage import from Energa Operator "Mój Licznik" into MySQL/MariaDB or CSV (import, PV export, full history)
 - **[pstryk-api](https://github.com/tymoteuszrogalewski/pstryk-api)** — hourly dynamic electricity prices, usage and costs from the Pstryk API into MySQL/MariaDB or CSV (today + tomorrow, cheap hours, PV, full history)
+- **[tge-rdn](https://github.com/tymoteuszrogalewski/tge-rdn)** — Polish Power Exchange (TGE) day-ahead prices into MySQL/MariaDB or CSV (Fixing I and II, continuous trading, hourly and 15-minute products, tomorrow's prices)
 
 ## Repository layout
 
