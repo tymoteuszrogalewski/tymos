@@ -20,8 +20,7 @@ Installing TymOS on your own hardware with an AI agent takes just a few minutes:
 
 > Code comments and UI texts are in Polish.
 
-![TymOS kiosk panel](docs/panel.png)
-
+![TymOS kiosk panel](docs/panel.png)<br>
 *Wall-mounted kiosk panel: cameras, doorbell, weather, ventilation flow, dynamic energy prices, heating, garden.*
 
 ## What it does
