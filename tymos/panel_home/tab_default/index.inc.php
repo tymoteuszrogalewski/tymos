@@ -30,6 +30,8 @@ return [
             [
                 ['name' => 'camera_doorbell', 'refresh' => 0],
                 ['name' => 'klimat', 'refresh' => 0],
+                // HiFi (Technics) pod ogrzewaniem — wypelnia pusty dol lewej kolumny (2026-10-08, user)
+                ['name' => 'hifi', 'refresh' => 0],
             ],
             [
                 // Pogoda NAD cenami: prognoza na dzis i jutro (weather_hourly, import co 30 min).
