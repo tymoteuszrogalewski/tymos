@@ -235,6 +235,14 @@ function tempAt($byTs, $date, $time) {
       }
       if ($best !== null) $marks[] = [$best, $bestT, true];
   }
+  // Etykieta wschodu / zachodu blizej niz 2 h od dziennego maksimum nachodzila na nie (2026-10-08:
+  // 21° i 20° jedna na drugiej) — wtedy zostaje samo maksimum.
+  $maxIdx = array_map(fn($m) => $m[0], array_filter($marks, fn($m) => $m[2]));
+  $marks = array_filter($marks, function ($m) use ($maxIdx) {
+      if ($m[2]) return true;
+      foreach ($maxIdx as $mi) if (abs($m[0] - $mi) < 2) return false;
+      return true;
+  });
   foreach ($marks as [$i, $t, $isMax]):
       $cx = $xOf($i) + $colW / 2;
       $anchor = $cx < $L + 26 ? 'start' : ($cx > $W - $Rr - 26 ? 'end' : 'middle');
