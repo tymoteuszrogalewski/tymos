@@ -103,7 +103,7 @@ The ventilation module (ESP32 + CAN on a Zehnder ComfoAir Q) has its own reposit
 
 ## Architecture
 
-![TymOS architecture](docs/architecture-4.svg)
+![TymOS architecture](docs/architecture-5.svg)
 
 ## Standalone modules
 
