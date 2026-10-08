@@ -148,10 +148,15 @@ function tempAt($byTs, $date, $time) {
   <rect x="<?= $L ?>" y="<?= $Y_CLOUD ?>" width="<?= $W - $L - $Rr ?>" height="<?= $H_CLOUD ?>"
         fill="url(#wxCloud)"/>
 
-  <?php // TLO wykresu: jednolite, noc ciemniejsza
+  <?php // TLO wykresu: jednolite, noc ciemniejsza. Noc wg PRAWDZIWEGO wschodu i zachodu danej doby
+  // (do 2026-10-08 bylo na sztywno 20-6, wiec jesienia etykieta zachodu o 18 stala w „dniu").
+  // Godzina wschodu i zachodu sa jeszcze jasne, ciemno od nastepnej po zachodzie.
+  $sun = [];
+  foreach ($days as $dd) $sun[$dd['d']] = [(int)substr($dd['sunrise'], 0, 2), (int)substr($dd['sunset'], 0, 2)];
   foreach ($rows as $i => $x):
       $hh = (int)date('G', strtotime($x['ts']));
-      if ($hh >= 6 && $hh < 20) continue; ?>
+      [$sr, $ss] = $sun[substr($x['ts'], 0, 10)] ?? [6, 19];
+      if ($hh >= $sr && $hh <= $ss) continue; ?>
     <rect x="<?= round($xOf($i), 1) ?>" y="<?= $Y_PLOT ?>" width="<?= ceil($colW) + 1 ?>" height="<?= $H_PLOT ?>" fill="#3a3a41"/>
   <?php endforeach; ?>
 
@@ -231,6 +236,9 @@ function tempAt($byTs, $date, $time) {
           $hh = (int)date('G', strtotime($x['ts']));
           if ($hh === $hSr) $marks[] = [$i, (float)$x['temp'], false];
           if ($hh === $hSs) $marks[] = [$i, (float)$x['temp'], false];
+          // Maksimum tylko z godzin DZIENNYCH (wschod..zachod). Z calej doby wypadalo czasem
+          // o polnocy (cieply wieczor, potem ochlodzenie), a to nie jest „ile bedzie w dzien".
+          if ($hh < $hSr || $hh > $hSs) continue;
           if ((float)$x['temp'] > $bestT) { $bestT = (float)$x['temp']; $best = $i; }
       }
       if ($best !== null) $marks[] = [$best, $bestT, true];
