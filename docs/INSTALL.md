@@ -216,6 +216,10 @@ utils/tscert_renew.sh          # real Let's Encrypt certificate for the VPN name
 
 The real certificate matters for Telegram: links in notifications open the panel straight to the doorbell call.
 
+> **Important — disable key expiry.** By default a Tailscale device key expires after **180 days**. The Pi then logs out of the VPN, and the kiosk and remote access stop working without any warning. In the Tailscale admin console open **Machines**, click **⋯** next to the Pi (and every other device that should stay connected, e.g. the kiosk tablet and your phone) and choose **Disable key expiry**.
+>
+> As a safety net, the `tailscale_watchdog.php` action sends a Telegram message 7 days and 1 day before a key expires, and a ready login link if the Pi gets logged out. Add it in the admin panel as an action: *Cron* `*/15 * * * *` → *Run script* `/opt/tymos/actions/tailscale_watchdog.php`.
+
 ## 11. ESPHome dashboard (optional)
 
 Only needed if you want to build and flash ESP devices from the Pi (you can also do it from any computer):
