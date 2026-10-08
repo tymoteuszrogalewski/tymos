@@ -148,17 +148,21 @@ function tempAt($byTs, $date, $time) {
   <rect x="<?= $L ?>" y="<?= $Y_CLOUD ?>" width="<?= $W - $L - $Rr ?>" height="<?= $H_CLOUD ?>"
         fill="url(#wxCloud)"/>
 
-  <?php // TLO wykresu: jednolite, noc ciemniejsza. Noc wg PRAWDZIWEGO wschodu i zachodu danej doby
-  // (do 2026-10-08 bylo na sztywno 20-6, wiec jesienia etykieta zachodu o 18 stala w „dniu").
-  // Godzina wschodu i zachodu sa jeszcze jasne, ciemno od nastepnej po zachodzie.
-  $sun = [];
-  foreach ($days as $dd) $sun[$dd['d']] = [(int)substr($dd['sunrise'], 0, 2), (int)substr($dd['sunset'], 0, 2)];
-  foreach ($rows as $i => $x):
-      $hh = (int)date('G', strtotime($x['ts']));
-      [$sr, $ss] = $sun[substr($x['ts'], 0, 10)] ?? [6, 19];
-      if ($hh >= $sr && $hh <= $ss) continue; ?>
-    <rect x="<?= round($xOf($i), 1) ?>" y="<?= $Y_PLOT ?>" width="<?= ceil($colW) + 1 ?>" height="<?= $H_PLOT ?>" fill="#3a3a41"/>
-  <?php endforeach; ?>
+  <?php // TLO wykresu: jednolite, noc ciemniejsza. Noc wg PRAWDZIWEGO wschodu i zachodu danej doby,
+  // co do minuty (do 2026-10-08 bylo na sztywno 20-6, a potem calymi godzinami — kropka wschodu
+  // i zachodu nie trafiala w granice dnia i nocy). $xAt = pozycja dowolnej chwili na osi X.
+  $t0  = strtotime(substr($rows[0]['ts'], 0, 10) . ' 00:00:00');
+  $xAt = fn($ts) => $L + ($ts - $t0) / 3600 * $colW;
+  $clipX = fn($x) => max($L, min($W - $Rr, $x));
+  foreach ($days as $dd):
+      $d0 = strtotime($dd['d'] . ' 00:00:00');
+      $sr = strtotime($dd['d'] . ' ' . $dd['sunrise']);
+      $ss = strtotime($dd['d'] . ' ' . $dd['sunset']);
+      foreach ([[$d0, $sr], [$ss, $d0 + 86400]] as [$a, $b]):
+          $x1 = $clipX($xAt($a)); $x2 = $clipX($xAt($b));
+          if ($x2 - $x1 < 0.5) continue; ?>
+    <rect x="<?= round($x1, 1) ?>" y="<?= $Y_PLOT ?>" width="<?= round($x2 - $x1, 1) ?>" height="<?= $H_PLOT ?>" fill="#3a3a41"/>
+  <?php endforeach; endforeach; ?>
 
   <?php // siatka pozioma, rowny krok
   // Krok dobierany do zakresu, celujac w 4-6 wartosci: siatka ma pomagac odczytac wysokosc
@@ -226,35 +230,47 @@ function tempAt($byTs, $date, $time) {
   // temperatura faktycznie wypada, wiec czyta sie ja wzrokiem z wykresu, a nie z legendy.
   // Maksimum wyrozniona wielkoscia; przy szczycie etykieta idzie NAD punktem, przy skrajach
   // odsuwa sie w bok, zeby nie wyjsc poza obszar.
-  $marks = [];
+  // Temperatura w dowolnej chwili — odczytana z linii (punkty linii stoja w srodku kazdej godziny),
+  // zeby kropka wschodu i zachodu lezala dokladnie na krzywej, w tej samej minucie co granica nocy.
+  $tempAt = function ($ts) use ($rows, $t0) {
+      $f = ($ts - $t0) / 3600 - 0.5;
+      $i = max(0, min(count($rows) - 2, (int)floor($f)));
+      $k = max(0.0, min(1.0, $f - $i));
+      return (float)$rows[$i]['temp'] + ((float)$rows[$i + 1]['temp'] - (float)$rows[$i]['temp']) * $k;
+  };
+  $marks = [];   // [x, temperatura, czy maksimum]
   foreach ($days as $dd) {
-      $hSr = (int)substr($dd['sunrise'], 0, 2);
-      $hSs = (int)substr($dd['sunset'],  0, 2);
+      $sr = strtotime($dd['d'] . ' ' . $dd['sunrise']);
+      $ss = strtotime($dd['d'] . ' ' . $dd['sunset']);
+      $marks[] = [$xAt($sr), $tempAt($sr), false];
+      $marks[] = [$xAt($ss), $tempAt($ss), false];
+      // Maksimum tylko z godzin DZIENNYCH (wschod..zachod). Z calej doby wypadalo czasem
+      // o polnocy (cieply wieczor, potem ochlodzenie), a to nie jest „ile bedzie w dzien".
       $best = null; $bestT = -99;
       foreach ($rows as $i => $x) {
-          if (substr($x['ts'], 0, 10) !== $dd['d']) continue;
-          $hh = (int)date('G', strtotime($x['ts']));
-          if ($hh === $hSr) $marks[] = [$i, (float)$x['temp'], false];
-          if ($hh === $hSs) $marks[] = [$i, (float)$x['temp'], false];
-          // Maksimum tylko z godzin DZIENNYCH (wschod..zachod). Z calej doby wypadalo czasem
-          // o polnocy (cieply wieczor, potem ochlodzenie), a to nie jest „ile bedzie w dzien".
-          if ($hh < $hSr || $hh > $hSs) continue;
+          $mid = strtotime($x['ts']) + 1800;
+          if ($mid < $sr || $mid > $ss) continue;
           if ((float)$x['temp'] > $bestT) { $bestT = (float)$x['temp']; $best = $i; }
       }
-      if ($best !== null) $marks[] = [$best, $bestT, true];
+      if ($best !== null) $marks[] = [$xOf($best) + $colW / 2, $bestT, true];
   }
-  // Etykieta wschodu / zachodu blizej niz 2 h od dziennego maksimum nachodzila na nie (2026-10-08:
-  // 21° i 20° jedna na drugiej) — wtedy zostaje samo maksimum.
-  $maxIdx = array_map(fn($m) => $m[0], array_filter($marks, fn($m) => $m[2]));
-  $marks = array_filter($marks, function ($m) use ($maxIdx) {
+  // Etykieta wschodu / zachodu blisko dziennego maksimum nachodzila na nie (2026-10-08: 21° i 20°
+  // jedna na drugiej). Do 2 h od maksimum napis odsuwa sie w bok, NA ZEWNATRZ (zachod w prawo od
+  // kropki, wschod w lewo); gdy kropka prawie pokrywa sie z maksimum, zostaje samo maksimum.
+  $maxX = array_map(fn($m) => $m[0], array_filter($marks, fn($m) => $m[2]));
+  $marks = array_filter($marks, function ($m) use ($maxX, $colW, $L, $W, $Rr) {
+      if ($m[0] < $L || $m[0] > $W - $Rr) return false;
       if ($m[2]) return true;
-      foreach ($maxIdx as $mi) if (abs($m[0] - $mi) < 2) return false;
+      foreach ($maxX as $mx) if (abs($m[0] - $mx) < 0.8 * $colW) return false;
       return true;
   });
-  foreach ($marks as [$i, $t, $isMax]):
-      $cx = $xOf($i) + $colW / 2;
+  foreach ($marks as [$cx, $t, $isMax]):
       $anchor = $cx < $L + 26 ? 'start' : ($cx > $W - $Rr - 26 ? 'end' : 'middle');
-      $tx = $anchor === 'start' ? $L + 2 : ($anchor === 'end' ? $W - $Rr - 2 : $cx); ?>
+      $tx = $anchor === 'start' ? $L + 2 : ($anchor === 'end' ? $W - $Rr - 2 : $cx);
+      if (!$isMax) foreach ($maxX as $mx) {
+          if (abs($cx - $mx) >= 2 * $colW) continue;
+          if ($cx > $mx) { $anchor = 'start'; $tx = $cx + 3; } else { $anchor = 'end'; $tx = $cx - 3; }
+      } ?>
     <circle cx="<?= round($cx, 1) ?>" cy="<?= round($yOf($t), 1) ?>" r="2.6" fill="#ff5f45"/>
     <text x="<?= round($tx, 1) ?>" y="<?= round($yOf($t) - 7, 1) ?>" text-anchor="<?= $anchor ?>"
           fill="#e8e8e8"
