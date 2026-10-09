@@ -25,7 +25,7 @@
 .hifi .hifi-now .a{font-size:12px;color:#888}
 .hifi .hifi-now .tx{min-width:0;flex:1}
 .hifi .hifi-now.idle img,.hifi .hifi-now.idle .tx{opacity:.45}
-.hifi .hifi-ctl{display:flex;gap:6px;flex:0 0 auto}
+.hifi .hifi-ctl{display:flex;align-items:center;gap:6px;flex:0 0 auto}
 .hifi .hifi-ctl button{background:#2a2a2a;border:none;border-radius:6px;color:#9cc0ff;cursor:pointer;width:44px;height:44px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .hifi .hifi-ctl button:active{background:#333;transform:scale(0.93)}
 .hifi .hifi-ctl svg{width:20px;height:20px;fill:currentColor}
@@ -40,10 +40,11 @@
     </div>
     <div class="klm-r">
       <div class="wsw-lbl">Głośność</div>
-      <div class="therm">
-        <button class="therm-btn" data-d="-1">−</button>
+      <!-- Glosnosc: trojkaty dol / gora w stylu przyciskow prev / next (2026-10-09, user: zamiast − / +) -->
+      <div class="hifi-ctl">
+        <button data-d="-1" title="Ciszej"><svg viewBox="0 0 24 24"><path d="M5 8h14l-7 9z"/></svg></button>
         <span class="hifi-vol" id="hifi-vol">–</span>
-        <button class="therm-btn" data-d="1">+</button>
+        <button data-d="1" title="Głośniej"><svg viewBox="0 0 24 24"><path d="M5 16h14l-7-9z"/></svg></button>
       </div>
     </div>
     <!-- CO GRA: okladka, tytul, wykonawca — ukryte, gdy nic nie gra albo zrodlo nie podaje tytulu -->
@@ -106,7 +107,7 @@
   }
 
   // Glosnosc: liczba zmienia sie OD RAZU (optymistycznie), a poll i tak potwierdzi stan z wiezy.
-  $w.on('click', '.therm-btn', function(){
+  $w.on('click', '.hifi-ctl button[data-d]', function(){
     var d = parseInt($(this).attr('data-d'), 10), cur = parseInt($('#hifi-vol').text(), 10);
     if (!isNaN(cur)) $('#hifi-vol').text(Math.max(0, Math.min(100, cur + d)));
     $.post('api.php', {action: 'hifi_set', op: 'vol', delta: d}, function(r){
@@ -114,7 +115,7 @@
     }, 'json');
   });
 
-  $w.on('click', '.hifi-ctl button', function(){
+  $w.on('click', '.hifi-ctl button[data-ctl]', function(){
     var c = $(this).attr('data-ctl');
     if (c === 'pp') {
       var st = $('#hifi-pp').data('state');
