@@ -115,6 +115,7 @@ Some parts of TymOS are also published as small, independent repositories — ea
 - **[blebox-energy-meter](https://github.com/tymoteuszrogalewski/blebox-energy-meter)** — local (LAN, no cloud) reader for the BleBox 3-phase energy meter, e.g. the Pstryk meter: power, voltage and current per phase every few seconds into MySQL/MariaDB or CSV
 - **[zehnder-comfoair-q-esp32](https://github.com/tymoteuszrogalewski/zehnder-comfoair-q-esp32)** — control a Zehnder ComfoAir Q ventilation unit with an ESP32 and CAN bus (ESPHome): stable config with fixes, permanent fan speeds, PHP control over REST, hardware guide with photos
 - **[weather-widget](https://github.com/tymoteuszrogalewski/weather-widget)** — the 48-hour weather card as one PHP file: temperature, rain (median of 5 models), snow, clouds and wind, readable from a distance; Open-Meteo, no API key, no database
+- **[technics-hifi-widget](https://github.com/tymoteuszrogalewski/technics-hifi-widget)** — Technics SC-C70MK2 widget in one PHP file: volume, what is playing, previous / stop / next and Spotify resume over the unit's undocumented local API; what works, what does not (CD, OPT) and what comes with an ESP32 IR blaster
 
 ## Bridges — how non-Zigbee devices join in
 
