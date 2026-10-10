@@ -67,6 +67,7 @@ if (($st['last'] ?? '') !== $my) exit(0);  // nowszy klik przejmuje sekwencje
 
 // 3. ostatni klik sekwencji — wykonaj
 $count = (int)$st['count'];
+tymos_log('INFO', "multiclick dev={$dev_id} kliki={$count}");
 
 $db = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_TYM, DB_PORT);
 if ($db->connect_error) { tymos_log('ERROR', 'multiclick: DB connect: ' . $db->connect_error); exit(1); }
@@ -81,11 +82,12 @@ function dev($id) {
     if (!$row) return null;
     $ls = json_decode($row['last_state'] ?? '{}', true) ?: [];
     $fresh = time() - (float)($ls['__ts']['linkquality'] ?? 0) < 3600;
-    return ['name' => $row['device'], 'on' => $fresh && ($ls['state'] ?? '') === 'ON'];
+    return ['name' => $row['device'], 'fresh' => $fresh, 'on' => $fresh && ($ls['state'] ?? '') === 'ON'];
 }
 function set($id, $state) {
     $d = dev($id);
     if (!$d) { tymos_log('ERROR', "multiclick: brak urzadzenia dev_id={$id}"); return; }
+    if (!$d['fresh']) return;   // odlaczony modul (np. Nika przed montazem) — Z2M i tak by nie dostarczyl
     exec('mosquitto_pub -h localhost -t ' . escapeshellarg("zigbee2mqtt/{$d['name']}/set")
         . ' -m ' . escapeshellarg(json_encode(['state' => $state])) . ' > /dev/null 2>&1');
 }

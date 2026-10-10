@@ -917,8 +917,10 @@ def load_actions_cache():
             for trigger in action["triggers"]:
                 if trigger.get("type") in ("state", "event", "threshold"):
                     dev_id = str(trigger.get("dev_id", ""))
-                    if dev_id:
-                        new_index.setdefault(dev_id, []).append(action)
+                    # Raz na urzadzenie: akcja z dwoma triggerami na ten sam dev_id (np. state =ON i =OFF)
+                    # trafiala do listy dwa razy i odpalala sie dwa razy na jeden push.
+                    if dev_id and action not in new_index.setdefault(dev_id, []):
+                        new_index[dev_id].append(action)
             # Zbierz pola dla last_activity z filtrem value (tylko z enabled akcji)
             if action["enabled"] and action["conditions"]:
                 _collect_last_activity_fields(action["conditions"], new_last_activity_used)
