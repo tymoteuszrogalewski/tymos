@@ -620,3 +620,107 @@ camera_render('doorbell_sd', '', true);
     if (typeof cardOnUnload === 'function') cardOnUnload(function() { clearInterval(window.audioOvTimer); window.audioOvTimer = null; });
 })();
 </script>
+<script>
+// HIFI NA KADRZE DZWONKA (PROBA 2026-10-10) — te same przyciski co karta card_hifi, ktora na razie zostaje:
+// prawy GORNY rog obrazu: poprzedni / stop-graj / nastepny, prawy DOLNY: ciszej / glosnosc / glosniej.
+// "Prawy rog" = prawa krawedz OBRAZU, nie kontenera — za nia jest czarny pas z temperatura (dbSideBox),
+// wiec offset liczony tak samo jak szerokosc tego pasa. Wlasny poll co 5 s, pauzowany przy wygaszonym ekranie.
+(function(){
+    var ID = 'cam_doorbell_sd';
+    var v = document.getElementById(ID);
+    if (!v) return;
+    var wrap = v.parentElement;
+
+    ['dbHifiTop', 'dbHifiBot'].forEach(function(id){ var o = document.getElementById(id); if (o) o.remove(); });
+
+    var ROW = 'position:absolute;z-index:12;display:flex;gap:8px;align-items:center;';
+    var BTN = 'border:none;border-radius:50%;cursor:pointer;width:44px;height:44px;display:flex;align-items:center;'
+        + 'justify-content:center;padding:0;background:rgba(0,0,0,0.3);color:rgba(255,255,255,0.85);'
+        + '-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none;';
+    function svg(d, id) {
+        return '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path'
+            + (id ? ' id="' + id + '"' : '') + ' d="' + d + '"/></svg>';
+    }
+    function button(title, html, fn) {
+        var b = document.createElement('button');
+        b.title = title; b.style.cssText = BTN; b.innerHTML = html; b.onclick = fn;
+        return b;
+    }
+
+    var st = '', lastSrc = '';
+
+    var top = document.createElement('div');
+    top.id = 'dbHifiTop';
+    top.style.cssText = ROW + 'top:12px;';
+    function ctl(c) {
+        if (c === 'pp') {
+            if (st === 'playing') c = 'pause';
+            else if (st === 'paused') c = 'play';
+            else if (lastSrc === 'spotify') {
+                // Zatrzymany Spotify: wznowienie ostatniej sesji — jak w karcie HiFi
+                $.post('api.php', {action: 'hifi_set', op: 'src', src: 'spotify'}, function(){ setTimeout(poll, 1500); }, 'json');
+                return;
+            }
+            else c = 'play';
+        }
+        $.post('api.php', {action: 'hifi_set', op: 'ctl', ctl: c}, function(){ setTimeout(poll, 800); }, 'json');
+    }
+    top.appendChild(button('Poprzedni',   svg('M6 5h2v14H6zM20 5v14L9 12z'),   function(){ ctl('previous'); }));
+    top.appendChild(button('Stop / graj', svg('M7 5v14l12-7z', 'dbHifiPpIc'), function(){ ctl('pp'); }));
+    top.appendChild(button('Następny',    svg('M16 5h2v14h-2zM4 5v14l11-7z'),  function(){ ctl('next'); }));
+
+    var bot = document.createElement('div');
+    bot.id = 'dbHifiBot';
+    bot.style.cssText = ROW + 'bottom:12px;';
+    var volEl = document.createElement('span');
+    volEl.style.cssText = 'min-width:44px;height:44px;display:flex;align-items:center;justify-content:center;'
+        + 'border-radius:22px;background:rgba(0,0,0,0.3);color:rgba(255,255,255,0.85);font:600 17px/1 system-ui,sans-serif;';
+    volEl.textContent = '–';
+    // Glosnosc: liczba zmienia sie OD RAZU (optymistycznie), poll i tak potwierdzi stan z wiezy.
+    function vol(d) {
+        var cur = parseInt(volEl.textContent, 10);
+        if (!isNaN(cur)) volEl.textContent = Math.max(0, Math.min(100, cur + d));
+        $.post('api.php', {action: 'hifi_set', op: 'vol', delta: d}, function(r){
+            if (r && r.ok) volEl.textContent = r.volume; else poll();
+        }, 'json');
+    }
+    bot.appendChild(button('Ciszej',   svg('M5 8h14l-7 9z'),  function(){ vol(-1); }));
+    bot.appendChild(volEl);
+    bot.appendChild(button('Głośniej', svg('M5 16h14l-7-9z'), function(){ vol(1); }));
+
+    function show(d) {
+        if (!d || !d.ok) { volEl.textContent = '–'; st = ''; return; }
+        volEl.textContent = d.volume;
+        volEl.style.textDecoration = d.mute ? 'line-through' : '';
+        st = d.state;
+        lastSrc = d.title ? d.src : (d.last ? d.last.src : '');
+        var ic = document.getElementById('dbHifiPpIc');
+        if (ic) ic.setAttribute('d', st === 'playing' ? 'M6 6h12v12H6z' : 'M7 5v14l12-7z');
+    }
+    function poll() {
+        if (!document.getElementById('dbHifiTop')) { clearInterval(window.dbHifiTimer); return; }
+        if (document.hidden) return;
+        $.getJSON('api.php?action=hifi_state&_=' + Date.now(), show);
+    }
+
+    // Ten sam wzor co szerokosc czarnego pasa w bloku temperatury (fallback 4:3 przed pierwsza ramka).
+    function place() {
+        var W = wrap.offsetWidth, H = wrap.offsetHeight;
+        var ar = (v.videoWidth && v.videoHeight) ? (v.videoWidth / v.videoHeight) : (4 / 3);
+        var r = Math.max(0, W - Math.min(W, H * ar)) + 12;
+        top.style.right = r + 'px';
+        bot.style.right = r + 'px';
+    }
+
+    wrap.appendChild(top);
+    wrap.appendChild(bot);
+    place();
+    v.addEventListener('loadedmetadata', place);
+    if (window.ResizeObserver) new ResizeObserver(place).observe(wrap);
+
+    poll();
+    if (window.dbHifiTimer) clearInterval(window.dbHifiTimer);
+    window.dbHifiTimer = setInterval(poll, 5000);
+    if (typeof cardOnUnload === 'function') cardOnUnload(function() { clearInterval(window.dbHifiTimer); window.dbHifiTimer = null; });
+})();
+</script>
