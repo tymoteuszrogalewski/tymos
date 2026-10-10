@@ -4,7 +4,7 @@
 // (inc/hifi.inc.php, endpointy hifi_state / hifi_set) — bez aplikacji Technicsa i bez pilota.
 // Wieza sama sie wlacza, gdy cos zacznie na niej grac (na kablu LAN), i sama wylacza po czasie,
 // wiec przycisku zasilania nie ma.
-// HIFI_CARD_CONTROLS = false (config) chowa przyciski glosnosci i prev / stop / next — zostaja same informacje.
+// HIFI_CARD_CONTROLS = false (config) chowa caly wiersz glosnosci i przyciski prev / stop / next — zostaja zrodlo i co gra.
 // Lokalnie steruje sie z nakladki na kadrze dzwonka (card_camera_doorbell, 2026-10-10).
 $hifiCtl = !defined('HIFI_CARD_CONTROLS') || HIFI_CARD_CONTROLS;
 ?>
@@ -32,7 +32,7 @@ $hifiCtl = !defined('HIFI_CARD_CONTROLS') || HIFI_CARD_CONTROLS;
 .hifi .hifi-ctl button{background:#2a2a2a;border:none;border-radius:6px;color:#9cc0ff;cursor:pointer;width:44px;height:44px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .hifi .hifi-ctl button:active{background:#333;transform:scale(0.93)}
 .hifi .hifi-ctl svg{width:20px;height:20px;fill:currentColor}
-.hifi.noctl .hifi-ctl button{display:none}
+.hifi.noctl .hifi-ctl button,.hifi.noctl .hifi-volrow{display:none}
 </style>
 
 <div class="wda hifi<?= $hifiCtl ? '' : ' noctl' ?>" id="hifi">
@@ -42,7 +42,7 @@ $hifiCtl = !defined('HIFI_CARD_CONTROLS') || HIFI_CARD_CONTROLS;
     <div class="klm-r">
       <div class="wsw-lbl"><span class="ic">🎵</span>HiFi<span class="hifi-src" id="hifi-src">…</span></div>
     </div>
-    <div class="klm-r">
+    <div class="klm-r hifi-volrow">
       <div class="wsw-lbl">Głośność</div>
       <!-- Glosnosc: trojkaty dol / gora w stylu przyciskow prev / next (2026-10-09, user: zamiast − / +) -->
       <div class="hifi-ctl">
