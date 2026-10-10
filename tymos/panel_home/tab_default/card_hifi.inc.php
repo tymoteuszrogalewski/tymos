@@ -4,6 +4,9 @@
 // (inc/hifi.inc.php, endpointy hifi_state / hifi_set) — bez aplikacji Technicsa i bez pilota.
 // Wieza sama sie wlacza, gdy cos zacznie na niej grac (na kablu LAN), i sama wylacza po czasie,
 // wiec przycisku zasilania nie ma.
+// HIFI_CARD_CONTROLS = false (config) chowa przyciski glosnosci i prev / stop / next — zostaja same informacje.
+// Lokalnie steruje sie z nakladki na kadrze dzwonka (card_camera_doorbell, 2026-10-10).
+$hifiCtl = !defined('HIFI_CARD_CONTROLS') || HIFI_CARD_CONTROLS;
 ?>
 <style>
 /* Wlasne kopie stylow z card_woda / card_klimat (wsw-lbl, seg--flat, therm) — karta ma dzialac tez wtedy,
@@ -29,9 +32,10 @@
 .hifi .hifi-ctl button{background:#2a2a2a;border:none;border-radius:6px;color:#9cc0ff;cursor:pointer;width:44px;height:44px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .hifi .hifi-ctl button:active{background:#333;transform:scale(0.93)}
 .hifi .hifi-ctl svg{width:20px;height:20px;fill:currentColor}
+.hifi.noctl .hifi-ctl button{display:none}
 </style>
 
-<div class="wda hifi" id="hifi">
+<div class="wda hifi<?= $hifiCtl ? '' : ' noctl' ?>" id="hifi">
   <div class="wda-cat">
     <!-- Kolejnosc (2026-10-08, user): naglowek ze zrodlem, glosnosc, ZAWARTOSC zrodla, przelaczniki zrodel na dole.
          Zawartosc to dzis blok Spotify (okladka, tytul, przyciski); dla CD / OPT dojdzie wlasny blok w tym samym miejscu. -->

@@ -66,6 +66,7 @@ define('HOME_LON', 21.01);
 define('REKU_IP',    '192.168.1.30');    // ESPHome rekuperator (Zehnder ComfoAir Q)
 define('PRINTER_IP', '192.168.1.40');   // drukarka HP (utils/printer_keepalive.sh)
 define('HIFI_IP',    '192.168.1.45');   // Technics SC-C70MK2 (lokalne API StreamSDK: /api/getData, /api/setData) — karta hifi
+define('HIFI_CARD_CONTROLS', true);   // false = karta hifi bez przyciskow (glosnosc, prev / stop / next) — gdy steruje sie z nakladki na kamerze dzwonka
 
 // --- Kamery (go2rtc: etc/go2rtc/go2rtc.yaml renderowany przez scripts/render_etc.php) ---
 define('CAM_TAPO_USER',  'user');   // konto RTSP/ONVIF jednakowe na kazdej kamerze Tapo
