@@ -671,7 +671,8 @@ camera_render('doorbell_sd', '', true);
 
     var bot = document.createElement('div');
     bot.id = 'dbHifiBot';
-    bot.style.cssText = ROW + 'bottom:12px;';
+    // Glosnosc w PIONIE (user 2026-10-10): glosniej u gory, liczba, ciszej na dole.
+    bot.style.cssText = ROW + 'bottom:12px;flex-direction:column;';
     var volEl = document.createElement('span');
     volEl.style.cssText = 'min-width:44px;height:44px;display:flex;align-items:center;justify-content:center;'
         + 'border-radius:22px;background:rgba(0,0,0,0.3);color:rgba(255,255,255,0.85);font:600 17px/1 system-ui,sans-serif;';
@@ -684,9 +685,9 @@ camera_render('doorbell_sd', '', true);
             if (r && r.ok) volEl.textContent = r.volume; else poll();
         }, 'json');
     }
-    bot.appendChild(button('Ciszej',   svg('M5 8h14l-7 9z'),  function(){ vol(-1); }));
-    bot.appendChild(volEl);
     bot.appendChild(button('Głośniej', svg('M5 16h14l-7-9z'), function(){ vol(1); }));
+    bot.appendChild(volEl);
+    bot.appendChild(button('Ciszej',   svg('M5 8h14l-7 9z'),  function(){ vol(-1); }));
 
     function show(d) {
         if (!d || !d.ok) { volEl.textContent = '–'; st = ''; return; }
