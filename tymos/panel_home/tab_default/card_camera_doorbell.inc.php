@@ -672,7 +672,7 @@ camera_render('doorbell_sd', '', true);
     var bot = document.createElement('div');
     bot.id = 'dbHifiBot';
     // Glosnosc w PIONIE (user 2026-10-10): glosniej u gory, liczba, ciszej na dole.
-    bot.style.cssText = ROW + 'bottom:12px;flex-direction:column;';
+    bot.style.cssText = ROW + 'bottom:12px;flex-direction:column;gap:4px;';   // gap 4: na iPhonie kolumna nie siega przycisku "nastepny"
     var volEl = document.createElement('span');
     volEl.style.cssText = 'min-width:44px;height:44px;display:flex;align-items:center;justify-content:center;'
         + 'border-radius:22px;background:rgba(0,0,0,0.3);color:rgba(255,255,255,0.85);font:600 17px/1 system-ui,sans-serif;';
