@@ -36,6 +36,24 @@ $cur = val("SELECT power FROM device{$DEV} ORDER BY ts DESC LIMIT 1");
 if ($cur === null) exit(0);
 $cur = (float)$cur;
 
+// PRZYPOMNIENIE (2026-10-11, zona): 15 min po komunikacie „przeloz do suszarki”, jesli suszarka (dev17)
+// nadal nie ruszyla, ten sam lektor jeszcze raz — jednorazowo. Helper `pralka_przypomnij` = unix ts
+// terminu, 0 = brak. Suszarka ruszyla (> 150 W, prog jak SUSZ_ON nizej) albo nowe pranie = kasujemy.
+$REMIND_MIN = 15;
+$remind = (int) val("SELECT value FROM helpers WHERE name='pralka_przypomnij' LIMIT 1");
+function setRemind($v) { global $db; $db->query("INSERT INTO helpers (name, value) VALUES ('pralka_przypomnij', '{$v}') ON DUPLICATE KEY UPDATE value='{$v}'"); }
+if ($remind > 0) {
+    $od = $remind - $REMIND_MIN * 60;   // chwila komunikatu o koncu prania
+    $suszRuszyla = (float) val("SELECT COALESCE(MAX(power), 0) FROM device17 WHERE ts > FROM_UNIXTIME({$od})") > 150;
+    if ($suszRuszyla || $cur > $START) {
+        setRemind(0);
+    } elseif (time() >= $remind) {
+        setRemind(0);
+        if (!tymos_cisza_nocna()) $db->query("INSERT INTO tymos_sounds (sound) VALUES ('pralka')");
+        tymos_log('INFO', "pralka: przypomnienie po {$REMIND_MIN} min — suszarka nie ruszyla");
+    }
+}
+
 $stan = val("SELECT value FROM helpers WHERE name='pralka_stan' LIMIT 1");
 if ($stan === null) { $db->query("INSERT INTO helpers (name, value) VALUES ('pralka_stan', 'idle')"); $stan = 'idle'; }
 function setStan($v) { global $db; $db->query("UPDATE helpers SET value='{$v}' WHERE name='pralka_stan'"); }
@@ -72,6 +90,7 @@ if ($cnt >= $MIN_CNT && $maxRecent !== null && (float)$maxRecent <= $OFF) {
         echo date('c') . " pralka KONIEC, suszarka pracuje ({$suszMax}W) -> lektor 'czeka'" . ($cicho ? " POMINIETY (cisza nocna)" : "") . "\n";
     } else {
         if (!$cicho) $db->query("INSERT INTO tymos_sounds (sound) VALUES ('pralka')");
+        setRemind(time() + $REMIND_MIN * 60);
         echo date('c') . " pralka KONIEC -> lektor (max{$FIN_MIN}min={$maxRecent}W, n={$cnt})" . ($cicho ? " POMINIETY (cisza nocna)" : "") . "\n";
     }
     if ($cicho) tymos_log('INFO', 'pralka KONIEC w ciszy nocnej — lektor pominiety');
