@@ -506,13 +506,25 @@ window.camParkingActive = function () {
     var b = document.createElement('button');
     b.id = 'pralkaBtn';
     b.title = 'Pranie czeka na suszarkę — kliknij, jeśli tego nie suszymy';
-    b.style.cssText = 'position:absolute;top:50%;left:50%;margin:-36px 0 0 -36px;z-index:13;display:none;'
-        + 'border:none;border-radius:50%;cursor:pointer;width:72px;height:72px;align-items:center;'
-        + 'justify-content:center;padding:0;background:rgba(33,150,243,0.45);color:#fff;'
-        + 'animation:grzPulse 1.3s ease-in-out infinite;'
+    b.style.cssText = 'position:absolute;top:50%;left:50%;margin:-52px 0 0 -52px;z-index:13;display:none;'
+        + 'border:none;border-radius:50%;cursor:pointer;width:104px;height:104px;align-items:center;'
+        + 'justify-content:center;padding:0;background:rgba(25,118,210,0.75);color:#fff;'
+        + 'animation:pralkaRing 1.6s ease-out infinite;'
         + '-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none;';
+    // Jak dzwoniacy telefon (user): fale rozchodza sie od przycisku, ikona w srodku drga seriami.
+    if (!document.getElementById('pralkaRingCss')) {
+        var st = document.createElement('style');
+        st.id = 'pralkaRingCss';
+        st.textContent = '@keyframes pralkaRing{0%{box-shadow:0 0 0 0 rgba(25,118,210,.7),0 0 0 0 rgba(25,118,210,.5)}'
+            + '70%{box-shadow:0 0 0 26px rgba(25,118,210,0),0 0 0 48px rgba(25,118,210,0)}'
+            + '100%{box-shadow:0 0 0 0 rgba(25,118,210,0),0 0 0 0 rgba(25,118,210,0)}}'
+            + '@keyframes pralkaShake{0%,40%,100%{transform:rotate(0)}5%,15%,25%,35%{transform:rotate(-14deg)}'
+            + '10%,20%,30%{transform:rotate(14deg)}}'
+            + '#pralkaBtn svg{animation:pralkaShake 1.6s ease-in-out infinite}';
+        document.head.appendChild(st);
+    }
     // pralka: obudowa, panel, okno bebna
-    b.innerHTML = '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" '
+    b.innerHTML = '<svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" '
         + 'stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/>'
         + '<line x1="4" y1="7" x2="20" y2="7"/><circle cx="7.5" cy="4.5" r="0.6" fill="currentColor"/>'
         + '<circle cx="12" cy="14" r="5"/><path d="M9.5 14.5c1.2 1 3.8 1 5 0"/></svg>';
