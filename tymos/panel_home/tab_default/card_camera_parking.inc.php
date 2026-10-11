@@ -490,6 +490,54 @@ window.camParkingActive = function () {
     window.grzAlertTimer = setInterval(function(){ load(); loadZigbee(); }, 15000);
     if (typeof cardOnUnload === 'function') cardOnUnload(function() { clearInterval(window.grzAlertTimer); window.grzAlertTimer = null; });
 })();
+
+// PRANIE CZEKA NA SUSZARKE (srodek kadru, 2026-10-11) — miga od komunikatu „przeloz do suszarki”,
+// az suszarka ruszy (ai_pralka_done.php kasuje sam). Klik = „tego nie suszymy”: chowa ikone
+// i odwoluje przypomnienie lektora po 15 min (api pralka_ack). Tylko na parkingu, jak reszta nakladek o domu.
+(function(){
+    var v = document.getElementById('cam_parking_sd');
+    if (!v) return;
+    var wrap = v.parentElement;
+
+    var old = document.getElementById('pralkaBtn');
+    if (old) old.remove();
+    if (window.pralkaAlertTimer) clearInterval(window.pralkaAlertTimer);
+
+    var b = document.createElement('button');
+    b.id = 'pralkaBtn';
+    b.title = 'Pranie czeka na suszarkę — kliknij, jeśli tego nie suszymy';
+    b.style.cssText = 'position:absolute;top:50%;left:50%;margin:-36px 0 0 -36px;z-index:13;display:none;'
+        + 'border:none;border-radius:50%;cursor:pointer;width:72px;height:72px;align-items:center;'
+        + 'justify-content:center;padding:0;background:rgba(33,150,243,0.45);color:#fff;'
+        + 'animation:grzPulse 1.3s ease-in-out infinite;'
+        + '-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none;';
+    // pralka: obudowa, panel, okno bebna
+    b.innerHTML = '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" '
+        + 'stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/>'
+        + '<line x1="4" y1="7" x2="20" y2="7"/><circle cx="7.5" cy="4.5" r="0.6" fill="currentColor"/>'
+        + '<circle cx="12" cy="14" r="5"/><path d="M9.5 14.5c1.2 1 3.8 1 5 0"/></svg>';
+
+    var czeka = false;
+    function vis() { b.style.display = (czeka && window.camParkingActive()) ? 'flex' : 'none'; }
+
+    function load() {
+        if (!document.getElementById('pralkaBtn')) { clearInterval(window.pralkaAlertTimer); return; }
+        $.getJSON('api.php?action=pralka_alert&_=' + Date.now(), function(d){
+            czeka = !!(d && d.czeka); vis();
+        });
+    }
+
+    b.onclick = function() {
+        czeka = false; vis();   // od razu, bez czekania na serwer
+        $.post('api.php', {action: 'pralka_ack'}, function(){ load(); }, 'json');
+    };
+
+    wrap.appendChild(b);
+    v.addEventListener('camswitch', vis);
+    load();
+    window.pralkaAlertTimer = setInterval(load, 15000);
+    if (typeof cardOnUnload === 'function') cardOnUnload(function() { clearInterval(window.pralkaAlertTimer); window.pralkaAlertTimer = null; });
+})();
 </script>
 
 <?php
