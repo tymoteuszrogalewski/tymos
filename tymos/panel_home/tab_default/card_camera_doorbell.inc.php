@@ -80,13 +80,9 @@ camera_render('doorbell_sd', '', true);
         var m = 0.75;
         var X = m, Y = m, W = VW - 2 * m, H = VH - 2 * m;
         var bh = Math.max(1.8, H * (100 - p) / 100);          // 1,8 = zwinieta roleta w skrzynce
-        var slats = '';
-        for (var y = Y + 2.6; y < Y + bh - 0.6; y += 2.6) {
-            slats += '<line x1="' + X + '" y1="' + y.toFixed(1) + '" x2="' + (X + W) + '" y2="' + y.toFixed(1)
-                   + '" stroke="rgba(0,0,0,.28)" stroke-width="0.9"/>';
-        }
-        // PROPOZYCJA 1 (2026-10-12): w szybie WIDOK Z KAMERY OGRODU (snapshot co minute), roleta jak prawdziwa —
-        // jasnoszare lamele z dolna listwa. Widac wprost, ile swiata zaslania. Snapshot z /snap (tmpfs, snapshot_refresh).
+        // W szybie WIDOK Z KAMERY OGRODU (snapshot co minute). Roleta to SCREEN (tkanina), wiec bez lameli:
+        // przyciemnia obraz w 95% (jak naprawde), a dol wyznacza antracytowa belka (RAL 7016).
+        // Widac wprost, ile swiata zaslania. Snapshot z /snap (tmpfs, snapshot_refresh).
         var snap = '/snap/snap_basen_hd.jpg?m=' + Math.floor(Date.now() / 60000);
         // -webkit-touch-callout/user-select: DLUGIE PRZYTRZYMANIE okna otwiera okienko z algorytmem
         // (blok nizej), wiec iOS nie moze na tym gescie pokazywac swojego menu ani zaznaczac.
@@ -98,9 +94,8 @@ camera_render('doorbell_sd', '', true);
              + '<defs><clipPath id="dbWinClip"><rect x="' + X + '" y="' + Y + '" width="' + W + '" height="' + H + '" rx="1.6"/></clipPath></defs>'
              + '<rect x="' + X + '" y="' + Y + '" width="' + W + '" height="' + H + '" rx="1.6" fill="#16232f"/>'
              + '<image href="' + snap + '" x="' + X + '" y="' + Y + '" width="' + W + '" height="' + H + '" preserveAspectRatio="xMidYMid slice" clip-path="url(#dbWinClip)"/>'
-             + '<rect x="' + X + '" y="' + Y + '" width="' + W + '" height="' + bh.toFixed(1) + '" fill="#d3d6da" clip-path="url(#dbWinClip)"/>'
-             + slats
-             + '<line x1="' + X + '" y1="' + (Y + bh).toFixed(1) + '" x2="' + (X + W) + '" y2="' + (Y + bh).toFixed(1) + '" stroke="#5c626a" stroke-width="1.1"/>'
+             + '<rect x="' + X + '" y="' + Y + '" width="' + W + '" height="' + bh.toFixed(1) + '" fill="#000" fill-opacity=".95" clip-path="url(#dbWinClip)"/>'
+             + '<rect x="' + X + '" y="' + Math.max(Y, Y + bh - 1.6).toFixed(1) + '" width="' + W + '" height="1.6" fill="#383e42"/>'
              + '<rect x="' + X + '" y="' + Y + '" width="' + W + '" height="' + H + '" rx="1.6" fill="none" stroke="#8a8a8a" stroke-width="1.5"/>'
              + '<line x1="' + (VW / 2) + '" y1="' + Y + '" x2="' + (VW / 2) + '" y2="' + (Y + H) + '" stroke="#8a8a8a" stroke-width="1" opacity=".55"/>'
              + '</svg></button>';
