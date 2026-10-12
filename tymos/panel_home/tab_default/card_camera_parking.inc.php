@@ -325,8 +325,8 @@ window.camParkingActive = function () {
 })();
 
 // DRUGA LINIA IKON (prawa strona, pod tarczami alarmu) = PASEK OSTRZEZEN I STANU.
-// Miejsce na rozne ikony; kolejnosc od prawej wg waznosci. Dzis: [1] stan sieci Zigbee (zawsze
-// widoczny), [2..] awarie grzalek bufora (tylko gdy sa). Na srodku gory obie grupy wchodzilyby
+// Miejsce na rozne ikony; kolejnosc od prawej wg waznosci. Dzis: awarie grzalek bufora (tylko gdy sa).
+// Stan sieci Zigbee (zawsze widoczny) przeszedl na lewa strone, obok zebatki. Na srodku gory obie grupy wchodzilyby
 // na siebie na wąskim ekranie iPhone'a — stad prawa strona i osobny wiersz.
 //
 // AWARIA GRZALEK BUFORA — czerwone ikonki grzalek, ktore maja stan ON, ale nie ciagna
@@ -351,7 +351,7 @@ window.camParkingActive = function () {
     // Tarcze alarmu maja top:12 i 44 px wysokosci, wiec druga linia zaczyna sie na 64.
     // WSZYSTKIE ikony w obu liniach trzymaja ten sam raster 44x44 (kolka alarmu, kwadrat anteny,
     // trojkaty grzalek) — rozne ksztalty, jedna siatka.
-    // row-reverse: pierwszy dopisany element lezy NAJBARDZIEJ Z PRAWEJ — tam siedzi ikona Zigbee.
+    // row-reverse: pierwszy dopisany element lezy NAJBARDZIEJ Z PRAWEJ.
     box.style.cssText = 'position:absolute;top:64px;right:12px;z-index:11;'
         + 'display:flex;flex-direction:row-reverse;gap:8px;pointer-events:none;';
     wrap.appendChild(box);
@@ -360,10 +360,16 @@ window.camParkingActive = function () {
     // czysci pasek dla grzalek (`box.innerHTML=''`) i dorysowywana z odpowiedzi async — gdy
     // zapytanie o grzalki bylo wolniejsze albo nie doszlo, antena po prostu znikala („co ktorys
     // refresh nie ma ikony"). Teraz kazdy slot ma wlasne zapytanie i wlasny cykl.
-    var slotZb = document.createElement('div');   // stan Zigbee — skrajnie z prawej (row-reverse)
+    // Stan Zigbee siedzi w LEWYM GORNYM rogu, obok zebatki (2026-10-12, user) — prawy drugi wiersz
+    // zostaje caly dla ikon bledow. Zebatka: left 12 + 44 px, wiec antena na 64.
+    var prevZb = document.getElementById('zbSlot');
+    if (prevZb) prevZb.remove();
+    var slotZb = document.createElement('div');   // stan Zigbee — obok zebatki
+    slotZb.id = 'zbSlot';
+    slotZb.style.cssText = 'position:absolute;top:12px;left:64px;z-index:12;display:flex;';
+    wrap.appendChild(slotZb);
     var slotGrz = document.createElement('div');  // ostrzezenia grzalek
-    slotZb.style.cssText = slotGrz.style.cssText = 'display:flex;flex-direction:row-reverse;gap:8px;';
-    box.appendChild(slotZb);
+    slotGrz.style.cssText = 'display:flex;flex-direction:row-reverse;gap:8px;';
     box.appendChild(slotGrz);
 
     // Znak ostrzegawczy: czerwony trojkat (rogi zaokraglone obrysem w tym samym kolorze, bez bialej
@@ -483,7 +489,7 @@ window.camParkingActive = function () {
     // Pasek ostrzezen mowi o DOMU (siec Zigbee, grzalki bufora), a nie o tym, co widac w kadrze —
     // wiec poza parkingiem chowa sie tak samo jak pogoda i tarcze alarmu. Na pozostalych kamerach
     // zostaja tylko rzeczy dotyczace samego obrazu: zebatka, jakosc SD/HD i dzwiek.
-    function visAlert() { box.style.display = window.camParkingActive() ? '' : 'none'; }
+    function visAlert() { box.style.display = slotZb.style.display = window.camParkingActive() ? '' : 'none'; }
     v.addEventListener('camswitch', visAlert);
     visAlert();
 
