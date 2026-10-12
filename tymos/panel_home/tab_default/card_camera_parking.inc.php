@@ -10,7 +10,7 @@ camera_render('parking_sd', '', false, ['parking_sd', 'basen_hd']);
 ?>
 <script>
 // Nakladki dziela sie na dwie grupy: te o KADRZE (zebatka, jakosc SD/HD, dzwiek) sa zawsze,
-// a te o DOMU (pogoda, tarcze alarmu, pasek ostrzezen) tylko na parkingu. Kazda siedzi we
+// a te o DOMU (pogoda, pasek ostrzezen) tylko na parkingu. Kazda siedzi we
 // wlasnym IIFE, wiec warunek musi byc wspolny — inaczej rosnie w kopiach.
 window.camParkingActive = function () {
     return String(window['cam_parking_sd_stream'] || 'parking_sd').indexOf('parking') === 0;
@@ -153,7 +153,7 @@ window.camParkingActive = function () {
 // Kamera pokazuje dwor, wiec dwor ma tu swoje liczby. Zrodlo: api.php?action=klimat_tiles.
 // 2026-08-29: WIDOCZNE TYLKO NA KADRZE PARKINGU. Wczesniej zostawaly przy przelaczeniu na ogrod
 // czy basen — z zalozeniem, ze dotycza pogody, a nie konkretnej kamery. W praktyce zaslanialy
-// obraz kamery, ktorej sie akurat oglada, wiec chowaja sie razem z tarczami alarmu.
+// obraz kamery, ktorej sie akurat oglada, wiec chowaja sie razem z paskiem ostrzezen.
 //
 // Oba wiersze siedza na JEDNYM tle (zaokraglony prostokat, to samo krycie co ikony) — dwa osobne
 // pill-e rozjezdzaly sie wizualnie, bo maja rozne szerokosci liczb.
@@ -229,105 +229,9 @@ window.camParkingActive = function () {
     if (window.ResizeObserver) new ResizeObserver(paint).observe(wrap);
 })();
 
-// POZIOM ALARMU (prawy gorny rog) — helper alarm_zazbrojony 0/1/2, TRZY tarcze obok siebie:
-//   zielona przekreslona = 0 rozbrojony, pomaranczowa = 1 NOC (dom zajety, tylko zdarzenia
-//   zewnetrzne + zalanie), czerwona = 2 NIKOGO (wszystko, takze ruch wewnatrz).
-// Osobny przycisk na poziom (nie cykl) — stan widac bez zgadywania i nie da sie przeskoczyc
-// o jeden za daleko. Aktywny swieci pelnym kolorem, pozostale przygaszone.
-// Stan czytany z serwera (musi przezyc odswiezenie kiosku i zmiane z telefonu) + poll 15 s.
-(function(){
-    var v = document.getElementById('cam_parking_sd');
-    if (!v) return;
-    var wrap = v.parentElement;
-    var level = 0;
-
-    // Karta bywa ladowana ponownie (przejscie panelu, loadCard) i blok wykonuje sie znowu.
-    // Wczesniej trzy tarcze byly dopinane wprost do `wrap`, bez id i bez sprzatania, wiec KAZDE
-    // zaladowanie dokladalo kolejne trzy — niewidocznie, bo leza absolutnie w tym samym miejscu,
-    // jedna na drugiej. Klikalo sie w najwyzsza i wszystko wygladalo normalnie. Teraz caly rzed
-    // siedzi w JEDNYM kontenerze z id: stary leci do kosza, nowy jest przerysowany w calosci
-    // z tablicy `modes`. Kontener jest staticowy, wiec `position:absolute` przyciskow nadal
-    // liczy sie wzgledem `wrap` — uklad bez zmian.
-    var prevRow = document.getElementById('camAlarmRow');
-    if (prevRow) prevRow.remove();
-    if (window.camAlarmTimer) clearInterval(window.camAlarmTimer);
-
-    var row = document.createElement('div');
-    row.id = 'camAlarmRow';
-    wrap.appendChild(row);
-
-    var svgOn  = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
-    var svgOff = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.69 14a6.9 6.9 0 0 0 .31-2V5l-8-3-3.16 1.18"/><path d="M4.73 4.73L4 5v7c0 6 8 10 8 10a20.29 20.29 0 0 0 5.62-4.38"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
-
-    // kolejnosc = od lewej: rozbrojony, NOC, NIKOGO
-    var modes = [
-        // Nasycony kolor przy tej samej alfie czyta sie mocniej niz czarne tlo anteny — stad 0.35,
-        // zeby tarcza aktywna wygladala rownie lekko jak reszta nakladek.
-        {v: 0, bg: 'rgba(67,160,71,0.35)', fg: 'rgba(129,199,132,0.9)', svg: svgOff, title: 'Rozbrojony'},
-        {v: 1, bg: 'rgba(251,140,0,0.35)', fg: 'rgba(255,183,77,0.9)',  svg: svgOn,  title: 'NOC — zdarzenia zewnętrzne'},
-        {v: 2, bg: 'rgba(229,57,53,0.35)', fg: 'rgba(239,154,154,0.9)', svg: svgOn,  title: 'NIKOGO — wszystko'}
-    ];
-    var btns = [];
-
-
-    function load() {
-        $.getJSON('api.php?action=helper_state&name=alarm_zazbrojony', function(d){
-            if (d && d.ok) { level = parseInt(d.value, 10) || 0; render(); }
-        });
-    }
-
-    function setLevel(val) {
-        for (var i = 0; i < btns.length; i++) btns[i].disabled = true;
-        $.post('api.php', {action: 'alarm_set', v: val}, function(d){
-            for (var i = 0; i < btns.length; i++) btns[i].disabled = false;
-            if (d && d.ok) { level = parseInt(d.value, 10) || 0; render(); }
-        }, 'json').fail(function(){
-            for (var i = 0; i < btns.length; i++) btns[i].disabled = false;
-        });
-    }
-
-    // JEDNO miejsce, ktore rysuje rzed — z tablicy `modes` i biezacego `level`. Kazda zmiana stanu
-    // (poll, klik) wola render() i pasek powstaje od nowa, zamiast recznego dopinania przyciskow
-    // i doklejania poprawek do tych, ktore juz wisza. Trzy przyciski co 15 s to koszt zaniedbywalny,
-    // a DOM nie ma jak rozjechac sie ze stanem.
-    function render() {
-        row.innerHTML = '';
-        btns = [];
-        modes.forEach(function(m, i) {
-            // right liczone od konca, zeby idx 0 (rozbrojony) byl NAJBARDZIEJ Z LEWEJ
-            var right = 12 + (modes.length - 1 - i) * 52;
-            var act = (m.v === level);
-            var b = document.createElement('button');
-            b.style.cssText = 'position:absolute;top:12px;right:' + right + 'px;z-index:10;border:none;'
-                + 'border-radius:50%;cursor:pointer;width:44px;height:44px;display:flex;align-items:center;'
-                + 'justify-content:center;padding:0;transition:background 0.15s,color 0.15s;'
-                + '-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none;'
-                + 'background:' + (act ? m.bg : 'rgba(0,0,0,0.3)') + ';color:' + (act ? '#fff' : m.fg) + ';';
-            b.innerHTML = m.svg;
-            b.title = m.title;
-            b.onclick = function() { setLevel(m.v); };
-            btns.push(b);
-            row.appendChild(b);
-        });
-    }
-
-    // Tarcze alarmu tez nalezą do domu, nie do kamery — poza parkingiem chowamy je razem
-    // z temperaturami, zeby nie leżały na obrazie z ogrodu czy basenu. Chowa sie CALY rzed,
-    // nie kazdy przycisk po kolei — jeden element, jeden stan.
-    function visRow() { row.style.display = window.camParkingActive() ? '' : 'none'; }
-    v.addEventListener('camswitch', visRow);
-
-    render();
-    visRow();
-    load();
-    window.camAlarmTimer = setInterval(load, 15000);
-    if (typeof cardOnUnload === 'function') cardOnUnload(function() { clearInterval(window.camAlarmTimer); window.camAlarmTimer = null; });
-})();
-
-// DRUGA LINIA IKON (prawa strona, pod tarczami alarmu) = PASEK OSTRZEZEN I STANU.
+// IKONY PO PRAWEJ U GORY = PASEK OSTRZEZEN I STANU.
 // Miejsce na rozne ikony; kolejnosc od prawej wg waznosci. Dzis: awarie grzalek bufora (tylko gdy sa).
-// Stan sieci Zigbee (zawsze widoczny) przeszedl na lewa strone, obok zebatki. Na srodku gory obie grupy wchodzilyby
-// na siebie na wąskim ekranie iPhone'a — stad prawa strona i osobny wiersz.
+// Stan sieci Zigbee (zawsze widoczny) przeszedl na lewa strone, obok zebatki.
 //
 // AWARIA GRZALEK BUFORA — czerwone ikonki grzalek, ktore maja stan ON, ale nie ciagna
 // pradu (wyskoczylo STB, reset tylko fizycznie na glowicy). Telegram czyta tylko user, a kamera
@@ -348,11 +252,10 @@ window.camParkingActive = function () {
 
     var box = document.createElement('div');
     box.id = 'grzAlertBox';
-    // Tarcze alarmu maja top:12 i 44 px wysokosci, wiec druga linia zaczyna sie na 64.
-    // WSZYSTKIE ikony w obu liniach trzymaja ten sam raster 44x44 (kolka alarmu, kwadrat anteny,
-    // trojkaty grzalek) — rozne ksztalty, jedna siatka.
+    // Tarcze alarmu przeszly na dzwonek (2026-10-12), wiec pasek wszedl do pierwszej linii (top 12).
+    // Ikony trzymaja raster 44x44 jak zebatka i antena — rozne ksztalty, jedna siatka.
     // row-reverse: pierwszy dopisany element lezy NAJBARDZIEJ Z PRAWEJ.
-    box.style.cssText = 'position:absolute;top:64px;right:12px;z-index:11;'
+    box.style.cssText = 'position:absolute;top:12px;right:12px;z-index:11;'
         + 'display:flex;flex-direction:row-reverse;gap:8px;pointer-events:none;';
     wrap.appendChild(box);
 
@@ -487,7 +390,7 @@ window.camParkingActive = function () {
     load();
     loadZigbee();
     // Pasek ostrzezen mowi o DOMU (siec Zigbee, grzalki bufora), a nie o tym, co widac w kadrze —
-    // wiec poza parkingiem chowa sie tak samo jak pogoda i tarcze alarmu. Na pozostalych kamerach
+    // wiec poza parkingiem chowa sie tak samo jak pogoda. Na pozostalych kamerach
     // zostaja tylko rzeczy dotyczace samego obrazu: zebatka, jakosc SD/HD i dzwiek.
     function visAlert() { box.style.display = slotZb.style.display = window.camParkingActive() ? '' : 'none'; }
     v.addEventListener('camswitch', visAlert);

@@ -382,6 +382,95 @@ camera_render('doorbell_sd', '', true);
 <?php
 ?>
 <script>
+// POZIOM ALARMU (lewy gorny rog kadru DZWONKA; do 2026-10-12 prawy gorny rog kamery parkingu — przeniesione,
+// zeby tam zostalo miejsce na ikony bledow) — helper alarm_zazbrojony 0/1/2, TRZY tarcze obok siebie:
+//   zielona przekreslona = 0 rozbrojony, pomaranczowa = 1 NOC (dom zajety, tylko zdarzenia
+//   zewnetrzne + zalanie), czerwona = 2 NIKOGO (wszystko, takze ruch wewnatrz).
+// Osobny przycisk na poziom (nie cykl) — stan widac bez zgadywania i nie da sie przeskoczyc
+// o jeden za daleko. Aktywny swieci pelnym kolorem, pozostale przygaszone.
+// Stan czytany z serwera (musi przezyc odswiezenie kiosku i zmiane z telefonu) + poll 15 s.
+(function(){
+    var v = document.getElementById('cam_doorbell_sd');
+    if (!v) return;
+    var wrap = v.parentElement;
+    var level = 0;
+
+    // Karta bywa ladowana ponownie (przejscie panelu, loadCard) i blok wykonuje sie znowu.
+    // Wczesniej trzy tarcze byly dopinane wprost do `wrap`, bez id i bez sprzatania, wiec KAZDE
+    // zaladowanie dokladalo kolejne trzy — niewidocznie, bo leza absolutnie w tym samym miejscu,
+    // jedna na drugiej. Klikalo sie w najwyzsza i wszystko wygladalo normalnie. Teraz caly rzed
+    // siedzi w JEDNYM kontenerze z id: stary leci do kosza, nowy jest przerysowany w calosci
+    // z tablicy `modes`. Kontener jest staticowy, wiec `position:absolute` przyciskow nadal
+    // liczy sie wzgledem `wrap` — uklad bez zmian.
+    var prevRow = document.getElementById('camAlarmRow');
+    if (prevRow) prevRow.remove();
+    if (window.camAlarmTimer) clearInterval(window.camAlarmTimer);
+
+    var row = document.createElement('div');
+    row.id = 'camAlarmRow';
+    wrap.appendChild(row);
+
+    var svgOn  = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+    var svgOff = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.69 14a6.9 6.9 0 0 0 .31-2V5l-8-3-3.16 1.18"/><path d="M4.73 4.73L4 5v7c0 6 8 10 8 10a20.29 20.29 0 0 0 5.62-4.38"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+
+    // kolejnosc = od lewej: rozbrojony, NOC, NIKOGO
+    var modes = [
+        // Nasycony kolor przy tej samej alfie czyta sie mocniej niz czarne tlo anteny — stad 0.35,
+        // zeby tarcza aktywna wygladala rownie lekko jak reszta nakladek.
+        {v: 0, bg: 'rgba(67,160,71,0.35)', fg: 'rgba(129,199,132,0.9)', svg: svgOff, title: 'Rozbrojony'},
+        {v: 1, bg: 'rgba(251,140,0,0.35)', fg: 'rgba(255,183,77,0.9)',  svg: svgOn,  title: 'NOC — zdarzenia zewnętrzne'},
+        {v: 2, bg: 'rgba(229,57,53,0.35)', fg: 'rgba(239,154,154,0.9)', svg: svgOn,  title: 'NIKOGO — wszystko'}
+    ];
+    var btns = [];
+
+
+    function load() {
+        $.getJSON('api.php?action=helper_state&name=alarm_zazbrojony', function(d){
+            if (d && d.ok) { level = parseInt(d.value, 10) || 0; render(); }
+        });
+    }
+
+    function setLevel(val) {
+        for (var i = 0; i < btns.length; i++) btns[i].disabled = true;
+        $.post('api.php', {action: 'alarm_set', v: val}, function(d){
+            for (var i = 0; i < btns.length; i++) btns[i].disabled = false;
+            if (d && d.ok) { level = parseInt(d.value, 10) || 0; render(); }
+        }, 'json').fail(function(){
+            for (var i = 0; i < btns.length; i++) btns[i].disabled = false;
+        });
+    }
+
+    // JEDNO miejsce, ktore rysuje rzed — z tablicy `modes` i biezacego `level`. Kazda zmiana stanu
+    // (poll, klik) wola render() i pasek powstaje od nowa, zamiast recznego dopinania przyciskow
+    // i doklejania poprawek do tych, ktore juz wisza. Trzy przyciski co 15 s to koszt zaniedbywalny,
+    // a DOM nie ma jak rozjechac sie ze stanem.
+    function render() {
+        row.innerHTML = '';
+        btns = [];
+        modes.forEach(function(m, i) {
+            var left = 12 + i * 52;   // idx 0 (rozbrojony) najbardziej z lewej
+            var act = (m.v === level);
+            var b = document.createElement('button');
+            b.style.cssText = 'position:absolute;top:12px;left:' + left + 'px;z-index:10;border:none;'
+                + 'border-radius:50%;cursor:pointer;width:44px;height:44px;display:flex;align-items:center;'
+                + 'justify-content:center;padding:0;transition:background 0.15s,color 0.15s;'
+                + '-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none;'
+                + 'background:' + (act ? m.bg : 'rgba(0,0,0,0.3)') + ';color:' + (act ? '#fff' : m.fg) + ';';
+            b.innerHTML = m.svg;
+            b.title = m.title;
+            b.onclick = function() { setLevel(m.v); };
+            btns.push(b);
+            row.appendChild(b);
+        });
+    }
+
+    render();
+    load();
+    window.camAlarmTimer = setInterval(load, 15000);
+    if (typeof cardOnUnload === 'function') cardOnUnload(function() { clearInterval(window.camAlarmTimer); window.camAlarmTimer = null; });
+})();
+</script>
+<script>
 (function(){
     var ID = 'cam_doorbell_sd';
     var v = document.getElementById(ID);
