@@ -71,58 +71,49 @@ camera_render('doorbell_sd', '', true);
     // stoja pod nim jako dwa duze przyciski. Wczesniej wszystkie trzy elementy staly w jednym
     // rzedzie i strzalki wychodzily waskie — na iPadzie trudno bylo trafic palcem.
     // viewBox jest liczony z proporcji, zeby okno bylo szerokie, a nie rozciagniete kwadratem.
-    function winIcon(wPx, hPx, pos) {
+    function winIcon(wPx, hPx, pos, dir) {
         var p = (pos == null) ? 100 : Math.max(0, Math.min(100, pos));
         var VH = 24, VW = Math.max(24, Math.round(VH * wPx / hPx));
-        // Margines = POLOWA grubosci obrysu (stroke-width 1.5), nic wiecej. Dzieki temu zewnetrzna
-        // krawedz ramki lezy dokladnie na krawedzi svg, wiec WIDOCZNA szerokosc okna rowna sie
-        // szerokosci elementu — mozna ja zestawic z borderami strzalek pod spodem.
-        var m = 0.75;
+        var m = 0;   // bez ramki (2026-10-12, user): zdjecie na cala powierzchnie, z rysunku zostaje tylko belka
         var X = m, Y = m, W = VW - 2 * m, H = VH - 2 * m;
         var bh = Math.max(1.8, H * (100 - p) / 100);          // 1,8 = zwinieta roleta w skrzynce
         // W szybie WIDOK Z KAMERY OGRODU (snapshot co minute). Roleta to SCREEN (tkanina), wiec bez lameli:
-        // przyciemnia obraz (naprawde 95%, rysowane 75% — przy 95 na ekranie wygladalo jak 100), a dol wyznacza antracytowa belka (RAL 7016), rama okna w tym samym antracycie.
+        // przyciemnia obraz (naprawde 95%, rysowane 75% — przy 95 na ekranie wygladalo jak 100), a dol wyznacza ciemna belka (#1f2224, ciemniej niz antracyt RAL 7016 — tamten na ciemnym tle wychodzil za jasno).
         // Widac wprost, ile swiata zaslania. Snapshot z /snap (tmpfs, snapshot_refresh).
         var snap = '/snap/snap_basen_hd.jpg?m=' + Math.floor(Date.now() / 60000);
+        // PRZYCISKI NA OKNIE (2026-10-12, user): lewa szyba = w gore, prawa = w dol. Osobny rzad strzalek
+        // zniknal, wiec roleta zajmuje polowe miejsca. Gdy silnik jedzie (strzalka niebieska), klik
+        // w ktorakolwiek szybe ZATRZYMUJE — stop nie potrzebuje wlasnego przycisku.
         // -webkit-touch-callout/user-select: DLUGIE PRZYTRZYMANIE okna otwiera okienko z algorytmem
         // (blok nizej), wiec iOS nie moze na tym gescie pokazywac swojego menu ani zaznaczac.
-        return '<button data-rol="stop" title="Stop" style="grid-column:1/-1;background:none;border:none;'
-             + 'padding:0;margin:0;cursor:pointer;display:flex;justify-content:center;'
-             + '-webkit-touch-callout:none;user-select:none;-webkit-user-select:none;'
-             + '-webkit-tap-highlight-color:transparent;touch-action:manipulation">'
+        var aS = Math.round(hPx * 0.62);
+        function pane(side, d, body) {
+            return '<button data-rol="' + d + '" title="' + (d === 'otworz' ? 'W górę' : 'W dół') + '" style="position:absolute;top:0;'
+                 + side + ':0;width:50%;height:100%;background:none;border:none;padding:0;margin:0;cursor:pointer;'
+                 + 'display:flex;align-items:center;justify-content:center;color:' + (dir === (d === 'otworz' ? 'up' : 'down') ? '#4a9eff' : '#fff') + ';'
+                 + '-webkit-touch-callout:none;user-select:none;-webkit-user-select:none;'
+                 + '-webkit-tap-highlight-color:transparent;touch-action:manipulation">'
+                 + '<svg width="' + aS + '" height="' + aS + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" '
+                 + 'stroke-linecap="round" stroke-linejoin="round" style="display:block;filter:drop-shadow(0 0 2px rgba(0,0,0,.9))">'
+                 + body + '</svg></button>';
+        }
+        return '<div style="position:relative;width:' + wPx + 'px;height:' + hPx + 'px">'
              + '<svg width="' + wPx + '" height="' + hPx + '" viewBox="0 0 ' + VW + ' ' + VH + '" style="display:block">'
              + '<defs><clipPath id="dbWinClip"><rect x="' + X + '" y="' + Y + '" width="' + W + '" height="' + H + '" rx="1.6"/></clipPath></defs>'
              + '<rect x="' + X + '" y="' + Y + '" width="' + W + '" height="' + H + '" rx="1.6" fill="#16232f"/>'
              + '<image href="' + snap + '" x="' + X + '" y="' + Y + '" width="' + W + '" height="' + H + '" preserveAspectRatio="xMidYMid slice" clip-path="url(#dbWinClip)"/>'
              + '<rect x="' + X + '" y="' + Y + '" width="' + W + '" height="' + bh.toFixed(1) + '" fill="#000" fill-opacity=".75" clip-path="url(#dbWinClip)"/>'
-             + '<rect x="' + X + '" y="' + Math.max(Y, Y + bh - 1.6).toFixed(1) + '" width="' + W + '" height="1.6" fill="#383e42"/>'
-             + '<rect x="' + X + '" y="' + Y + '" width="' + W + '" height="' + H + '" rx="1.6" fill="none" stroke="#383e42" stroke-width="1.5"/>'
-             + '<line x1="' + (VW / 2) + '" y1="' + Y + '" x2="' + (VW / 2) + '" y2="' + (Y + H) + '" stroke="#383e42" stroke-width="1"/>'
-             + '</svg></button>';
+             + '<rect x="' + X + '" y="' + Math.max(Y, Y + bh - 1.6).toFixed(1) + '" width="' + W + '" height="1.6" fill="#1f2224"/>'
+             + '</svg>'
+             + pane('left', 'otworz', ROL_UP) + pane('right', 'zamknij', ROL_DOWN)
+             + '</div>';
     }
 
+    // Strzalka niebieska = silnik jedzie WLASNIE w te strone. Polozenie niesie okno, wiec niebieski
+    // znaczy wylacznie ruch.
     var ROL_UP   = '<path d="M12 19V6"/><polyline points="6 12 12 6 18 12"/>';
     var ROL_DOWN = '<path d="M12 5v13"/><polyline points="6 12 12 18 18 12"/>';
-    // `lit` = silnik jedzie WLASNIE w te strone. Strzalka nie niesie polozenia (to robi okno),
-    // wiec niebieski moze znaczyc wylacznie ruch i nie miesza sie z niczym innym.
-    // Przycisk WYPELNIA komorke grida (wPx x hPx), a strzalka siedzi w nim wysrodkowana — cale pole
-    // jest klikalne, nie tylko sama ikona. `display:block` na svg konieczne, bo inline SVG dostaje
-    // dolna przestrzen od line-height i pole dotyku rozjezdza sie w pionie.
-    function rolBtn(dir, body, wPx, hPx, lit) {
-        // Styl jak grupy przyciskow karty HiFi pod spodem (2026-10-12, user): szare tlo zamiast ramki
-        // (wczesniej border 0,45 -> 0,22 -> 0,12), jasna ikona. Tlo wyznacza realne pole dotyku strzalki.
-        return '<button data-rol="' + dir + '" style="background:rgba(255,255,255,0.06);margin:0;padding:0;'
-             + 'box-sizing:border-box;'
-             + 'border:none;border-radius:10px;'
-             + 'width:' + wPx + 'px;height:' + hPx + 'px;'
-             + 'cursor:pointer;display:flex;align-items:center;justify-content:center;'
-             + 'color:' + (lit ? '#4a9eff' : '#ddd') + ';'
-             + '-webkit-tap-highlight-color:transparent;touch-action:manipulation">'
-             + '<svg width="' + Math.round(Math.min(wPx, hPx) * 0.92) + '" height="' + Math.round(Math.min(wPx, hPx) * 0.92) + '" '
-             + 'viewBox="0 0 24 24" fill="none" '
-             + 'stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" '
-             + 'style="display:block">' + body + '</svg></button>';
-    }
+    var rolDir = null;   // kierunek jazdy z ostatniego odczytu (up / down / null)
 
     // Impuls: sterownik gubi pozycje przy pulse, wiec potwierdzeniem jest odswiezenie stanu.
     // Roleta jedzie kilkanascie sekund, stad kilka doczytan zamiast jednego.
@@ -133,16 +124,16 @@ camera_render('doorbell_sd', '', true);
         // nie moze on zatrzymac rolety, bo user chcial tylko zobaczyc algorytm.
         if (algoFired) { algoFired = false; return; }
         var dir = b.getAttribute('data-rol');
-        // Klik w SAMO OKNO zatrzymuje roletę — celujesz w to, co ma stanac, wiec nie trzeba
-        // trzeciego przycisku i rzad zostaje trzyelementowy.
-        if (dir === 'stop') {
+        // Roleta jedzie => klik w ktorakolwiek szybe ja zatrzymuje (stop nie ma osobnego przycisku).
+        if (rolDir) {
             $.post('api.php', {action: 'roleta_stop'});
+            rolDir = null;
             b.style.opacity = '.45';
             setTimeout(function(){ b.style.opacity = '1'; }, 900);
         } else {
             $.post('api.php', {action: 'roleta_move', dir: dir});
+            rolDir = (dir === 'otworz') ? 'up' : 'down';           // kolejny klik od razu = stop
             b.style.color = '#4a9eff';                              // blysk = klikniecie doszlo
-            setTimeout(function(){ b.style.color = '#ddd'; }, 900);
         }
         // Gestsze doczytania niz przy samej pozycji: podswietlenie ma nadazac za jazda,
         // a przejazd trwa kilkanascie sekund.
@@ -153,12 +144,12 @@ camera_render('doorbell_sd', '', true);
     // User: „zebym nie musial pytac ciagle, czy roleta powinna juz zjechac". Okienko pokazuje WSZYSTKIE
     // warianty automatu (rano / dzien / geometria / zachod / blokada / flagi) z ocena kazdego warunku
     // TAK/NIE wg aktualnych odczytow — liczy to api/roleta_algo.inc.php (warunki 33 i 110 czyta z bazy).
-    // Gest: palec na oknie >= ALGO_HOLD ms bez przesuniecia. Krotki tap = STOP jak dotad.
+    // Gest: palec na oknie (dowolna szyba) >= ALGO_HOLD ms bez przesuniecia. Krotki tap = gora / dol / stop.
     // Pointer events (iPadOS 13+), `algoFired` tlumi `click`, ktory przychodzi po puszczeniu palca.
     var ALGO_HOLD = 600, algoTimer = null, algoFired = false, algoStart = null, algoRefresh = null;
     function algoCancel() { if (algoTimer) { clearTimeout(algoTimer); algoTimer = null; } }
     rol.addEventListener('pointerdown', function(e){
-        var b = e.target.closest('[data-rol="stop"]'); if (!b) return;
+        var b = e.target.closest('[data-rol]'); if (!b) return;
         algoStart = {x: e.clientX, y: e.clientY};
         algoCancel();
         algoTimer = setTimeout(function(){ algoTimer = null; algoFired = true; algoOpen(); }, ALGO_HOLD);
@@ -349,26 +340,18 @@ camera_render('doorbell_sd', '', true);
             render(fFinal);
         }
 
-        // ROLETA rysowana na koncu, bo ikona okna ma byc DOKLADNIE tej samej wielkosci co domek —
-        // a domek skaluje sie z finalnym rozmiarem temperatury, nie z wartoscia wyjsciowa.
-        // Strzalka w gore swieci przy pozycji >= 50, w dol ponizej; brak odczytu => zadna.
+        // ROLETA: okno ze zdjeciem z kamery na cala szerokosc pasa, strzalki na szybach.
+        // Strzalka swieci na niebiesko, gdy silnik jedzie w jej strone.
         var rp   = (last.roleta_pos == null) ? null : last.roleta_pos;
-        var rgap = Math.round(4 * k);
-        var colW = Math.floor((avail - rgap) / 2);      // dwie kolumny na cala szerokosc pasa
-        var rpx  = Math.round(fFinal * 1.05);           // baza: tyle, ile ikona domku wyzej
-        // Okno 20% wyzsze od bazy, przemnozone przez 0,783 — tyle zajmowala widoczna ramka, gdy
-        // svg mialo jeszcze margines 2,6 w viewBoxie. Bez tej korekty zdjecie marginesu podnioslo
-        // by okno o kolejne 21%, o ktore nikt nie prosil.
-        var winH = Math.round(rpx * 1.20 * 0.783 * 1.6);   // * 1,6: okno ze zdjeciem z kamery o 60% wyzsze (2026-10-12, user)
-        var btnH = Math.round(rpx * 1.35);              // wiersz strzalek WYZSZY, palec ma w co trafic
+        rolDir = last.roleta_dir || null;
         rol.style.paddingBottom = '0px';
-        rol.innerHTML =
-            '<div style="display:grid;grid-template-columns:' + colW + 'px ' + colW + 'px;'
-          + 'gap:' + rgap + 'px;justify-items:center;align-items:center">'
-          + winIcon(colW * 2 + rgap, winH, rp)
-          + rolBtn('otworz',  ROL_UP,   colW, btnH, last.roleta_dir === 'up')
-          + rolBtn('zamknij', ROL_DOWN, colW, btnH, last.roleta_dir === 'down')
-          + '</div>';
+        // Okno DO SAMEJ krawedzi pasa z prawej i z dolu (2026-10-12, user): ujemny margines zjada padding
+        // pasa, bo odstep od reszty strony daje juz wrapper kamery. Z lewej zostaje tylko lpad od obrazu.
+        var lpad = Math.round(3 * k);
+        // Wysokosc = proporcje kamery ogrodu 16:9 (2026-10-12, user: na maksa, zobaczymy ile zajmie).
+        var winH = Math.round((w - lpad) * 9 / 16);
+        rol.style.margin = 'auto ' + (-padX) + 'px ' + (-Math.round(3 * k)) + 'px ' + (lpad - padX) + 'px';
+        rol.innerHTML = winIcon(w - lpad, winH, rp, rolDir);
     }
 
     function load() {
