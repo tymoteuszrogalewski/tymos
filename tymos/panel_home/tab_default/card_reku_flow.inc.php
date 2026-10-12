@@ -50,8 +50,11 @@
      szerokosci SVG (szerokosc karty minus padding 2x10), wiec 1 jednostka = szerokosc/680,
      na tablecie ~1,28 px. Wysokosc viewBoxu 196 = 140 (diagram) + 56 (rzad ikon 44 + luzy).
      UKLAD 2026-08-29: strumienie splaszczone do poziom-ukos-poziom, przez co diagram zmiescil sie
-     w 190 jednostkach zamiast 236 (bylo 0..290, jest 0..190). -->
-<svg viewBox="0 0 680 196" preserveAspectRatio="xMidYMid meet">
+     w 190 jednostkach zamiast 236 (bylo 0..290, jest 0..190).
+     SPLASZCZENIE 2026-10-12 (user): wartosci siedza NA strzalkach (pille przykrywaja linie), lewe
+     odsuniete do x=52, prawe do 628, zeby nie zaslanialy grotow. Linie y=16 i y=68 (byly 18 i 118),
+     romb mniejszy, rzad kontrolek od y=92. viewBox 680x148 zamiast 196. -->
+<svg viewBox="0 0 680 148" preserveAspectRatio="xMidYMid meet">
   <defs>
     <symbol id="ic-heat" viewBox="0 0 24 24">
       <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
@@ -99,18 +102,18 @@
   <path id="byp-ghost0" class="ghost" fill="none" stroke="#2f2f2f" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
   <path id="byp-ghost1" class="ghost" fill="none" stroke="#2f2f2f" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <path id="flow-supply"  d="M650 18 H432 Q410 18 392 31 L288 105 Q270 118 248 118 H40"
+  <path id="flow-supply"  d="M650 16 H432 Q410 16 389.4 23.7 L290.6 60.3 Q270 68 248 68 H40"
         fill="none" stroke="#5ab6ff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>
-  <path id="flow-extract" d="M30 18 H248 Q270 18 288 31 L392 105 Q410 118 432 118 H640"
+  <path id="flow-extract" d="M30 16 H248 Q270 16 290.6 23.7 L389.4 60.3 Q410 68 432 68 H640"
         fill="none" stroke="#ff7a5c" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>
 
   <!-- groty na koncach poziomow, w tej samej osi Y -->
-  <polygon id="a-sup-out" points="40,106 40,130 16,118"/>
-  <polygon id="a-ext-out" points="640,106 640,130 664,118"/>
+  <polygon id="a-sup-out" points="40,56 40,80 16,68"/>
+  <polygon id="a-ext-out" points="640,56 640,80 664,68"/>
 
   <!-- WYMIENNIK: mniejszy (50x36 zamiast 80x52), bo stan bypassu niesie teraz sama linia,
        a nie napis w srodku. -->
-  <polygon class="exch" points="340,32 390,68 340,104 290,68"/>
+  <polygon class="exch" points="340,20 374,42 340,64 306,42"/>
 
   <!-- WARTOSCI. Gorne pod swoja pozioma linia, dolne nad swoja. Lewy dol to JEDEN rzad:
        temperatura za wezownica, ikona wezownicy, nawiew z wymiennika — poziomy odcinek daje
@@ -118,14 +121,14 @@
        Tekst NIE jest wysrodkowany w ramce: lewe pille maja text-anchor=start (x=12), prawe
        text-anchor=end (x=68). Przy `middle` rozne szerokosci ramek (80 vs 52) dawaly rozny
        odstep tresci od brzegu i wartosci nie stały w jednej osi. -->
-  <g id="p_extract" transform="translate(28,30)"><rect class="pillbg" x="0" width="80" height="28" rx="8"/><text id="v_extract" x="11" y="19" class="val" text-anchor="start">—</text></g>
-  <g id="p_outdoor" transform="translate(648,30)"><rect class="pillbg" x="-80" width="80" height="28" rx="8"/><text id="v_outdoor" x="-11" y="19" class="val" text-anchor="end">—</text></g>
+  <g id="p_extract" transform="translate(52,2)"><rect class="pillbg" x="0" width="80" height="28" rx="8"/><text id="v_extract" x="11" y="19" class="val" text-anchor="start">—</text></g>
+  <g id="p_outdoor" transform="translate(628,2)"><rect class="pillbg" x="-80" width="80" height="28" rx="8"/><text id="v_outdoor" x="-11" y="19" class="val" text-anchor="end">—</text></g>
 
-  <g id="p_post" transform="translate(28,76)"><rect class="pillbg" x="0" width="52" height="28" rx="8"/><text id="v_post" x="11" y="19" class="val" text-anchor="start">—</text></g>
-  <use id="post-coil" href="#ic-heat" x="86" y="77" width="26" height="26" style="color:#8a8a8a;opacity:.42"/>
-  <g id="p_supply" transform="translate(118,76)"><rect class="pillbg" x="0" width="80" height="28" rx="8"/><text id="v_supply" x="11" y="19" class="val" text-anchor="start">—</text></g>
+  <g id="p_post" transform="translate(52,54)"><rect class="pillbg" x="0" width="52" height="28" rx="8"/><text id="v_post" x="11" y="19" class="val" text-anchor="start">—</text></g>
+  <use id="post-coil" href="#ic-heat" x="110" y="55" width="26" height="26" style="color:#8a8a8a;opacity:.42"/>
+  <g id="p_supply" transform="translate(142,54)"><rect class="pillbg" x="0" width="80" height="28" rx="8"/><text id="v_supply" x="11" y="19" class="val" text-anchor="start">—</text></g>
 
-  <g id="p_exhaust" transform="translate(648,76)"><rect class="pillbg" x="-80" width="80" height="28" rx="8"/><text id="v_exhaust" x="-11" y="19" class="val" text-anchor="end">—</text></g>
+  <g id="p_exhaust" transform="translate(628,54)"><rect class="pillbg" x="-80" width="80" height="28" rx="8"/><text id="v_exhaust" x="-11" y="19" class="val" text-anchor="end">—</text></g>
 
   <!-- JEDEN RZAD KONTROLEK, DWIE GRUPY (2026-08-29):
        LEWA = sam rekuperator: bieg wentylatorow | bypass.
@@ -133,51 +136,51 @@
        2026-10-12 (user): wezownica przeszla z lewej grupy do chlodnicy salonu (funkcjonalnie jej miejsce),
        a cel komfortu z pola miedzy pillami na lewo od niej. `komfort_target` prowadzi sezonowo
        ai_rekuperator (zima 21,5 / lato 23,0). Przerwa miedzy grupami niesie te roznice. -->
-  <line class="devsep" x1="30" y1="140" x2="650" y2="140"/>
+  <line class="devsep" x1="30" y1="92" x2="650" y2="92"/>
 
   <g class="ctl" id="bieg-ctl">
-    <rect class="hit" x="10" y="141" width="160" height="54"/>
-    <text class="badge" id="bieg-a" x="14" y="157">A</text>
-    <use class="ico" id="bieg-f1" href="#ic-fan" x="26"  y="145" width="44" height="44"/>
-    <use class="ico" id="bieg-f2" href="#ic-fan" x="72"  y="145" width="44" height="44"/>
-    <use class="ico" id="bieg-f3" href="#ic-fan" x="118" y="145" width="44" height="44"/>
+    <rect class="hit" x="10" y="93" width="160" height="54"/>
+    <text class="badge" id="bieg-a" x="14" y="109">A</text>
+    <use class="ico" id="bieg-f1" href="#ic-fan" x="26"  y="97" width="44" height="44"/>
+    <use class="ico" id="bieg-f2" href="#ic-fan" x="72"  y="97" width="44" height="44"/>
+    <use class="ico" id="bieg-f3" href="#ic-fan" x="118" y="97" width="44" height="44"/>
   </g>
 
   <g class="ctl" id="byp-ctl">
-    <rect class="hit" x="174" y="141" width="70" height="54"/>
-    <text class="badge" id="byp-a" x="178" y="157">A</text>
-    <use class="ico lit" id="byp-on"  href="#ic-flow"  x="190" y="145" width="44" height="44"/>
-    <use class="ico lit" id="byp-off" href="#ic-flowX" x="190" y="145" width="44" height="44"/>
+    <rect class="hit" x="174" y="93" width="70" height="54"/>
+    <text class="badge" id="byp-a" x="178" y="109">A</text>
+    <use class="ico lit" id="byp-on"  href="#ic-flow"  x="190" y="97" width="44" height="44"/>
+    <use class="ico lit" id="byp-off" href="#ic-flowX" x="190" y="97" width="44" height="44"/>
   </g>
 
-  <text id="v_komfort" x="438" y="174" class="komf" text-anchor="end">—</text>
+  <text id="v_komfort" x="438" y="126" class="komf" text-anchor="end">—</text>
 
   <g class="ctl" id="chl-reku" data-key="tryb_chlodnice_nawiew">
-    <rect class="hit" x="444" y="141" width="70" height="54"/>
-    <text class="badge" x="448" y="157">A</text>
-    <use class="ico cool" href="#ic-heat" x="460" y="145" width="44" height="44"/>
-    <line class="slash" x1="459" y1="190" x2="504" y2="146"/>
+    <rect class="hit" x="444" y="93" width="70" height="54"/>
+    <text class="badge" x="448" y="109">A</text>
+    <use class="ico cool" href="#ic-heat" x="460" y="97" width="44" height="44"/>
+    <line class="slash" x1="459" y1="142" x2="504" y2="98"/>
   </g>
 
   <g class="ctl" id="chl-salon" data-key="tryb_chlodnice">
-    <rect class="hit" x="522" y="141" width="70" height="54"/>
-    <text class="badge" x="526" y="157">A</text>
-    <use class="ico cool" href="#ic-snow" x="538" y="145" width="44" height="44"/>
-    <line class="slash" x1="537" y1="190" x2="582" y2="146"/>
+    <rect class="hit" x="522" y="93" width="70" height="54"/>
+    <text class="badge" x="526" y="109">A</text>
+    <use class="ico cool" href="#ic-snow" x="538" y="97" width="44" height="44"/>
+    <line class="slash" x1="537" y1="142" x2="582" y2="98"/>
   </g>
 
   <g class="ctl" id="chl-kuch" data-key="tryb_freecool">
-    <rect class="hit" x="600" y="141" width="80" height="54"/>
-    <text class="badge" x="604" y="157">A</text>
-    <use class="ico fan" href="#ic-fan" x="616" y="145" width="44" height="44"/>
-    <line class="slash" x1="615" y1="190" x2="660" y2="146"/>
+    <rect class="hit" x="600" y="93" width="80" height="54"/>
+    <text class="badge" x="604" y="109">A</text>
+    <use class="ico fan" href="#ic-fan" x="616" y="97" width="44" height="44"/>
+    <line class="slash" x1="615" y1="142" x2="660" y2="98"/>
   </g>
 
   <!-- Klik otwierajacy wykresy lapie TYLKO wymiennik, nie caly diagram (2026-08-30). Wczesniej
        pole szlo przez cala szerokosc do y=136, a rzad kontrolek zaczyna sie na 145 — przy
        celowaniu w ikony palec za czesto trafial w diagram i otwieral wykresy. Romb jest tu
        nieco wiekszy od rysowanego (`.exch`), zeby dalo sie w niego trafic bez mierzenia. -->
-  <polygon id="rkf-hit" points="340,20 402,68 340,116 278,68" fill="transparent" style="cursor:pointer"/>
+  <polygon id="rkf-hit" points="340,8 392,42 340,76 288,42" fill="transparent" style="cursor:pointer"/>
 </svg>
 </div>
 
@@ -364,9 +367,9 @@
       // pigulki na styk WSPOLRZEDNYCH, ten luz zostalby widoczny. Kompensujemy go, zeby
       // temperatura, falka i nawiew czytaly sie jako jeden ciag. PILL_GAP zostaje dla reszty pill.
       var COIL_W = 26, COIL_INK_L = 4.3, COIL_INK_R = 8.7;
-      var cx = 28 + wPost - COIL_INK_L;
+      var cx = 52 + wPost - COIL_INK_L;
       coil.setAttribute('x', cx);
-      sup.setAttribute('transform', 'translate(' + Math.round(cx + COIL_W - COIL_INK_R) + ',76)');
+      sup.setAttribute('transform', 'translate(' + Math.round(cx + COIL_W - COIL_INK_R) + ',54)');
       fitPill('p_supply');
   }
 
@@ -375,7 +378,7 @@
   // Polozenie 100 %: ukos schodzi TUZ ZA wymiennikiem (konczy sie on na x=390), nie na skraju.
   // Przy wiekszym przesunieciu obie linie rozjezdzaly sie tak, ze skrzyzowanie robilo sie ledwo
   // widocznym stykiem — a to wlasnie ono niesie informacje, ze strumienie sie mijaja.
-  var BYP_V1 = [270, 355], BYP_V2 = [410, 485], BYP_R = 22, BYP_Y1 = 18, BYP_Y2 = 118;
+  var BYP_V1 = [270, 355], BYP_V2 = [410, 485], BYP_R = 22, BYP_Y1 = 16, BYP_Y2 = 68;
   function extractPath(byp){
       var t   = Math.max(0, Math.min(100, byp)) / 100;
       var v1  = BYP_V1[0] + (BYP_V1[1] - BYP_V1[0]) * t;
