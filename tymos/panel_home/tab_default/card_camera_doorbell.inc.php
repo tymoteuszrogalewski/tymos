@@ -63,6 +63,19 @@ camera_render('doorbell_sd', '', true);
     rol.style.cssText = 'margin-top:auto;display:flex;flex-direction:column;align-items:center;'
         + 'white-space:nowrap;-webkit-tap-highlight-color:transparent;';
     box.appendChild(rol);
+    // ZDJECIE W TLE rol, nie w <image> w SVG (2026-10-12, user): SVG jest budowane od nowa przy kazdym
+    // odswiezeniu danych i obraz mrugal na czarno. rol zostaje, a nowa klatka wchodzi dopiero po zaladowaniu.
+    // overflow:hidden + promien przycina zdjecie i zaslone razem — osobne clipy dawaly szara obwodke.
+    rol.style.overflow = 'hidden';
+    rol.style.background = '#16232f center / cover no-repeat';
+    var snapCur = '';
+    function snapLoad(u) {
+        if (u === snapCur) return;
+        snapCur = u;
+        var im = new Image();
+        im.onload = function(){ if (snapCur === u) rol.style.backgroundImage = 'url("' + u + '")'; };
+        im.src = u;
+    }
 
     // OKNO POKAZUJE POLOZENIE: roleta w srodku jest opuszczona dokladnie na tyle, na ile jest
     // naprawde (position 100 = zwinieta u gory, 0 = calkiem zasloniete). Dzieki temu stan czyta
@@ -78,7 +91,7 @@ camera_render('doorbell_sd', '', true);
         var X = m, Y = m, W = VW - 2 * m, H = VH - 2 * m;
         var bh = Math.max(1.8, H * (100 - p) / 100);          // 1,8 = zwinieta roleta w skrzynce
         // W szybie WIDOK Z KAMERY OGRODU (snapshot co minute). Roleta to SCREEN (tkanina), wiec bez lameli:
-        // przyciemnia obraz (naprawde 95%, rysowane 75% — przy 95 na ekranie wygladalo jak 100), a dol wyznacza ciemna belka (#1f2224, ciemniej niz antracyt RAL 7016 — tamten na ciemnym tle wychodzil za jasno).
+        // przyciemnia obraz (naprawde 95%, rysowane 70% — przy 95 na ekranie wygladalo jak 100), a dol wyznacza niebieska belka (kolor "aktywny").
         // Widac wprost, ile swiata zaslania. Snapshot z /snap (tmpfs, snapshot_refresh).
         var snap = '/snap/snap_basen_hd.jpg?m=' + Math.floor(Date.now() / 60000);
         // PRZYCISKI NA OKNIE (2026-10-12, user): lewa szyba = w gore, prawa = w dol. Osobny rzad strzalek
@@ -97,13 +110,11 @@ camera_render('doorbell_sd', '', true);
                  + 'stroke-linecap="round" stroke-linejoin="round" style="display:block;filter:drop-shadow(0 0 2px rgba(0,0,0,.9))">'
                  + body + '</svg></button>';
         }
+        snapLoad(snap);
         return '<div style="position:relative;width:' + wPx + 'px;height:' + hPx + 'px">'
              + '<svg width="' + wPx + '" height="' + hPx + '" viewBox="0 0 ' + VW + ' ' + VH + '" style="display:block">'
-             + '<defs><clipPath id="dbWinClip"><rect x="' + X + '" y="' + Y + '" width="' + W + '" height="' + H + '" rx="1.6"/></clipPath></defs>'
-             + '<rect x="' + X + '" y="' + Y + '" width="' + W + '" height="' + H + '" rx="1.6" fill="#16232f"/>'
-             + '<image href="' + snap + '" x="' + X + '" y="' + Y + '" width="' + W + '" height="' + H + '" preserveAspectRatio="xMidYMid slice" clip-path="url(#dbWinClip)"/>'
-             + '<rect x="' + X + '" y="' + Y + '" width="' + W + '" height="' + bh.toFixed(1) + '" fill="#000" fill-opacity=".75" clip-path="url(#dbWinClip)"/>'
-             + '<rect x="' + X + '" y="' + Math.max(Y, Y + bh - 1.6).toFixed(1) + '" width="' + W + '" height="1.6" fill="#1f2224"/>'
+             + '<rect x="' + X + '" y="' + Y + '" width="' + W + '" height="' + bh.toFixed(1) + '" fill="#000" fill-opacity=".70"/>'
+             + '<rect x="' + X + '" y="' + Math.max(Y, Y + bh - 1.6).toFixed(1) + '" width="' + W + '" height="1.6" fill="#4a9eff"/>'
              + '</svg>'
              + pane('left', 'otworz', ROL_UP) + pane('right', 'zamknij', ROL_DOWN)
              + '</div>';
@@ -351,6 +362,7 @@ camera_render('doorbell_sd', '', true);
         // Wysokosc = proporcje kamery ogrodu 16:9 (2026-10-12, user: na maksa, zobaczymy ile zajmie).
         var winH = Math.round((w - lpad) * 9 / 16);
         rol.style.margin = 'auto ' + (-padX) + 'px ' + (-Math.round(3 * k)) + 'px ' + (lpad - padX) + 'px';
+        rol.style.borderRadius = Math.round(winH * 1.6 / 24) + 'px';
         rol.innerHTML = winIcon(w - lpad, winH, rp, rolDir);
     }
 
