@@ -10,7 +10,8 @@
 $hifiTitle = defined('HIFI_TITLE_VISIBLE') && HIFI_TITLE_VISIBLE;   // domyslnie ukryty (2026-10-12, user), wlacza sie w configu
 ?>
 <style>
-.hifi .wda-cat{padding:8px;display:flex;flex-direction:column;gap:8px}
+/* Bez ramki karty (2026-10-12, user: szkoda miejsca) — zostaja same dwie szare grupy przyciskow */
+.hifi .wda-cat{padding:0;background:none;border:none;display:flex;flex-direction:column;gap:8px}
 .hifi .hifi-now{display:flex;align-items:center;gap:10px;min-height:44px}
 .hifi .hifi-now img{width:44px;height:44px;border-radius:6px;object-fit:cover;background:#262626;flex:0 0 44px}
 .hifi .hifi-now .tx{min-width:0;flex:1;white-space:nowrap}
