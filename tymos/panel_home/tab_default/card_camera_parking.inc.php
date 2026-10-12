@@ -61,7 +61,7 @@ window.camParkingActive = function () {
     wrap.appendChild(btn);
 })();
 
-// JAKOSC SD / HD (gora, na srodku kadru) — pokazuje AKTUALNY stan i przelacza klikiem.
+// JAKOSC SD / HD (prawy dolny rog, na lewo od glosnika; do 2026-10-12 gora, srodek â gora zostaje na ikony bledow) — pokazuje AKTUALNY stan i przelacza klikiem.
 // Substream leci na iPada domyslnie (male pasmo, natychmiastowy start), HD na zadanie.
 // Przelaczanie robi `switchTo` z inc/camera.inc.php, wystawione jako window[ID + '_switch'] —
 // ta sama sciezka, ktorej uzywa pasek miniatur, wiec poster, glosnik i nakladki same nadazaja.
@@ -83,8 +83,8 @@ window.camParkingActive = function () {
 
     var b = document.createElement('button');
     b.id = 'camQualityBtn';
-    b.style.cssText = 'position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:12;'
-        + 'border:none;border-radius:10px;cursor:pointer;width:44px;height:44px;display:flex;'
+    b.style.cssText = 'position:absolute;bottom:12px;right:64px;z-index:12;'
+        + 'border:none;border-radius:50%;cursor:pointer;width:44px;height:44px;display:flex;'
         + 'align-items:center;justify-content:center;padding:0;font:700 15px/1 system-ui,sans-serif;'
         + 'letter-spacing:0.5px;transition:background 0.15s,color 0.15s;'
         + '-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none;';
@@ -310,7 +310,7 @@ window.camParkingActive = function () {
     function paintZigbee(st) {
         var b = document.createElement('button');
         b.id = 'zbBtn';
-        b.style.cssText = 'pointer-events:auto;border:none;border-radius:10px;cursor:pointer;'
+        b.style.cssText = 'pointer-events:auto;border:none;border-radius:50%;cursor:pointer;'
             + 'width:44px;height:44px;display:flex;align-items:center;justify-content:center;padding:0;'
             + 'background:rgba(0,0,0,0.3);'
             + '-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none;'
