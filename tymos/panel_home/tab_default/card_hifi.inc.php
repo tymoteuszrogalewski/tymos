@@ -3,7 +3,7 @@
 // Zastepuje stara karte (naglowek, wiersz glosnosci, co gra) i nakladke z przyciskami na kadrze dzwonka:
 // na jasnym niebie przyciski na obrazie byly slabo widoczne, a tu stoja na stalym, ciemnym tle.
 //   wiersz 1 (HIFI_TITLE_VISIBLE): okladka, tytul, wykonawca · zrodlo
-//   wiersz 2: poprzedni / pauza-graj (pauza = wyciszenie) / nastepny oraz ciszej / glosnosc / glosniej — szerokie pola dotyku
+//   wiersz 2: poprzedni / pauza-graj (pauza = wyciszenie) / nastepny / stop (prawdziwe zatrzymanie, wieza sama sie potem wylacza) oraz ciszej / glosnosc / glosniej — szerokie pola dotyku
 // Steruje lokalnym API wiezy (inc/hifi.inc.php, endpointy hifi_state / hifi_set) — bez aplikacji Technicsa i bez pilota.
 // Wieza sama sie wlacza, gdy cos zacznie na niej grac (na kablu LAN), i sama wylacza po czasie,
 // wiec przycisku zasilania nie ma. Przelacznikow zrodel nie ma (CD / OPT tylko przez IR).
@@ -42,6 +42,8 @@ $hifiTitle = !defined('HIFI_TITLE_VISIBLE') || HIFI_TITLE_VISIBLE;
         <button data-ctl="previous" title="Poprzedni"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
         <button data-ctl="pp" id="hifi-pp" title="Pauza (wyciszenie) / graj"><svg viewBox="0 0 24 24"><path id="hifi-pp-ic" d="M7 5v14l12-7z"/></svg></button>
         <button data-ctl="next" title="Następny"><svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button>
+        <!-- STOP (2026-10-12, user): bez niego wieza nigdy sie nie wylaczy, bo pauza tylko wycisza i muzyka gra dalej -->
+        <button data-ctl="stop" title="Stop"><svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg></button>
       </div>
       <div class="hifi-grp">
         <button data-d="-1" title="Ciszej"><svg viewBox="0 0 24 24"><path d="M5 8h14l-7 9z"/></svg></button>
@@ -120,7 +122,13 @@ $hifiTitle = !defined('HIFI_TITLE_VISIBLE') || HIFI_TITLE_VISIBLE;
 
   $w.on('click', 'button[data-ctl]', function(){
     var c = $(this).attr('data-ctl');
-    if (c === 'pp') {
+    if (c === 'stop') {
+      // Prawdziwe zatrzymanie Spotify (pause = koniec sesji Spotify Connect) + odciszenie, zeby wieza
+      // nie zostala wyciszona dla nastepnego zrodla (telefon, TV). Po czasie bez grania wieza sama sie wylacza.
+      if (mute) setMute(false);
+      c = 'pause';
+    }
+    else     if (c === 'pp') {
       // PAUZA = WYCISZENIE (2026-10-12): pause w Spotify Connect zrywa sesje i „graj” zaczyna playliste od nowa.
       // Wyciszona muzyka gra dalej po cichu, a odciszenie wraca do tej samej glosnosci (wieza jej nie zmienia).
       // Wyciszona i zatrzymana (np. wieza wylaczyla sie w trakcie): odcisza i wznawia jednym kliknieciem.
