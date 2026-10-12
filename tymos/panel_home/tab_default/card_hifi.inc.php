@@ -7,7 +7,7 @@
 // Steruje lokalnym API wiezy (inc/hifi.inc.php, endpointy hifi_state / hifi_set) — bez aplikacji Technicsa i bez pilota.
 // Wieza sama sie wlacza, gdy cos zacznie na niej grac (na kablu LAN), i sama wylacza po czasie,
 // wiec przycisku zasilania nie ma. Przelacznikow zrodel nie ma (CD / OPT tylko przez IR).
-$hifiTitle = !defined('HIFI_TITLE_VISIBLE') || HIFI_TITLE_VISIBLE;
+$hifiTitle = defined('HIFI_TITLE_VISIBLE') && HIFI_TITLE_VISIBLE;   // domyslnie ukryty (2026-10-12, user), wlacza sie w configu
 ?>
 <style>
 .hifi .wda-cat{padding:8px;display:flex;flex-direction:column;gap:8px}
