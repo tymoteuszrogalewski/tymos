@@ -124,9 +124,9 @@
   <g id="p_extract" transform="translate(52,2)"><rect class="pillbg" x="0" width="80" height="28" rx="8"/><text id="v_extract" x="11" y="19" class="val" text-anchor="start">—</text></g>
   <g id="p_outdoor" transform="translate(628,2)"><rect class="pillbg" x="-80" width="80" height="28" rx="8"/><text id="v_outdoor" x="-11" y="19" class="val" text-anchor="end">—</text></g>
 
-  <g id="p_post" transform="translate(52,54)"><rect class="pillbg" x="0" width="52" height="28" rx="8"/><text id="v_post" x="11" y="19" class="val" text-anchor="start">—</text></g>
-  <use id="post-coil" href="#ic-heat" x="110" y="55" width="26" height="26" style="color:#8a8a8a;opacity:.42"/>
-  <g id="p_supply" transform="translate(142,54)"><rect class="pillbg" x="0" width="80" height="28" rx="8"/><text id="v_supply" x="11" y="19" class="val" text-anchor="start">—</text></g>
+  <!-- Za wezownica + wezownica + nawiew = JEDEN balonik (2026-10-12, user): trzy osobne elementy
+       na sztywnych pozycjach wchodzily na siebie (ikona pod strzalka/ramka) przy dluzszych liczbach. -->
+  <g id="p_postrow" transform="translate(52,54)"><rect class="pillbg" x="0" width="160" height="28" rx="8"/><text id="v_post" x="11" y="19" class="val" text-anchor="start">—</text><use id="post-coil" href="#ic-heat" x="40" y="1" width="26" height="26" style="color:#8a8a8a;opacity:.42"/><text id="v_supply" x="70" y="19" class="val" text-anchor="start">—</text></g>
 
   <g id="p_exhaust" transform="translate(628,54)"><rect class="pillbg" x="-80" width="80" height="28" rx="8"/><text id="v_exhaust" x="-11" y="19" class="val" text-anchor="end">—</text></g>
 
@@ -354,23 +354,22 @@
   }
   function fitPills(){
       fitPill('p_extract'); fitPill('p_outdoor'); fitPill('p_exhaust');
-      // Lewy dolny rzad jest jeden pod druga wartoscia, wiec ikona i nawiew musza sie przesunac
-      // o tyle, ile urosla ramka temperatury za wezownica.
-      var wPost = fitPill('p_post');
-      var coil  = document.getElementById('post-coil');
-      var sup   = document.getElementById('p_supply');
-      if (!coil || !sup) return;
-      // ZEROWY odstep i to WIZUALNIE, nie w liczbach. Falka `#ic-heat` NIE jest wysrodkowana
-      // w swoim polu: kreski ida w viewBoxie od x=4 do x=16 z 24, wiec przy skali 26/24 ink zajmuje
-      // 87,8..100,8 z pola 83,5..109,5 — 4,3 jednostki luzu z lewej i az 8,7 z prawej (zmierzone
-      // przez getBBox na wyrenderowanej karcie, nie policzone z glowy). Gdyby ikone dokleic do
-      // pigulki na styk WSPOLRZEDNYCH, ten luz zostalby widoczny. Kompensujemy go, zeby
-      // temperatura, falka i nawiew czytaly sie jako jeden ciag. PILL_GAP zostaje dla reszty pill.
-      var COIL_W = 26, COIL_INK_L = 4.3, COIL_INK_R = 8.7;
-      var cx = 52 + wPost - COIL_INK_L;
-      coil.setAttribute('x', cx);
-      sup.setAttribute('transform', 'translate(' + Math.round(cx + COIL_W - COIL_INK_R) + ',54)');
-      fitPill('p_supply');
+      // Lewy dolny balonik: temperatura za wezownica, falka, nawiew — jeden ciag w jednej ramce,
+      // ramka rosnie do sumy. Falka `#ic-heat` NIE jest wysrodkowana w swoim polu: kreski ida
+      // w viewBoxie od x=4 do x=16 z 24, wiec przy skali 26/24 jest 4,3 luzu z lewej i 8,7 z prawej
+      // (zmierzone getBBox). Kompensujemy, zeby odstepy wokol falki byly WIZUALNIE rowne (COIL_GAP).
+      var g = document.getElementById('p_postrow'); if (!g) return;
+      var tp = document.getElementById('v_post'), ts = document.getElementById('v_supply');
+      var coil = document.getElementById('post-coil'), r = g.querySelector('rect');
+      var bp, bs;
+      try { bp = tp.getBBox(); bs = ts.getBBox(); } catch (e) { return; }   // karta ukryta => getBBox rzuca
+      if (!bp || !bp.width) return;
+      var COIL_W = 26, COIL_INK_L = 4.3, COIL_INK_R = 8.7, COIL_GAP = 9;
+      var cx = PILL_PAD + Math.ceil(bp.width) + COIL_GAP - COIL_INK_L;
+      coil.setAttribute('x', cx.toFixed(1));
+      var sx = cx + COIL_W - COIL_INK_R + COIL_GAP;
+      ts.setAttribute('x', sx.toFixed(1));
+      r.setAttribute('width', Math.ceil(sx + bs.width + PILL_PAD));
   }
 
   // Sciezka wywiewu dla zadanego bypassu (0-100). Wierzcholki jada liniowo miedzy polozeniem
