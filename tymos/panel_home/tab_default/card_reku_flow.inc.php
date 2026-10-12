@@ -7,7 +7,7 @@
 // Coil POST to JEDNA ikona (wezownica) przebarwiana rola — czerwona gdy grzeje, niebieska gdy
 // chlodzi (2026-08-29). Wczesniej stala tam para falka+sniezynka, ale to jedno urzadzenie i para
 // sugerowala dwa; sniezynka zostaje na diagramie tylko jako kontrolka chlodzenia salonu.
-// Pod diagramem JEDEN rzad kontrolek: bieg | bypass | chlodzenie (salon, reku-post, kuchnia).
+// Pod diagramem JEDEN rzad kontrolek: bieg | bypass, a po prawej cel komfortu | reku-post | chlodnica salonu | kuchnia.
 // Dane z api reku_diagram + klimat_state. v3.
 ?>
 <style>
@@ -121,10 +121,6 @@
   <g id="p_extract" transform="translate(28,30)"><rect class="pillbg" x="0" width="80" height="28" rx="8"/><text id="v_extract" x="11" y="19" class="val" text-anchor="start">—</text></g>
   <g id="p_outdoor" transform="translate(648,30)"><rect class="pillbg" x="-80" width="80" height="28" rx="8"/><text id="v_outdoor" x="-11" y="19" class="val" text-anchor="end">—</text></g>
 
-  <!-- Cel komfortu (2026-09-04, na zyczenie usera): w wolnym polu MIEDZY pillami wywiewu
-       (u gory) a nawiewu (nizej), na prawo od nich — z dala od rzedu kontrolek, gdzie wczesniej
-       stal przy chlodnicy salonu. `komfort_target` prowadzi sezonowo ai_rekuperator (zima 21,5 / lato 23,0). -->
-  <text id="v_komfort" x="194" y="70" class="komf" text-anchor="middle">—</text>
   <g id="p_post" transform="translate(28,76)"><rect class="pillbg" x="0" width="52" height="28" rx="8"/><text id="v_post" x="11" y="19" class="val" text-anchor="start">—</text></g>
   <use id="post-coil" href="#ic-heat" x="86" y="77" width="26" height="26" style="color:#8a8a8a;opacity:.42"/>
   <g id="p_supply" transform="translate(118,76)"><rect class="pillbg" x="0" width="80" height="28" rx="8"/><text id="v_supply" x="11" y="19" class="val" text-anchor="start">—</text></g>
@@ -132,10 +128,11 @@
   <g id="p_exhaust" transform="translate(648,76)"><rect class="pillbg" x="-80" width="80" height="28" rx="8"/><text id="v_exhaust" x="-11" y="19" class="val" text-anchor="end">—</text></g>
 
   <!-- JEDEN RZAD KONTROLEK, DWIE GRUPY (2026-08-29):
-       LEWA = sam rekuperator: bieg wentylatorow | bypass | wezownica nawiewu.
-       PRAWA = odbiorniki poza centrala: chlodnica salonu | przewiew kuchni.
-       Wczesniej wszystkie piec stalo w rownych odstepach i bypass z wezownica wygladaly na
-       czesc prawej grupy, choc naleza do reku. Przerwa miedzy grupami niesie te roznice. -->
+       LEWA = sam rekuperator: bieg wentylatorow | bypass.
+       PRAWA = grzanie / chlodzenie: cel komfortu | wezownica nawiewu (reku-post) | chlodnica salonu | przewiew kuchni.
+       2026-10-12 (user): wezownica przeszla z lewej grupy do chlodnicy salonu (funkcjonalnie jej miejsce),
+       a cel komfortu z pola miedzy pillami na lewo od niej. `komfort_target` prowadzi sezonowo
+       ai_rekuperator (zima 21,5 / lato 23,0). Przerwa miedzy grupami niesie te roznice. -->
   <line class="devsep" x1="30" y1="140" x2="650" y2="140"/>
 
   <g class="ctl" id="bieg-ctl">
@@ -153,11 +150,13 @@
     <use class="ico lit" id="byp-off" href="#ic-flowX" x="190" y="145" width="44" height="44"/>
   </g>
 
+  <text id="v_komfort" x="438" y="174" class="komf" text-anchor="end">—</text>
+
   <g class="ctl" id="chl-reku" data-key="tryb_chlodnice_nawiew">
-    <rect class="hit" x="252" y="141" width="70" height="54"/>
-    <text class="badge" x="256" y="157">A</text>
-    <use class="ico cool" href="#ic-heat" x="268" y="145" width="44" height="44"/>
-    <line class="slash" x1="267" y1="190" x2="312" y2="146"/>
+    <rect class="hit" x="444" y="141" width="70" height="54"/>
+    <text class="badge" x="448" y="157">A</text>
+    <use class="ico cool" href="#ic-heat" x="460" y="145" width="44" height="44"/>
+    <line class="slash" x1="459" y1="190" x2="504" y2="146"/>
   </g>
 
   <g class="ctl" id="chl-salon" data-key="tryb_chlodnice">
