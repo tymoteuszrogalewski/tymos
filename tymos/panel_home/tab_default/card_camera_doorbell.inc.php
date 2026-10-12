@@ -81,7 +81,7 @@ camera_render('doorbell_sd', '', true);
         var X = m, Y = m, W = VW - 2 * m, H = VH - 2 * m;
         var bh = Math.max(1.8, H * (100 - p) / 100);          // 1,8 = zwinieta roleta w skrzynce
         // W szybie WIDOK Z KAMERY OGRODU (snapshot co minute). Roleta to SCREEN (tkanina), wiec bez lameli:
-        // przyciemnia obraz (naprawde 95%, rysowane 70% — przy 95 na ekranie wygladalo jak 100), a dol wyznacza antracytowa belka (RAL 7016).
+        // przyciemnia obraz (naprawde 95%, rysowane 75% — przy 95 na ekranie wygladalo jak 100), a dol wyznacza antracytowa belka (RAL 7016), rama okna w tym samym antracycie.
         // Widac wprost, ile swiata zaslania. Snapshot z /snap (tmpfs, snapshot_refresh).
         var snap = '/snap/snap_basen_hd.jpg?m=' + Math.floor(Date.now() / 60000);
         // -webkit-touch-callout/user-select: DLUGIE PRZYTRZYMANIE okna otwiera okienko z algorytmem
@@ -94,10 +94,10 @@ camera_render('doorbell_sd', '', true);
              + '<defs><clipPath id="dbWinClip"><rect x="' + X + '" y="' + Y + '" width="' + W + '" height="' + H + '" rx="1.6"/></clipPath></defs>'
              + '<rect x="' + X + '" y="' + Y + '" width="' + W + '" height="' + H + '" rx="1.6" fill="#16232f"/>'
              + '<image href="' + snap + '" x="' + X + '" y="' + Y + '" width="' + W + '" height="' + H + '" preserveAspectRatio="xMidYMid slice" clip-path="url(#dbWinClip)"/>'
-             + '<rect x="' + X + '" y="' + Y + '" width="' + W + '" height="' + bh.toFixed(1) + '" fill="#000" fill-opacity=".7" clip-path="url(#dbWinClip)"/>'
+             + '<rect x="' + X + '" y="' + Y + '" width="' + W + '" height="' + bh.toFixed(1) + '" fill="#000" fill-opacity=".75" clip-path="url(#dbWinClip)"/>'
              + '<rect x="' + X + '" y="' + Math.max(Y, Y + bh - 1.6).toFixed(1) + '" width="' + W + '" height="1.6" fill="#383e42"/>'
-             + '<rect x="' + X + '" y="' + Y + '" width="' + W + '" height="' + H + '" rx="1.6" fill="none" stroke="#8a8a8a" stroke-width="1.5"/>'
-             + '<line x1="' + (VW / 2) + '" y1="' + Y + '" x2="' + (VW / 2) + '" y2="' + (Y + H) + '" stroke="#8a8a8a" stroke-width="1" opacity=".55"/>'
+             + '<rect x="' + X + '" y="' + Y + '" width="' + W + '" height="' + H + '" rx="1.6" fill="none" stroke="#383e42" stroke-width="1.5"/>'
+             + '<line x1="' + (VW / 2) + '" y1="' + Y + '" x2="' + (VW / 2) + '" y2="' + (Y + H) + '" stroke="#383e42" stroke-width="1"/>'
              + '</svg></button>';
     }
 
@@ -359,7 +359,7 @@ camera_render('doorbell_sd', '', true);
         // Okno 20% wyzsze od bazy, przemnozone przez 0,783 — tyle zajmowala widoczna ramka, gdy
         // svg mialo jeszcze margines 2,6 w viewBoxie. Bez tej korekty zdjecie marginesu podnioslo
         // by okno o kolejne 21%, o ktore nikt nie prosil.
-        var winH = Math.round(rpx * 1.20 * 0.783 * 1.4);   // * 1,4: okno ze zdjeciem z kamery o 40% wyzsze (2026-10-12, user)
+        var winH = Math.round(rpx * 1.20 * 0.783 * 1.6);   // * 1,6: okno ze zdjeciem z kamery o 60% wyzsze (2026-10-12, user)
         var btnH = Math.round(rpx * 1.35);              // wiersz strzalek WYZSZY, palec ma w co trafic
         rol.style.paddingBottom = '0px';
         rol.innerHTML =
