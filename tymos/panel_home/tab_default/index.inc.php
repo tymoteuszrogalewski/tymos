@@ -29,9 +29,9 @@ return [
         ['colWidths' => '1fr 1fr', 'columns' => [
             [
                 ['name' => 'camera_doorbell', 'refresh' => 0],
-                ['name' => 'klimat', 'refresh' => 0],
-                // HiFi (Technics) pod ogrzewaniem — wypelnia pusty dol lewej kolumny (2026-10-08, user)
+                // HiFi (Technics) zaraz pod dzwonkiem, nad klimatem — muzyka wazniejsza niz rekuperacja (2026-10-12, user)
                 ['name' => 'hifi', 'refresh' => 0],
+                ['name' => 'klimat', 'refresh' => 0],
             ],
             [
                 // Pogoda NAD cenami: prognoza na dzis i jutro (weather_hourly, import co 30 min).
