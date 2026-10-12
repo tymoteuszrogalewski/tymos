@@ -3,7 +3,7 @@
 // Zastepuje stara karte (naglowek, wiersz glosnosci, co gra) i nakladke z przyciskami na kadrze dzwonka:
 // na jasnym niebie przyciski na obrazie byly slabo widoczne, a tu stoja na stalym, ciemnym tle.
 //   wiersz 1 (HIFI_TITLE_VISIBLE): okladka, tytul, wykonawca · zrodlo
-//   wiersz 2: poprzedni / stop-graj / nastepny oraz ciszej / glosnosc / glosniej — szerokie pola dotyku
+//   wiersz 2: poprzedni / pauza-graj (pauza = wyciszenie) / nastepny oraz ciszej / glosnosc / glosniej — szerokie pola dotyku
 // Steruje lokalnym API wiezy (inc/hifi.inc.php, endpointy hifi_state / hifi_set) — bez aplikacji Technicsa i bez pilota.
 // Wieza sama sie wlacza, gdy cos zacznie na niej grac (na kablu LAN), i sama wylacza po czasie,
 // wiec przycisku zasilania nie ma. Przelacznikow zrodel nie ma (CD / OPT tylko przez IR).
@@ -40,7 +40,7 @@ $hifiTitle = !defined('HIFI_TITLE_VISIBLE') || HIFI_TITLE_VISIBLE;
     <div class="hifi-row">
       <div class="hifi-grp">
         <button data-ctl="previous" title="Poprzedni"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
-        <button data-ctl="pp" id="hifi-pp" title="Stop / graj"><svg viewBox="0 0 24 24"><path id="hifi-pp-ic" d="M7 5v14l12-7z"/></svg></button>
+        <button data-ctl="pp" id="hifi-pp" title="Pauza (wyciszenie) / graj"><svg viewBox="0 0 24 24"><path id="hifi-pp-ic" d="M7 5v14l12-7z"/></svg></button>
         <button data-ctl="next" title="Następny"><svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button>
       </div>
       <div class="hifi-grp">
@@ -59,7 +59,7 @@ $hifiTitle = !defined('HIFI_TITLE_VISIBLE') || HIFI_TITLE_VISIBLE;
   $w.data('init', 1);
 
   var last = null;   // ostatni grany utwor — zostaje na ekranie po zatrzymaniu
-  var st = '';
+  var st = '', mute = false;   // mute = pauza z panelu (wyciszenie, patrz klik w srodkowy przycisk)
 
   function show(d){
     if (!d || !d.ok) {
@@ -69,13 +69,12 @@ $hifiTitle = !defined('HIFI_TITLE_VISIBLE') || HIFI_TITLE_VISIBLE;
     }
     $('#hifi-vol').text(d.volume).toggleClass('mute', !!d.mute);
     st = d.state;
+    mute = !!d.mute;
     if (d.title) last = {title: d.title, artist: d.artist, cover: d.cover, src: d.src};
     else if (!last && d.last) last = {title: d.last.title, artist: d.last.artist, cover: d.last.cover, src: d.last.src};
-    // Ikona srodkowego przycisku: gdy gra — STOP (kwadrat), inaczej trojkat „graj”. Pauza w Spotify Connect
-    // i tak zatrzymuje odtwarzanie i zrywa sesje (stan „stopped”), wiec kwadrat mowi prawde.
-    $('#hifi-pp-ic').attr('d', st === 'playing' ? 'M6 6h12v12H6z' : 'M7 5v14l12-7z');
+    paintPp();
     // Druga linia: wykonawca · zrodlo, gdy gra; inaczej wykonawca · pauza / nie gra
-    var state = st === 'playing' ? (d.srcName || '') : (st === 'paused' ? 'pauza' : 'nie gra');
+    var state = st === 'playing' ? (mute ? 'wyciszone' : (d.srcName || '')) : (st === 'paused' ? 'pauza' : 'nie gra');
     if (last) {
       $('#hifi-title').text(last.title);
       $('#hifi-artist').text([last.artist, state].filter(Boolean).join(' · '));
@@ -85,7 +84,16 @@ $hifiTitle = !defined('HIFI_TITLE_VISIBLE') || HIFI_TITLE_VISIBLE;
       $('#hifi-title').text('HiFi');
       $('#hifi-artist').text(st === 'playing' ? state : 'Spotify nie gra');
     }
-    $('#hifi-now').toggleClass('idle', st !== 'playing');
+    $('#hifi-now').toggleClass('idle', st !== 'playing' || mute);
+  }
+
+  // Ikona srodkowego przycisku: gra i nie jest wyciszona = PAUZA (dwie kreski), inaczej trojkat „graj”.
+  function paintPp(){
+    $('#hifi-pp-ic').attr('d', st === 'playing' && !mute ? 'M6 5h4v14H6zM14 5h4v14h-4z' : 'M7 5v14l12-7z');
+  }
+  function setMute(on){
+    mute = on; paintPp(); $('#hifi-vol').toggleClass('mute', on);
+    $.post('api.php', {action: 'hifi_set', op: 'mute', on: on ? 1 : 0}, function(){ setTimeout(poll, 800); }, 'json');
   }
 
   function poll(){
@@ -106,8 +114,12 @@ $hifiTitle = !defined('HIFI_TITLE_VISIBLE') || HIFI_TITLE_VISIBLE;
   $w.on('click', 'button[data-ctl]', function(){
     var c = $(this).attr('data-ctl');
     if (c === 'pp') {
-      if (st === 'playing') c = 'pause';
-      else if (st === 'paused') c = 'play';
+      // PAUZA = WYCISZENIE (2026-10-12): pause w Spotify Connect zrywa sesje i „graj” zaczyna playliste od nowa.
+      // Wyciszona muzyka gra dalej po cichu, a odciszenie wraca do tej samej glosnosci (wieza jej nie zmienia).
+      // Wyciszona i zatrzymana (np. wieza wylaczyla sie w trakcie): odcisza i wznawia jednym kliknieciem.
+      if (mute) { setMute(false); if (st === 'playing') return; }
+      else if (st === 'playing') { setMute(true); return; }
+      if (st === 'paused') c = 'play';
       else if (last && last.src === 'spotify') {
         // Zatrzymany Spotify: wznowienie ostatniej sesji
         $.post('api.php', {action: 'hifi_set', op: 'src', src: 'spotify'}, function(){ setTimeout(poll, 1500); }, 'json');

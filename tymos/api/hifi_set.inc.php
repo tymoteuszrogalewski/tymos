@@ -1,7 +1,16 @@
-<?php // POST — sterowanie wieza Technics: op=vol (delta), op=src (spotify | cd | opt), op=ctl (previous | next | pause | play).
+<?php // POST — sterowanie wieza Technics: op=vol (delta), op=mute (on 0/1), op=src (spotify | cd | opt), op=ctl (previous | next | pause | play).
 require_once __DIR__ . '/../inc/hifi.inc.php';
 
 $op = $_POST['op'] ?? '';
+
+if ($op === 'mute') {
+    // Pauza z panelu = WYCISZENIE (2026-10-12): pause w Spotify Connect zrywa sesje i play zaczyna od nowa.
+    // Muzyka gra dalej po cichu, glosnosc zostaje nietknieta, odciszenie wraca do tego samego poziomu.
+    $on = !empty($_POST['on']);
+    $ok = hifi_set('settings:/mediaPlayer/mute', ['type' => 'bool_', 'bool_' => $on]);
+    echo json_encode(['ok' => $ok, 'mute' => $on]);
+    exit;
+}
 
 if ($op === 'vol') {
     $delta = (int)($_POST['delta'] ?? 0);
