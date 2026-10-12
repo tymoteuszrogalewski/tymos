@@ -25,7 +25,7 @@ $hifiTitle = !defined('HIFI_TITLE_VISIBLE') || HIFI_TITLE_VISIBLE;
 .hifi .hifi-grp svg{width:28px;height:28px;fill:currentColor;display:block}
 .hifi .hifi-grp #hifi-pp{color:#4a9eff}
 .hifi .hifi-vol{flex:0 0 40px;text-align:center;font:700 18px/1 system-ui,sans-serif;color:#fff}
-.hifi .hifi-vol.mute{color:#666;text-decoration:line-through}
+.hifi .hifi-vol svg{width:26px;height:26px;fill:#888;display:block;margin:0 auto}
 </style>
 
 <div class="wda hifi" id="hifi">
@@ -60,16 +60,23 @@ $hifiTitle = !defined('HIFI_TITLE_VISIBLE') || HIFI_TITLE_VISIBLE;
 
   var last = null;   // ostatni grany utwor — zostaje na ekranie po zatrzymaniu
   var st = '', mute = false;   // mute = pauza z panelu (wyciszenie, patrz klik w srodkowy przycisk)
+  var vol = null;   // glosnosc z wiezy; przy wyciszeniu w polu liczby stoi przekreslony glosnik
+  var SPK_X = '<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9z"/><path d="M16 9l6 6M22 9l-6 6" stroke="#888" stroke-width="2" stroke-linecap="round" fill="none"/></svg>';
+  function paintVol(){
+    if (mute) $('#hifi-vol').html(SPK_X);
+    else $('#hifi-vol').text(vol === null ? '–' : vol);
+  }
 
   function show(d){
     if (!d || !d.ok) {
-      $('#hifi-vol').text('–'); st = '';
+      vol = null; st = ''; paintVol();
       if (!last) { $('#hifi-title').text('HiFi'); $('#hifi-artist').text(d && d.offline ? 'wyłączona / brak połączenia' : ''); }
       return;
     }
-    $('#hifi-vol').text(d.volume).toggleClass('mute', !!d.mute);
     st = d.state;
     mute = !!d.mute;
+    vol = d.volume;
+    paintVol();
     if (d.title) last = {title: d.title, artist: d.artist, cover: d.cover, src: d.src};
     else if (!last && d.last) last = {title: d.last.title, artist: d.last.artist, cover: d.last.cover, src: d.last.src};
     paintPp();
@@ -92,7 +99,7 @@ $hifiTitle = !defined('HIFI_TITLE_VISIBLE') || HIFI_TITLE_VISIBLE;
     $('#hifi-pp-ic').attr('d', st === 'playing' && !mute ? 'M6 5h4v14H6zM14 5h4v14h-4z' : 'M7 5v14l12-7z');
   }
   function setMute(on){
-    mute = on; paintPp(); $('#hifi-vol').toggleClass('mute', on);
+    mute = on; paintPp(); paintVol();
     $.post('api.php', {action: 'hifi_set', op: 'mute', on: on ? 1 : 0}, function(){ setTimeout(poll, 800); }, 'json');
   }
 
@@ -104,10 +111,10 @@ $hifiTitle = !defined('HIFI_TITLE_VISIBLE') || HIFI_TITLE_VISIBLE;
 
   // Glosnosc: liczba zmienia sie OD RAZU (optymistycznie), a poll i tak potwierdzi stan z wiezy.
   $w.on('click', 'button[data-d]', function(){
-    var d = parseInt($(this).attr('data-d'), 10), cur = parseInt($('#hifi-vol').text(), 10);
-    if (!isNaN(cur)) $('#hifi-vol').text(Math.max(0, Math.min(100, cur + d)));
+    var d = parseInt($(this).attr('data-d'), 10);
+    if (vol !== null) { vol = Math.max(0, Math.min(100, vol + d)); paintVol(); }
     $.post('api.php', {action: 'hifi_set', op: 'vol', delta: d}, function(r){
-      if (r && r.ok) $('#hifi-vol').text(r.volume); else poll();
+      if (r && r.ok) { vol = r.volume; paintVol(); } else poll();
     }, 'json');
   });
 
