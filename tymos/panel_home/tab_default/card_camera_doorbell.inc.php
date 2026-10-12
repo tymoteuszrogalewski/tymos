@@ -108,16 +108,14 @@ camera_render('doorbell_sd', '', true);
     // jest klikalne, nie tylko sama ikona. `display:block` na svg konieczne, bo inline SVG dostaje
     // dolna przestrzen od line-height i pole dotyku rozjezdza sie w pionie.
     function rolBtn(dir, body, wPx, hPx, lit) {
-        // Border obrysowuje realne pole dotyku strzalki. Krycie 0,12 — dwa razy przyciemniane od
-        // pierwszej wersji (0,45 -> 0,22 -> 0,12): ramka ma tylko podpowiadac, gdzie celowac.
-        // box-sizing:border-box — inaczej `width` liczy sie BEZ bordera i dwie strzalki wychodza
-        // o 4 px szersze niz okno nad nimi, ktore ma dokladnie `colW * 2 + gap`.
-        return '<button data-rol="' + dir + '" style="background:none;margin:0;padding:0;'
+        // Styl jak grupy przyciskow karty HiFi pod spodem (2026-10-12, user): szare tlo zamiast ramki
+        // (wczesniej border 0,45 -> 0,22 -> 0,12), jasna ikona. Tlo wyznacza realne pole dotyku strzalki.
+        return '<button data-rol="' + dir + '" style="background:rgba(255,255,255,0.06);margin:0;padding:0;'
              + 'box-sizing:border-box;'
-             + 'border:1px solid rgba(255,255,255,.12);border-radius:' + Math.round(hPx * 0.14) + 'px;'
+             + 'border:none;border-radius:10px;'
              + 'width:' + wPx + 'px;height:' + hPx + 'px;'
              + 'cursor:pointer;display:flex;align-items:center;justify-content:center;'
-             + 'color:' + (lit ? '#4a9eff' : '#7e7e7e') + ';'
+             + 'color:' + (lit ? '#4a9eff' : '#ddd') + ';'
              + '-webkit-tap-highlight-color:transparent;touch-action:manipulation">'
              + '<svg width="' + Math.round(Math.min(wPx, hPx) * 0.92) + '" height="' + Math.round(Math.min(wPx, hPx) * 0.92) + '" '
              + 'viewBox="0 0 24 24" fill="none" '
@@ -143,7 +141,7 @@ camera_render('doorbell_sd', '', true);
         } else {
             $.post('api.php', {action: 'roleta_move', dir: dir});
             b.style.color = '#4a9eff';                              // blysk = klikniecie doszlo
-            setTimeout(function(){ b.style.color = '#7e7e7e'; }, 900);
+            setTimeout(function(){ b.style.color = '#ddd'; }, 900);
         }
         // Gestsze doczytania niz przy samej pozycji: podswietlenie ma nadazac za jazda,
         // a przejazd trwa kilkanascie sekund.
