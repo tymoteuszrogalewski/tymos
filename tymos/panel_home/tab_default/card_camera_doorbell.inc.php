@@ -415,11 +415,11 @@ camera_render('doorbell_sd', '', true);
 
     // kolejnosc = od lewej: rozbrojony, NOC, NIKOGO
     var modes = [
-        // Nasycony kolor przy tej samej alfie czyta sie mocniej niz czarne tlo anteny — stad 0.35,
-        // zeby tarcza aktywna wygladala rownie lekko jak reszta nakladek.
-        {v: 0, bg: 'rgba(67,160,71,0.35)', fg: 'rgba(129,199,132,0.9)', svg: svgOff, title: 'Rozbrojony'},
-        {v: 1, bg: 'rgba(251,140,0,0.35)', fg: 'rgba(255,183,77,0.9)',  svg: svgOn,  title: 'NOC — zdarzenia zewnętrzne'},
-        {v: 2, bg: 'rgba(229,57,53,0.35)', fg: 'rgba(239,154,154,0.9)', svg: svgOn,  title: 'NIKOGO — wszystko'}
+        // Aktywna: tlo 0.75 (2026-10-12, user: przy 0.35 slabo bylo widac, ktora jest wlaczona).
+        // Nieaktywne: kontur w pelnym, nasyconym kolorze, zeby pomaranczowa i czerwona nie bladly.
+        {v: 0, bg: 'rgba(67,160,71,0.75)', fg: '#66bb6a', svg: svgOff, title: 'Rozbrojony'},
+        {v: 1, bg: 'rgba(251,140,0,0.75)', fg: '#ff9800',  svg: svgOn,  title: 'NOC — zdarzenia zewnętrzne'},
+        {v: 2, bg: 'rgba(229,57,53,0.75)', fg: '#f44336', svg: svgOn,  title: 'NIKOGO — wszystko'}
     ];
     var btns = [];
 
