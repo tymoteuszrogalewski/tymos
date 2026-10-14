@@ -38,10 +38,10 @@ $cur = (float)$cur;
 
 // PRANIE CZEKA NA SUSZARKE (2026-10-11, zona). Po komunikacie „przeloz do suszarki”:
 //   - na kamerze glownej miga ikona (api pralka_alert) — klik = „tego nie suszymy” (api pralka_ack),
-//   - po 15 min, jesli suszarka (dev17) nie ruszyla, ten sam lektor jeszcze raz — jednorazowo.
+//   - co 15 min, dopoki suszarka (dev17) nie ruszyla, ten sam lektor jeszcze raz — bez limitu.
 // Koniec czekania: suszarka ruszyla (> 150 W, prog jak SUSZ_ON nizej), klik ikony albo nowe pranie.
 // Helpery: `pralka_do_suszarki` = unix ts konca prania (0 = nic nie czeka),
-//          `pralka_przypomnij`  = 1 dopoki przypomnienie nie poszlo.
+//          `pralka_przypomnij`  = unix ts ostatniego komunikatu (0 = bez przypominania).
 $REMIND_MIN = 15;
 function setH($n, $v) { global $db; $db->query("INSERT INTO helpers (name, value) VALUES ('{$n}', '{$v}') ON DUPLICATE KEY UPDATE value='{$v}'"); }
 $czeka = (int) val("SELECT value FROM helpers WHERE name='pralka_do_suszarki' LIMIT 1");
@@ -50,10 +50,13 @@ if ($czeka > 0) {
     if ($suszRuszyla || $cur > $START) {
         setH('pralka_do_suszarki', 0);
         setH('pralka_przypomnij', 0);
-    } elseif (time() >= $czeka + $REMIND_MIN * 60 && (int) val("SELECT value FROM helpers WHERE name='pralka_przypomnij' LIMIT 1") === 1) {
-        setH('pralka_przypomnij', 0);
-        if (!tymos_cisza_nocna()) $db->query("INSERT INTO tymos_sounds (sound) VALUES ('pralka')");
-        tymos_log('INFO', "pralka: przypomnienie po {$REMIND_MIN} min — suszarka nie ruszyla");
+    } else {
+        $last = (int) val("SELECT value FROM helpers WHERE name='pralka_przypomnij' LIMIT 1");
+        if ($last > 0 && time() >= $last + $REMIND_MIN * 60) {
+            setH('pralka_przypomnij', time());
+            if (!tymos_cisza_nocna()) $db->query("INSERT INTO tymos_sounds (sound) VALUES ('pralka')");
+            tymos_log('INFO', "pralka: przypomnienie po {$REMIND_MIN} min — suszarka nie ruszyla");
+        }
     }
 }
 
@@ -94,7 +97,7 @@ if ($cnt >= $MIN_CNT && $maxRecent !== null && (float)$maxRecent <= $OFF) {
     } else {
         if (!$cicho) $db->query("INSERT INTO tymos_sounds (sound) VALUES ('pralka')");
         setH('pralka_do_suszarki', time());
-        setH('pralka_przypomnij', 1);
+        setH('pralka_przypomnij', time());
         echo date('c') . " pralka KONIEC -> lektor (max{$FIN_MIN}min={$maxRecent}W, n={$cnt})" . ($cicho ? " POMINIETY (cisza nocna)" : "") . "\n";
     }
     if ($cicho) tymos_log('INFO', 'pralka KONIEC w ciszy nocnej — lektor pominiety');
