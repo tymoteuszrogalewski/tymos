@@ -292,12 +292,12 @@ window.camParkingActive = function () {
              + '</svg>';
     }
 
-    // Antena z falami — stan otwarcia sieci Zigbee. Szara = zamknieta, zielona pulsujaca = otwarta
+    // Antena z falami — stan otwarcia sieci Zigbee. Biala (jak zebatka) = zamknieta, zielona pulsujaca = otwarta
     // (obojetnie czy otworzyl ja user, czy watchdog rejoinu po starcie Z2M).
-    // zielony = otwarta, szary = zamknieta, bursztyn z ukosnikiem = Zigbee2MQTT nie zyje
+    // zielony = otwarta, bialy jak zebatka = zamknieta, bursztyn z ukosnikiem = Zigbee2MQTT nie zyje
     function svgZigbee(on, offline) {
-        var c = offline ? '#f59e0b' : (on ? '#22c55e' : 'rgba(255,255,255,0.45)');
-        return '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="' + c + '" '
+        var c = offline ? '#f59e0b' : (on ? '#22c55e' : 'rgba(255,255,255,0.85)');
+        return '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="' + c + '" '
              + 'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
              + '<path d="M12 10v10"/>'
              + '<path d="M8.5 8.5a5 5 0 0 1 0-5"/><path d="M15.5 3.5a5 5 0 0 1 0 5"/>'
