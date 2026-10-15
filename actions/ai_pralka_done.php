@@ -43,6 +43,8 @@ $cur = (float)$cur;
 // Helpery: `pralka_do_suszarki` = unix ts konca prania (0 = nic nie czeka),
 //          `pralka_przypomnij`  = unix ts ostatniego komunikatu (0 = bez przypominania).
 $REMIND_MIN = 15;
+// Mocniejsze teksty liczone od konca prania; brak pliku mp3 = zwykly lektor 'pralka'.
+$LVL = [60 => 'pralka_60min', 30 => 'pralka_30min'];
 function setH($n, $v) { global $db; $db->query("INSERT INTO helpers (name, value) VALUES ('{$n}', '{$v}') ON DUPLICATE KEY UPDATE value='{$v}'"); }
 $czeka = (int) val("SELECT value FROM helpers WHERE name='pralka_do_suszarki' LIMIT 1");
 if ($czeka > 0) {
@@ -54,8 +56,12 @@ if ($czeka > 0) {
         $last = (int) val("SELECT value FROM helpers WHERE name='pralka_przypomnij' LIMIT 1");
         if ($last > 0 && time() >= $last + $REMIND_MIN * 60) {
             setH('pralka_przypomnij', time());
-            if (!tymos_cisza_nocna()) $db->query("INSERT INTO tymos_sounds (sound) VALUES ('pralka')");
-            tymos_log('INFO', "pralka: przypomnienie po {$REMIND_MIN} min — suszarka nie ruszyla");
+            $snd = 'pralka';
+            foreach ($LVL as $min => $s) {
+                if (time() >= $czeka + $min * 60 && is_file(__DIR__ . "/../tymos/snd/{$s}.mp3")) { $snd = $s; break; }
+            }
+            if (!tymos_cisza_nocna()) $db->query("INSERT INTO tymos_sounds (sound) VALUES ('{$snd}')");
+            tymos_log('INFO', "pralka: przypomnienie ({$snd}) po {$REMIND_MIN} min — suszarka nie ruszyla");
         }
     }
 }
