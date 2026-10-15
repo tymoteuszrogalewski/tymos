@@ -49,6 +49,17 @@ function setH($n, $v) { global $db; $db->query("INSERT INTO helpers (name, value
 $czeka = (int) val("SELECT value FROM helpers WHERE name='pralka_do_suszarki' LIMIT 1");
 if ($czeka > 0) {
     $suszRuszyla = (float) val("SELECT COALESCE(MAX(power), 0) FROM device17 WHERE ts > FROM_UNIXTIME({$czeka})") > 150;
+    // Szybciej (2026-10-15): suszarka wylaczona = rowne 0 W (podloga 6,5 W jest tylko po cyklu).
+    // Pierwsza probka > 3 W po >= 10 min zera = ktos ja wlaczyl; start bierze ~100 W przez ~5 min,
+    // wiec sam prog 150 W gasil ikone z takim opoznieniem.
+    if (!$suszRuszyla && (float) val("SELECT power FROM device17 ORDER BY ts DESC LIMIT 1") > 3) {
+        $lastOff = val("SELECT MAX(ts) FROM device17 WHERE ts > FROM_UNIXTIME({$czeka}) AND power <= 3");
+        if ($lastOff !== null) {
+            $offMax = val("SELECT MAX(power) FROM device17 WHERE ts BETWEEN '{$lastOff}' - INTERVAL 10 MINUTE AND '{$lastOff}'");
+            $offCnt = (int) val("SELECT COUNT(*) FROM device17 WHERE ts BETWEEN '{$lastOff}' - INTERVAL 10 MINUTE AND '{$lastOff}'");
+            $suszRuszyla = $offCnt >= 15 && (float) $offMax <= 3;
+        }
+    }
     if ($suszRuszyla || $cur > $START) {
         setH('pralka_do_suszarki', 0);
         setH('pralka_przypomnij', 0);
