@@ -20,7 +20,7 @@ $SND = [
      'txt'=>'... Pranie zakończone. Proszę przełożyć je do suszarki.'],
     ['file'=>'pralka_30min.mp3',              'opis'=>'Pranie czeka na suszarkę ponad 30 min',
      'txt'=>'... Pranie zakończone już dawno temu. Ile kurwa trzeba czekać na przełożenie do suszarki?'],
-    ['file'=>'pralka_60min.mp3',              'opis'=>'Pranie czeka na suszarkę ponad godzinę',
+    ['file'=>'pralka_90min.mp3',              'opis'=>'Pranie czeka na suszarkę ponad 1,5 h',
      'txt'=>'... Pranie zakończyło się ponad godzinę temu. Leży w pralce już tak długo, że pewnie trzeba będzie je dodatkowo wypłukać.'],
     ['file'=>'pralka_czeka.mp3',              'opis'=>'Pralka skończyła, suszarka jeszcze pracuje',
      'txt'=>'... Pranie zakończone. Ale suszarka jeszcze pracuje - dam znać kiedy skończy.'],
