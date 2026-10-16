@@ -206,7 +206,7 @@ def sprzataj_tmpfs():
         for nazwa in os.listdir(TMP_DIR):
             # Klipy kasuje usun_klip() od razu po wysylce; tutaj tylko zamiatanie po awarii,
             # zeby nieudane nagranie nie zostalo w RAM na zawsze.
-            if not nazwa.startswith(('face_', 'clip_', 'thumb_')):
+            if not nazwa.startswith(('face_', 'clip_', 'thumb_', 'plate_')):
                 continue
             if not nazwa.endswith(('.jpg', '.mp4')):
                 continue

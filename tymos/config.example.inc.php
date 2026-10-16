@@ -24,6 +24,10 @@ define('TG_CHAT',  '123456789');            // prywatny czat z userem — WYCISZ
 // Bot jest tam adminem. Wybor celu: {"chat":"alert"} w JSON dla telegram_send.php.
 define('TG_CHAT_ALERT', '-1001234567890');
 
+// Tablice rejestracyjne NASZYCH aut (utils/plate_scan.py): inne auto na parkingu = "Mamy gosci"
+// na kanal Wazne + glosowka. Bez spacji, po przecinku; odczyt porownywany z tolerancja 1 znaku.
+define('PLATES_OWN', 'AB12345,XYZ9876');
+
 // --- Koordynator Zigbee (web UI / API restartu) ---
 define('DONGLE_IP',   '192.168.1.20');   // SMLIGHT SLZB-06Mg26U (PoE)
 define('DONGLE_USER', 'admin');
