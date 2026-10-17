@@ -24,10 +24,14 @@ JAK TO DZIALA:
      najlepiej czyta samo biale pole bez paska UE (pasek wykrywany po kolorze).
   4. Srodek tablicy musi lezec w masce strefy (parking_strefa.png: biale = nasz teren) —
      auta na ulicy nas nie obchodza.
-  5. Glosowanie po klatkach: odczyt "tablicowy" (2-3 litery + 4-5 znakow) grupowany z tolerancja
-     1 znaku. Slonce/IR potrafi przepalic czesc tablicy, wiec pojedyncza klatka to za malo.
+  5. Glosowanie po klatkach: odczyt "tablicowy" (2-3 litery + 4-5 znakow, poprawiony wzorem polskiej
+     tablicy — `popraw_wzor`) grupowany z tolerancja 1 znaku. Slonce/IR potrafi przepalic czesc
+     tablicy, wiec pojedyncza klatka to za malo. Glos klatki = OSTROSC wycinka wzgledem najostrzejszych
+     odczytow zdarzenia (`waga`): auto w ruchu daje rozmazane smieci, ktore waza malo.
   6. Odczyt zgodny z PLATES_OWN (config.inc.php) z tolerancja 2 (podobne znaki tanio, bez 1./ostatniego znaku) = nasze auto, cisza.
-     Obca tablica widziana w >= MIN_HITS klatkach = wiadomosc ze zdjeciem auta + glosowka.
+     Obca tablica z wynikiem >= SURE_SCORE = wiadomosc ze zdjeciem auta + glosowka.
+     Wynik "sredni" (obca >= DOUBT_SCORE albo nic pewnego) = DOGRYWKA: jeszcze raz GRAB_SECONDS klatek
+     (auto zwykle juz stoi) i liczenie wszystkiego razem; wtedy wystarcza MIN_SCORE.
      Ta sama obca tablica najwyzej raz na REPEAT_SEC.
 
 CZEGO NIE ROBI: auto z nieczytelna tablica (noc, brud, bokiem) nie daje powiadomienia — tylko
@@ -67,7 +71,9 @@ GRAB_GAP     = 2.0     # co ile sekund klatka -> 15 klatek
 ZONE_Y_MIN   = 200     # px — wyzej datownik kamery i ulica, szkoda czasu detektora
 NUM_THREADS  = 2       # z 4 rdzeni; skan i tak nie jest pilny, a Pi grzeje sie przy pelnym obciazeniu
 TEMP_PAUSE   = 75.0    # st. C — powyzej czekamy przed nastepna klatka (throttling Pi 5 = 80)
-MIN_HITS     = 2       # w ilu klatkach musi pojawic sie obca tablica, zeby uznac ja za prawdziwa
+SURE_SCORE   = 3.0     # wynik obcej tablicy (suma wag klatek, ostra klatka = 1) = pewny gosc od razu
+DOUBT_SCORE  = 1.0     # obca od tego wyniku (ale < SURE) albo nic pewnego = dogrywka
+MIN_SCORE    = 2.0     # po dogrywce wystarcza tyle
 REPEAT_SEC   = 6 * 3600   # ta sama obca tablica — najwyzej jedna wiadomosc na tyle sekund
 SOUND        = 'goscie'   # snd/goscie.mp3; brak pliku = syntetyczny 'doorbell'
 SOUND_ON     = False      # glosowka na iPadzie wylaczona do czasu nagrania goscie.mp3
@@ -152,10 +158,25 @@ def tablicowy(txt):
     for t in (txt, txt[1:]):
         if not 7 <= len(t) <= 8:
             continue
+        t = popraw_wzor(t)
         lit = len(t) - len(t.lstrip('ABCDEFGHIJKLMNOPQRSTUVWXYZ'))
         if 2 <= lit <= 3 and any(c.isdigit() for c in t[lit:]):
             return t
     return None
+
+
+# Wyroznik powiatu (pierwsze 2 znaki) to zawsze litery; po nim polskie tablice NIE uzywaja
+# liter B, D, I, O, Z (wlasnie przez pomylki z 8, 0, 1, 0, 2)
+NA_LITERE = str.maketrans('0124568', 'OIZASGB')
+NA_CYFRE  = str.maketrans('BDIOZ', '80102')
+
+
+def popraw_wzor(t):
+    """Znaki niemozliwe na danej pozycji polskiej tablicy -> najbardziej podobne mozliwe.
+    "GD7PABI" (Kamiq w ruchu) -> "GD7PA81"; "6DA57544" -> "GDA57544"."""
+    t = t[:2].translate(NA_LITERE) + t[2:]
+    lit = len(t) - len(t.lstrip('ABCDEFGHIJKLMNOPQRSTUVWXYZ'))
+    return t[:lit] + t[lit:].translate(NA_CYFRE)
 
 
 # Znaki, ktore OCR myli ze soba na tablicy (zamiana kosztuje 0.3 zamiast 1)
@@ -246,8 +267,18 @@ def wyprostuj(klatka, pkt):
     return cv2.warpPerspective(klatka, cv2.getPerspectiveTransform(zr, cel), (W, H))
 
 
+def ostrosc(prosta):
+    """Wariancja Laplasjanu wycinka przeskalowanego do wysokosci 32 px (jak wejscie CRNN) —
+    ta sama skala dla tablicy z bliska i z daleka; rozmazanie z ruchu = niska wartosc.
+    Dzielona przez wariancje jasnosci: sama wariancja Laplasjanu zalezy glownie od kontrastu
+    tablicy (swiatlo, odleglosc) — pomiar 2026-10-17: stojace Twingo 8478, stojaca Kamiq 2201."""
+    g = cv2.cvtColor(prosta, cv2.COLOR_BGR2GRAY)
+    g = cv2.resize(g, (max(1, int(g.shape[1] * 32 / g.shape[0])), 32), interpolation=cv2.INTER_AREA)
+    return float(cv2.Laplacian(g, cv2.CV_64F).var() / (g.astype(np.float64).var() + 1.0))
+
+
 def czytaj(det, rec, klatka, maska):
-    """Jedna klatka -> lista (tekst_znormalizowany, ramka_w_klatce)."""
+    """Jedna klatka -> lista (tekst_znormalizowany, ramka_w_klatce, ostrosc)."""
     h, w = klatka.shape[:2]
     pas = klatka[ZONE_Y_MIN:, :]
     ph, pw = pas.shape[:2]
@@ -275,10 +306,11 @@ def czytaj(det, rec, klatka, maska):
         prosta = wyprostuj(klatka, pkt)
         if prosta is None:
             continue
+        q = ostrosc(prosta)
         for wyc in warianty(prosta):
             txt = normalizuj(rec.recognize(wyc))
             if txt:
-                odczyty.append((txt, (x1, y1, x2, y2)))
+                odczyty.append((txt, (x1, y1, x2, y2), q))
     return odczyty
 
 
@@ -362,14 +394,15 @@ def zbierz(stream):
     return jpegi
 
 
-def analizuj(jpegi, nasze, wypisz=False):
-    """Wszystkie klatki -> {tablica: {'hits', 'klatka_nr', 'ramka'}} + licznik surowych odczytow."""
+def analizuj(jpegi, nasze, wypisz=False, od=0):
+    """Klatki jpegi[od:] -> lista odczytow (nr, surowy_txt, tablica_albo_None, ramka, ostrosc).
+    `od` — dogrywka czyta tylko nowe klatki, a grupuje razem ze starymi (`grupuj`)."""
     cv2.setNumThreads(NUM_THREADS)
     det, rec = modele()
     maska = cv2.imread(MASK_FILE, cv2.IMREAD_GRAYSCALE) if os.path.exists(MASK_FILE) else None
-    tablice = {}
-    surowych = 0
-    for nr, raw in enumerate(jpegi):
+    odczyty = []
+    for nr in range(od, len(jpegi)):
+        raw = jpegi[nr]
         t = temp_c()
         stop = time.time() + 60
         while t is not None and t > TEMP_PAUSE and time.time() < stop:
@@ -381,36 +414,51 @@ def analizuj(jpegi, nasze, wypisz=False):
         if maska is not None and maska.shape[:2] != klatka.shape[:2]:
             maska = cv2.resize(maska, (klatka.shape[1], klatka.shape[0]),
                                interpolation=cv2.INTER_NEAREST)
-        w_klatce = set()   # grupy trafione w TEJ klatce — kilka wariantow wycinka liczy sie raz
-        for txt, ramka in czytaj(det, rec, klatka, maska):
-            surowych += 1
+        for txt, ramka, q in czytaj(det, rec, klatka, maska):
             # Najpierw nasze auta, na SUROWYM odczycie: myslnik bywa czytany jako "S"
             # ("XXAS2345"), a wtedy filtr wzoru uznaje X za smiec z paska UE i robi "XAS2345".
             tab = next((n for n in nasze if blisko_naszej(txt, n)), None) \
                 or tablicowy(txt)
             if wypisz:
-                print(f'klatka {nr + 1}: {txt!r:12} -> {tab or "-"}  ramka {ramka}')
-            if not tab:
-                continue
-            # grupowanie z tolerancja 1 znaku — przepalona litera nie robi drugiego auta
-            klucz = next((k for k in tablice if lev(k, tab) <= 1), tab)
-            g = tablice.setdefault(klucz, {'hits': 0, 'warianty': {}, 'nr': nr, 'ramka': ramka,
-                                           'pole': 0})
-            if klucz not in w_klatce:
-                g['hits'] += 1
-                w_klatce.add(klucz)
-            g['warianty'][tab] = g['warianty'].get(tab, 0) + 1
-            pole = (ramka[2] - ramka[0]) * (ramka[3] - ramka[1])
-            if pole > g['pole']:     # zdjecie z klatki, w ktorej tablica byla najwieksza
-                g.update({'nr': nr, 'ramka': ramka, 'pole': pole})
+                print(f'klatka {nr + 1}: {txt!r:12} -> {tab or "-":10} ostrosc {q:5.2f}  ramka {ramka}')
+            odczyty.append((nr, txt, tab, ramka, q))
+    return odczyty
+
+
+def grupuj(odczyty, nasze):
+    """Odczyty -> {klucz: {'tablica', 'hits', 'wynik', 'nasza', 'nr', 'ramka', ...}}.
+
+    hits  = w ilu klatkach grupa sie pojawila,
+    wynik = suma wag tych klatek: waga = ostrosc / ostrosc odniesienia zdarzenia (75. percentyl
+            odczytow tablicowych), max 1. Wzgledna, bo poziom ostrosci zalezy od pory dnia i IR.
+    """
+    q_tab = [q for _, _, tab, _, q in odczyty if tab]
+    ref = float(np.percentile(q_tab, 75)) if q_tab else 1.0
+    tablice = {}
+    for nr, txt, tab, ramka, q in odczyty:
+        if not tab:
+            continue
+        waga = min(1.0, q / ref) if ref > 0 else 1.0
+        # grupowanie z tolerancja 1 znaku — przepalona litera nie robi drugiego auta
+        klucz = next((k for k in tablice if lev(k, tab) <= 1), tab)
+        g = tablice.setdefault(klucz, {'hits': 0, 'wynik': 0.0, 'klatki': {}, 'warianty': {},
+                                       'nr': nr, 'ramka': ramka, 'pole': 0})
+        # kilka wariantow wycinka w jednej klatce liczy sie raz — z najlepsza waga
+        g['klatki'][nr] = max(g['klatki'].get(nr, 0.0), waga)
+        g['warianty'][tab] = g['warianty'].get(tab, 0) + 1
+        pole = (ramka[2] - ramka[0]) * (ramka[3] - ramka[1])
+        if pole > g['pole']:     # zdjecie z klatki, w ktorej tablica byla najwieksza
+            g.update({'nr': nr, 'ramka': ramka, 'pole': pole})
     for g in tablice.values():
+        g['hits'] = len(g['klatki'])
+        g['wynik'] = sum(g['klatki'].values())
         # Wariant z najwiekszym poparciem (wlasne odczyty + rozniace sie o 1 znak), przy remisie
         # DLUZSZY: wycinek bez paska UE czasem ucina pierwsza litere ("XA12345" vs "XXA12345").
         war = g['warianty']
         g['tablica'] = max(war, key=lambda v: (sum(c for u, c in war.items() if lev(u, v) <= 1),
                                                len(v), war[v]))
         g['nasza'] = czy_nasza(g['tablica'], nasze)
-    return tablice, surowych
+    return tablice
 
 
 def juz_zgloszona(tablica):
@@ -444,10 +492,11 @@ def main():
     if args[0] == '--test':
         jpegi = [open(p, 'rb').read() for p in args[1:]]
         t0 = time.time()
-        tablice, surowych = analizuj(jpegi, nasze, wypisz=True)
-        for g in tablice.values():
-            print(f"TABLICA {g['tablica']} hits={g['hits']} nasza={g['nasza']} warianty={g['warianty']}")
-        print(f'{len(jpegi)} klatek, {surowych} odczytow, {time.time() - t0:.1f} s, temp {temp_c()}')
+        odczyty = analizuj(jpegi, nasze, wypisz=True)
+        for g in grupuj(odczyty, nasze).values():
+            print(f"TABLICA {g['tablica']} hits={g['hits']} wynik={g['wynik']:.1f} nasza={g['nasza']} "
+                  f"warianty={g['warianty']}")
+        print(f'{len(jpegi)} klatek, {len(odczyty)} odczytow, {time.time() - t0:.1f} s, temp {temp_c()}')
         return 0
 
     stream = args[0]
@@ -470,28 +519,44 @@ def main():
     zdarzenie = f'{stream}_{int(time.time())}'
     t0 = time.time()
     jpegi = zbierz(stream)
-    t_zb = time.time() - t0
-    tablice, surowych = analizuj(jpegi, nasze, wypisz=bench)
+    odczyty = analizuj(jpegi, nasze, wypisz=bench)
+    tablice = grupuj(odczyty, nasze)
+    kand = kandydaci(tablice)
+    pewne = [g for g in kand if g['wynik'] >= SURE_SCORE]
+    # Dogrywka: obca tablica "srednio" albo nic pewnego (auto jeszcze jechalo, tablica rozmazana).
+    # Druga porcja klatek zwykle lapie auto juz stojace; liczymy wszystko razem, prog nizszy.
+    dogrywka = not pewne and (any(g['wynik'] >= DOUBT_SCORE for g in kand)
+                              or not any(g['wynik'] >= SURE_SCORE for g in tablice.values()))
+    if dogrywka:
+        n0 = len(jpegi)
+        jpegi += zbierz(stream)
+        odczyty += analizuj(jpegi, nasze, wypisz=bench, od=n0)
+        tablice = grupuj(odczyty, nasze)
+        pewne = [g for g in kandydaci(tablice) if g['wynik'] >= MIN_SCORE]
     czas = time.time() - t0
 
-    opis = ', '.join(f"{g['tablica']}x{g['hits']}{'(nasza)' if g['nasza'] else ''}"
+    opis = ', '.join(f"{g['tablica']}x{g['hits']}/{g['wynik']:.1f}{'(nasza)' if g['nasza'] else ''}"
                      for g in tablice.values()) or 'brak'
-    log('INFO', f'plate_scan {zdarzenie}: {len(jpegi)} klatek, {surowych} odczytow, tablice: {opis} '
-                f'(zbieranie {t_zb:.0f} s, razem {czas:.0f} s)')
+    log('INFO', f'plate_scan {zdarzenie}: {len(jpegi)} klatek{" (z dogrywka)" if dogrywka else ""}, '
+                f'{len(odczyty)} odczytow, tablice: {opis} (razem {czas:.0f} s)')
     if bench:
-        print(f'tablice: {opis}\nczas {czas:.1f} s, temp {temp_c()}')
+        print(f'tablice: {opis}\nobce: {[g["tablica"] for g in pewne]}\nczas {czas:.1f} s, temp {temp_c()}')
         return 0
 
-    obce = [g for g in tablice.values() if not g['nasza'] and g['hits'] >= MIN_HITS]
-    # Blad odczytu tego samego auta (rozni sie o <= 2 znaki od mocniejszej grupy) to nie drugi gosc.
-    obce = [g for g in obce if not any(lev_w(g['tablica'], o['tablica']) <= 2 and o['hits'] > g['hits']
-                                       for o in tablice.values())]
-    obce = [g for g in obce if not juz_zgloszona(g['tablica'])]
+    obce = [g for g in pewne if not juz_zgloszona(g['tablica'])]
     if not obce:
         return 0
 
     zglos(obce, jpegi, zdarzenie)
     return 0
+
+
+def kandydaci(tablice):
+    """Obce grupy bez bledow odczytu naszych/innych aut: grupa rozniaca sie o <= 2 znaki od
+    mocniejszej (wiekszy wynik) to to samo auto, nie drugi gosc."""
+    obce = [g for g in tablice.values() if not g['nasza']]
+    return [g for g in obce if not any(lev_w(g['tablica'], o['tablica']) <= 2 and o['wynik'] > g['wynik']
+                                       for o in tablice.values())]
 
 
 def zglos(obce, jpegi, zdarzenie, naglowek='Mamy gości! Obce auto na parkingu.'):
