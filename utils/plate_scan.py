@@ -26,7 +26,7 @@ JAK TO DZIALA:
      auta na ulicy nas nie obchodza.
   5. Glosowanie po klatkach: odczyt "tablicowy" (2-3 litery + 4-5 znakow) grupowany z tolerancja
      1 znaku. Slonce/IR potrafi przepalic czesc tablicy, wiec pojedyncza klatka to za malo.
-  6. Odczyt zgodny z PLATES_OWN (config.inc.php) z tolerancja 1 znaku = nasze auto, cisza.
+  6. Odczyt zgodny z PLATES_OWN (config.inc.php) z tolerancja 2 (podobne znaki tanio, bez 1./ostatniego znaku) = nasze auto, cisza.
      Obca tablica widziana w >= MIN_HITS klatkach = wiadomosc ze zdjeciem auta + glosowka.
      Ta sama obca tablica najwyzej raz na REPEAT_SEC.
 
@@ -158,8 +158,32 @@ def tablicowy(txt):
     return None
 
 
+# Znaki, ktore OCR myli ze soba na tablicy (zamiana kosztuje 0.3 zamiast 1)
+PODOBNE = {frozenset(p) for p in ('0O', '0D', 'OD', '1I', '1L', 'IL', '2Z', '7Z', '5S',
+                                  '8B', '3B', '38', '6G', 'CG', 'QO', '7T')}
+
+
+def lev_w(a, b):
+    """Levenshtein, w ktorym zamiana podobnych znakow (8/B/3, 7/Z, C/G...) kosztuje 0.3."""
+    prev = [float(j) for j in range(len(b) + 1)]
+    for i, ca in enumerate(a, 1):
+        cur = [float(i)]
+        for j, cb in enumerate(b, 1):
+            zm = 0 if ca == cb else (0.3 if frozenset((ca, cb)) in PODOBNE else 1)
+            cur.append(min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + zm))
+        prev = cur
+    return prev[-1]
+
+
+def blisko_naszej(txt, n):
+    """Odczyt pasuje do naszej tablicy n. Auto w ruchu daje smieci: myslnik czytany jako litera
+    ("GDE7P488"), zgubiona pierwsza litera, znak z ramki na koncu ("DE7P4838") — stad
+    warianty bez pierwszego/ostatniego znaku i tolerancja 2 (z tanimi podobnymi znakami)."""
+    return any(lev_w(t, n) <= 2 for t in (txt, txt[1:], txt[:-1]))
+
+
 def czy_nasza(tablica, nasze):
-    return any(lev(tablica, n) <= 1 for n in nasze)
+    return any(blisko_naszej(tablica, n) for n in nasze)
 
 
 # --- detekcja i odczyt ----------------------------------------------------
@@ -362,7 +386,7 @@ def analizuj(jpegi, nasze, wypisz=False):
             surowych += 1
             # Najpierw nasze auta, na SUROWYM odczycie: myslnik bywa czytany jako "S"
             # ("XXAS2345"), a wtedy filtr wzoru uznaje X za smiec z paska UE i robi "XAS2345".
-            tab = next((n for n in nasze if lev(txt, n) <= 1 or lev(txt[1:], n) <= 1), None) \
+            tab = next((n for n in nasze if blisko_naszej(txt, n)), None) \
                 or tablicowy(txt)
             if wypisz:
                 print(f'klatka {nr + 1}: {txt!r:12} -> {tab or "-"}  ramka {ramka}')
@@ -460,7 +484,7 @@ def main():
 
     obce = [g for g in tablice.values() if not g['nasza'] and g['hits'] >= MIN_HITS]
     # Blad odczytu tego samego auta (rozni sie o <= 2 znaki od mocniejszej grupy) to nie drugi gosc.
-    obce = [g for g in obce if not any(lev(g['tablica'], o['tablica']) <= 2 and o['hits'] > g['hits']
+    obce = [g for g in obce if not any(lev_w(g['tablica'], o['tablica']) <= 2 and o['hits'] > g['hits']
                                        for o in tablice.values())]
     obce = [g for g in obce if not juz_zgloszona(g['tablica'])]
     if not obce:
