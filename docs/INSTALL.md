@@ -243,6 +243,17 @@ mosquitto_sub -t 'zigbee2mqtt/#' -C 5 -v     # do Zigbee messages arrive?
 
 Then reboot once (`systemctl reboot`) and check that everything comes back on its own.
 
+## Voice announcements (optional)
+
+The repo has no voice recordings, only their texts. Generate the files yourself:
+
+- Admin panel → Sounds: list of announcements with file name, text (copy button) and `BRAK PLIKU` for missing files
+- Generate each text with any TTS, e.g. ElevenLabs: https://elevenlabs.io/app/speech-synthesis/text-to-speech
+- Save as mp3 under the exact name from the list (e.g. `pralka.mp3`)
+- Copy to `/opt/tymos/tymos/snd/` on the Pi, `chmod 644`
+- No reload needed: the kiosk picks up new files within 5 minutes
+- Missing file = that announcement is silent (`pralka_30min` / `pralka_90min` fall back to `pralka`)
+
 ## Backup
 
 - `scripts/backup.sh` — runs on the Pi and creates a full snapshot in `/opt/tymos/backup/` (database, `/etc`, code and config, Zigbee2MQTT data, ESPHome files). Schedule it as a TymOS action: admin → Actions → new action → *Cron* `0 15 * * *` → *Run script* `/opt/tymos/scripts/backup.sh`.

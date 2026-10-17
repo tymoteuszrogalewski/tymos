@@ -22,3 +22,6 @@ tymos/img/esphome_*.png
 *.sql
 !schema.sql
 *.sql.gz
+
+# Glosowki lektora — generowane przez usera (licencje TTS / glos), procedura w docs/INSTALL.md
+tymos/snd/*.mp3
