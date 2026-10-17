@@ -160,7 +160,7 @@ def tablicowy(txt):
 
 # Znaki, ktore OCR myli ze soba na tablicy (zamiana kosztuje 0.3 zamiast 1)
 PODOBNE = {frozenset(p) for p in ('0O', '0D', 'OD', '1I', '1L', 'IL', '2Z', '7Z', '5S',
-                                  '8B', '3B', '38', '6G', 'CG', 'QO', '7T')}
+                                  '8B', '3B', '38', '6G', 'CG', 'QO', '7T', '4A')}
 
 
 def lev_w(a, b):
