@@ -7,7 +7,7 @@
 // Coil POST to JEDNA ikona (wezownica) przebarwiana rola — czerwona gdy grzeje, niebieska gdy
 // chlodzi (2026-08-29). Wczesniej stala tam para falka+sniezynka, ale to jedno urzadzenie i para
 // sugerowala dwa; sniezynka zostaje na diagramie tylko jako kontrolka chlodzenia salonu.
-// Pod diagramem JEDEN rzad kontrolek: bieg | bypass, a po prawej cel komfortu | reku-post | chlodnica salonu | kuchnia.
+// Pod diagramem JEDEN rzad kontrolek: bieg | bypass, a po prawej cel komfortu | reku-post | chlodnica salonu | kuchnia | podlogowka.
 // Dane z api reku_diagram + klimat_state. v3.
 ?>
 <style>
@@ -33,6 +33,7 @@
 .rkf .ctl .ico.lit{color:#4a9eff;opacity:1}
 .rkf .ctl .ico.lit.cool{color:#5ab6ff}
 .rkf .ctl .ico.lit.fan{color:#57c97a}
+.rkf .ctl .ico.lit.warm{color:#ff7a5c}
 /* "A" stoi ZAWSZE (2026-09-04): niebieskie = steruje automat, szare = przelaczone z reki.
    Wczesniej znikalo poza Auto — bez litery nie bylo widac, ze to w ogole da sie oddac automatowi. */
 .rkf .badge{fill:#8a8a8a;opacity:.45;font:700 13px sans-serif}
@@ -86,6 +87,14 @@
         <path d="M4 20 L19.2 4.8"/><polyline points="16.3 5 20 4 19 7.7"/>
       </g>
     </symbol>
+    <!-- Podlogowka = kreska podlogi i nad nia trzy PIONOWE falki ciepla. Wezownica reku (ic-heat)
+         ma falki poziome, wiec kierunek fal odroznia jedno od drugiego. -->
+    <symbol id="ic-floor" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <path d="M7 16 q-2.5 -3 0 -6 t0 -6"/><path d="M12 16 q-2.5 -3 0 -6 t0 -6"/><path d="M17 16 q-2.5 -3 0 -6 t0 -6"/>
+        <path d="M3 20h18" stroke-width="2"/>
+      </g>
+    </symbol>
     <symbol id="ic-fan" viewBox="0 0 24 24">
       <path fill="currentColor" d="M12,11A1,1 0 0,0 11,12A1,1 0 0,0 12,13A1,1 0 0,0 13,12A1,1 0 0,0 12,11M12.5,2C17,2 17.11,5.57 14.75,6.75C13.76,7.24 13.32,8.29 13.13,9.22C13.61,9.42 14.03,9.73 14.35,10.13C18.05,8.13 22.03,8.92 22.03,12.5C22.03,17 18.46,17.1 17.28,14.73C16.78,13.74 15.72,13.3 14.79,13.11C14.59,13.59 14.28,14 13.88,14.34C15.87,18.03 15.08,22 11.5,22C7,22 6.91,18.42 9.27,17.24C10.26,16.75 10.68,15.71 10.87,14.78C10.39,14.58 9.97,14.27 9.65,13.87C5.96,15.86 2,15.07 2,11.5C2,7 5.56,6.89 6.74,9.26C7.24,10.25 8.29,10.68 9.22,10.87C9.41,10.39 9.73,9.97 10.14,9.65C8.15,5.96 8.94,2 12.5,2Z"/>
     </symbol>
@@ -132,7 +141,7 @@
 
   <!-- JEDEN RZAD KONTROLEK, DWIE GRUPY (2026-08-29):
        LEWA = sam rekuperator: bieg wentylatorow | bypass.
-       PRAWA = grzanie / chlodzenie: cel komfortu | wezownica nawiewu (reku-post) | chlodnica salonu | przewiew kuchni.
+       PRAWA = grzanie / chlodzenie: cel komfortu | wezownica nawiewu (reku-post) | chlodnica salonu | przewiew kuchni | podlogowka.
        2026-10-12 (user): wezownica przeszla z lewej grupy do chlodnicy salonu (funkcjonalnie jej miejsce),
        a cel komfortu z pola miedzy pillami na lewo od niej. `komfort_target` prowadzi sezonowo
        ai_rekuperator (zima 21,5 / lato 23,0). Przerwa miedzy grupami niesie te roznice. -->
@@ -153,26 +162,34 @@
     <use class="ico lit" id="byp-off" href="#ic-flowX" x="190" y="97" width="44" height="44"/>
   </g>
 
-  <text id="v_komfort" x="438" y="126" class="komf" text-anchor="end">—</text>
+  <text id="v_komfort" x="360" y="126" class="komf" text-anchor="end">—</text>
 
   <g class="ctl" id="chl-reku" data-key="tryb_chlodnice_nawiew">
-    <rect class="hit" x="444" y="93" width="70" height="54"/>
-    <text class="badge" x="448" y="109">A</text>
-    <use class="ico cool" href="#ic-heat" x="460" y="97" width="44" height="44"/>
-    <line class="slash" x1="459" y1="142" x2="504" y2="98"/>
+    <rect class="hit" x="366" y="93" width="70" height="54"/>
+    <text class="badge" x="370" y="109">A</text>
+    <use class="ico cool" href="#ic-heat" x="382" y="97" width="44" height="44"/>
+    <line class="slash" x1="381" y1="142" x2="426" y2="98"/>
   </g>
 
   <g class="ctl" id="chl-salon" data-key="tryb_chlodnice">
-    <rect class="hit" x="522" y="93" width="70" height="54"/>
-    <text class="badge" x="526" y="109">A</text>
-    <use class="ico cool" href="#ic-snow" x="538" y="97" width="44" height="44"/>
-    <line class="slash" x1="537" y1="142" x2="582" y2="98"/>
+    <rect class="hit" x="444" y="93" width="70" height="54"/>
+    <text class="badge" x="448" y="109">A</text>
+    <use class="ico cool" href="#ic-snow" x="460" y="97" width="44" height="44"/>
+    <line class="slash" x1="459" y1="142" x2="504" y2="98"/>
   </g>
 
   <g class="ctl" id="chl-kuch" data-key="tryb_freecool">
+    <rect class="hit" x="522" y="93" width="70" height="54"/>
+    <text class="badge" x="526" y="109">A</text>
+    <use class="ico fan" href="#ic-fan" x="538" y="97" width="44" height="44"/>
+    <line class="slash" x1="537" y1="142" x2="582" y2="98"/>
+  </g>
+
+  <!-- Podlogowka lazienki (2026-10-18, przeniesiona z nastaw Ogrzewania): sam ON/OFF, bez Auto,
+       wiec bez "A". Klik przelacza helper podlogowka_wlaczona. -->
+  <g class="ctl" id="podl-ctl">
     <rect class="hit" x="600" y="93" width="80" height="54"/>
-    <text class="badge" x="604" y="109">A</text>
-    <use class="ico fan" href="#ic-fan" x="616" y="97" width="44" height="44"/>
+    <use class="ico warm" href="#ic-floor" x="616" y="97" width="44" height="44"/>
     <line class="slash" x1="615" y1="142" x2="660" y2="98"/>
   </g>
 
@@ -274,6 +291,10 @@
           $('#' + p[0] + ' .slash').css('display', mode === 'off' ? '' : 'none');
           $('#' + p[0] + ' .ico').toggleClass('lit', lit);
       });
+
+      var podl = String(st.podlogowka) === '1';
+      $('#podl-ctl .ico').toggleClass('lit', podl);
+      $('#podl-ctl .slash').css('display', podl ? 'none' : '');
   }
 
   // Klik: policz nastepny tryb, narysuj OD RAZU (bez czekania na poll — inaczej ikona stoi
@@ -294,6 +315,13 @@
   $c.on('click', '#chl-reku',  function(e){ e.stopPropagation(); cycle('tryb_chlodnice_nawiew', SEQ_TRI); });
   $c.on('click', '#chl-salon', function(e){ e.stopPropagation(); cycle('tryb_chlodnice', SEQ_TRI); });
   $c.on('click', '#chl-kuch',  function(e){ e.stopPropagation(); cycle('tryb_freecool', SEQ_TRI); });
+  $c.on('click', '#podl-ctl',  function(e){
+      e.stopPropagation();
+      st.podlogowka = (String(st.podlogowka) === '1') ? '0' : '1';
+      draw();
+      $.post('api.php', {action: 'klimat_set', key: 'podlogowka_wlaczona', value: st.podlogowka},
+             function(){ setTimeout(pollCtl, 1200); }, 'json');
+  });
 
   // Stan biegu, bypassu i chlodnic siedzi w klimat_state (te same helpery, co segmenty w widgecie klimatu).
   function pollCtl(){

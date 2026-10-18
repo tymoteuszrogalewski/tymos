@@ -25,9 +25,10 @@ if ($db) { $db->select_db('tymos'); }
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </button>
     </div>
-    <!-- Nastawy trybu (sezon, piec, podlogowka) schowane pod gear 2026-08-29: to rzeczy
+    <!-- Nastawy trybu (sezon, piec) schowane pod gear 2026-08-29: to rzeczy
          ustawiane raz na sezon, a zajmowaly trzy wiersze nad termostatami, ktore rusza sie
-         codziennie. Siedza na GORZE panelu, nad dosypaniem pelletu. -->
+         codziennie. Siedza na GORZE panelu, nad dosypaniem pelletu. Podlogowka przeszla
+         2026-10-18 do rzedu ikon reku (card_reku_flow). -->
     <div id="piec-cfg" style="display:none">
     <div class="klm-r"><div class="klm-lbl">Sezon</div><div class="seg" data-key="tryb_klimatu">
       <button class="seg-btn" data-val="grzej">Grzanie</button>
@@ -40,10 +41,6 @@ if ($db) { $db->select_db('tymos'); }
       <button class="seg-btn" data-val="0">OFF</button>
     </div></div>
     <div class="klm-sub">Grzałki tylko wsparciem</div>
-    <div class="klm-r"><div class="klm-lbl">Podłogówka</div><div class="seg" data-key="podlogowka_wlaczona">
-      <button class="seg-btn" data-val="1">ON</button>
-      <button class="seg-btn" data-val="0">OFF</button>
-    </div></div>
       <div id="piec-cfg-box"></div>
     </div>
     <!-- #piec-rap-in osobno, bo .html() na samym #piec-rap-box zmiotloby X okna (winShow) -->
@@ -143,7 +140,7 @@ if ($db) { $db->select_db('tymos'); }
   function sezonSub(val){ $('#sezon-sub').text(SEZON_OPIS[val] || ''); }
 
   function grp(key){ return $k.find('.seg[data-key="' + key + '"] .seg-btn'); }
-  // Toggle bez Auto (piec/podlogowka/podlewanie): tylko wybrany=.on.
+  // Toggle bez Auto (piec/podlewanie): tylko wybrany=.on.
   function hlToggle(key, cur){ var $g = grp(key); $g.removeClass('on cur'); $g.filter('[data-val="' + cur + '"]').addClass('on'); }
   function poll(){
     if (!$('#klm').length) return;
@@ -159,7 +156,6 @@ if ($db) { $db->select_db('tymos'); }
       hlToggle('tryb_klimatu', d.tryb_klimatu);
       sezonSub(d.tryb_klimatu);
       hlToggle('piec_wlaczony', d.piec);
-      hlToggle('podlogowka_wlaczona', d.podlogowka);
     });
   }
   poll();
