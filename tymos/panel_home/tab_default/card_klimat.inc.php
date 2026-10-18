@@ -1,30 +1,51 @@
 <?php
-// Widget sterowania klimatem/basenem (panel_heat, pod schematem reku).
+// Widget sterowania klimatem/basenem (panel_heat). Od 2026-10-18 JEDNA karta: diagram reku,
+// pod nim jeden wiersz z oboma termostatami i zebatka nastaw (bez naglowka Ogrzewanie). Raporty
+// ciepla sa zakladkami okna wykresow reku (klik w wymiennik, card_reku_flow).
 // Kazda funkcja: Auto + reczny override. Segmentowane kontrolki, kategorie jako karty.
 // Podswietlenie: wybrany tryb = pelny niebieski (.on); w Auto aktualny stan = kropka (.cur).
 if ($db) { $db->select_db('tymos'); }
 ?>
 <style>
-.therm{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:0 0 auto;width:340px;max-width:62%}
-.therm-cur{color:#8a8a8a;font-size:12px;min-width:46px;text-align:right}
+/* Diagram reku wchodzi do tej samej karty, wiec traci wlasna ramke. */
+.klm-one{padding:8px 10px 6px}
+.klm-one > .rkf{background:none;border:none;padding:0;border-radius:0}
+/* Oba termostaty w JEDNYM wierszu, po polowie. Przyciski +/- zostaja 36x34 jak wszedzie;
+   miejsce daje nazwa nad biezaca temperatura (dwie linijki). */
+.th2{display:flex;align-items:center;gap:10px;border-top:1px solid #2a2a2a;margin-top:2px;padding-top:6px}
+.th2 .therm{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
+.th2-n{flex:1;display:flex;flex-direction:column;line-height:1.2;min-width:0}
+.th2-n b{font-size:14px;font-weight:400;color:#ddd}
+.therm-cur{color:#8a8a8a;font-size:12px}
+.th2 #piec-gear{margin-left:0}
 .therm-btn{width:36px;height:34px;border:none;border-radius:8px;background:#262626;color:#dcdcdc;font-size:20px;line-height:1;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .therm-btn:active{background:#3a3a3a}
-.therm-tgt{min-width:46px;text-align:center;font-size:15px;font-weight:600;color:#fff}
+.therm-tgt{min-width:40px;text-align:center;font-size:15px;font-weight:600;color:#fff}
 </style>
 
 <div class="klm" id="klm">
 
+  <div class="klm-cat klm-one">
   <?php include __DIR__ . '/card_reku_flow.inc.php'; ?>
 
-  <div class="klm-cat">
-    <div class="klm-cat-h"><span class="ic">🔥</span>Ogrzewanie
-      <button id="piec-rap" title="Wykresy: temperatury, bufor, pellet">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><rect x="5" y="12" width="3.4" height="6"/><rect x="10.3" y="8" width="3.4" height="10"/><rect x="15.6" y="4" width="3.4" height="14"/></svg>
-      </button>
-      <button id="piec-gear" title="Dosypanie pelletu" style="margin-left:12px">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      </button>
+  <div class="th2">
+    <div class="therm" data-therm="salon" data-min="18" data-max="25">
+      <div class="th2-n"><b>Salon</b><span class="therm-cur" id="th-salon-cur">–°</span></div>
+      <button class="therm-btn" data-d="-0.5">−</button>
+      <span class="therm-tgt" id="th-salon-tgt">–</span>
+      <button class="therm-btn" data-d="0.5">+</button>
     </div>
+    <div class="therm" data-therm="liwia" data-min="18" data-max="24">
+      <div class="th2-n"><b>Liwia</b><span class="therm-cur" id="th-liwia-cur">–°</span></div>
+      <button class="therm-btn" data-d="-0.5">−</button>
+      <span class="therm-tgt" id="th-liwia-tgt">–</span>
+      <button class="therm-btn" data-d="0.5">+</button>
+    </div>
+    <button id="piec-gear" title="Dosypanie pelletu">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </div>
+
     <!-- Nastawy trybu (sezon, piec) schowane pod gear 2026-08-29: to rzeczy
          ustawiane raz na sezon, a zajmowaly trzy wiersze nad termostatami, ktore rusza sie
          codziennie. Siedza na GORZE panelu, nad dosypaniem pelletu. Podlogowka przeszla
@@ -43,20 +64,6 @@ if ($db) { $db->select_db('tymos'); }
     <div class="klm-sub">Grzałki tylko wsparciem</div>
       <div id="piec-cfg-box"></div>
     </div>
-    <!-- #piec-rap-in osobno, bo .html() na samym #piec-rap-box zmiotloby X okna (winShow) -->
-    <div id="piec-rap-box" style="display:none"><div id="piec-rap-in"></div></div>
-    <div class="klm-r"><div class="klm-lbl">Salon</div><div class="therm" data-therm="salon" data-min="18" data-max="25">
-      <span class="therm-cur" id="th-salon-cur">–°</span>
-      <button class="therm-btn" data-d="-0.5">−</button>
-      <span class="therm-tgt" id="th-salon-tgt">–</span>
-      <button class="therm-btn" data-d="0.5">+</button>
-    </div></div>
-    <div class="klm-r"><div class="klm-lbl">Liwia</div><div class="therm" data-therm="liwia" data-min="18" data-max="24">
-      <span class="therm-cur" id="th-liwia-cur">–°</span>
-      <button class="therm-btn" data-d="-0.5">−</button>
-      <span class="therm-tgt" id="th-liwia-tgt">–</span>
-      <button class="therm-btn" data-d="0.5">+</button>
-    </div></div>
   </div>
 
 </div>
@@ -96,24 +103,6 @@ if ($db) { $db->select_db('tymos'); }
       $.get('cnt.php?panel=home&tab=default&card=pellet_add&_=' + Date.now(), function(html){
         $box.html(html);
         execScripts($box[0]);
-      });
-    }
-  });
-
-  // RAPORTY CIEPLA — ikona wykresu przy "Ogrzewanie" dociaga ROZWINIECIE karty `temps`
-  // (`expand=1`): zakladki Temperatury | Bufor | Rozbicie | Pellet + wykresy wody chlodnic.
-  // Kafelki temperatur w tamtej karcie sa schowane (display:none), bo zeszly na kamery,
-  // wiec przychodzi tu sama czesc raportowa. Ten sam idiom co #piec-gear wyzej.
-  $k.on('click', '#piec-rap', function(){
-    var $box = $('#piec-rap-box'), $in = $('#piec-rap-in'), btn = this;
-    $(btn).addClass('on');
-    winShow($box[0], function(){ $(btn).removeClass('on'); });
-    if (!$box.data('loaded')) {
-      $box.data('loaded', 1);
-      $in.html('<div style="padding:10px 2px;color:#777;font-size:13px">Ładowanie…</div>');
-      $.get('cnt.php?panel=home&tab=default&card=temps&expand=1&_=' + Date.now(), function(html){
-        $in.html(html);
-        execScripts($in[0]);
       });
     }
   });

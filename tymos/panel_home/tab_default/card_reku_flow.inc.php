@@ -204,15 +204,28 @@
 <!-- Wykresy reku — od 2026-09-04 w OKNIE nad panelem (winShow, cards.inc.js), nie jako wstawka pod
      diagramem. Tresc NIE jest generowana razem z karta: dociagamy ja przez loadCard dopiero po
      kliknieciu w wymiennik, wiec zamkniete nie kosztuje ani jednego zapytania. Karty leza
-     w panel_home/tab_default (przeniesione z raportow/ogrzewanie 2026-08-17). -->
+     w panel_home/tab_default (przeniesione z raportow/ogrzewanie 2026-08-17).
+     2026-10-18 (user): raporty ciepla (Bufor, Temperatury, Rozbicie, Pellet, Prad vs Pellet) to kolejne
+     zakladki TEGO okna — osobna ikona raportow przy termostatach zniknela. Tresc to rozwiniecie karty
+     `temps` (expand=1), dociagane raz do #rkf-heat; jej wlasny pasek #tc-tabs jest schowany, a nasze
+     przyciski klikaja w jego przyciski, wiec cala logika zakladek/swipe zostaje w card_temps. -->
+<style>#rkf-heat #tc-tabs{display:none !important}</style>
 <div id="rkf-charts" style="display:none">
-  <div style="display:flex;gap:6px;justify-content:center;margin-bottom:10px;">
+  <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:10px;">
     <button class="rkf-vbtn on" data-view="daily">Dzień</button>
     <button class="rkf-vbtn" data-view="monthly">Miesiąc</button>
     <button class="rkf-vbtn" data-view="yearly">Rok</button>
+    <button class="rkf-vbtn" data-tc="bufor">Bufor</button>
+    <button class="rkf-vbtn" data-tc="temp">Temperatury</button>
+    <button class="rkf-vbtn" data-tc="split">Rozbicie</button>
+    <button class="rkf-vbtn" data-tc="pellet">Pellet</button>
+    <button class="rkf-vbtn" data-tc="compare">Prąd vs Pellet</button>
   </div>
-  <div id="card_rkf_temps"><div style="text-align:center;color:#666;font-size:12px;padding:20px 0;">…</div></div>
-  <div id="card_rkf_fans" style="margin-top:10px;"></div>
+  <div id="rkf-reku">
+    <div id="card_rkf_temps"><div style="text-align:center;color:#666;font-size:12px;padding:20px 0;">…</div></div>
+    <div id="card_rkf_fans" style="margin-top:10px;"></div>
+  </div>
+  <div id="rkf-heat" style="display:none"></div>
 </div>
 
 <script>
@@ -223,15 +236,30 @@
   var box = document.getElementById('rkf-charts');
   var tog = document.getElementById('rkf-toggle');
   if (box && tog) {
-      var view = window.rkfView || 'daily';
+      var view = window.rkfView || 'daily';   // daily/monthly/yearly = reku, reszta = zakladka ciepla
+      var HEAT = {bufor: 1, temp: 1, split: 1, pellet: 1, compare: 1};
 
       function paint() {
-          $('.rkf-vbtn').each(function(){ $(this).toggleClass('on', $(this).data('view') === view); });
+          $('.rkf-vbtn').each(function(){ $(this).toggleClass('on', ($(this).data('view') || $(this).data('tc')) === view); });
       }
       function pull() {
+          if (HEAT[view]) { heat(view); return; }
+          $('#rkf-heat').hide(); $('#rkf-reku').show();
           // refresh 0 — wykresy dobowe nie musza sie odswiezac same; diagram wyzej ma wlasny poll 10 s
           loadCard('home', 'default', 'temps_esp',  0, null, 'rkf_temps', { view: view });
           loadCard('home', 'default', 'reku_fans',  0, null, 'rkf_fans',  { view: view });
+      }
+      function heat(tc) {
+          var $h = $('#rkf-heat');
+          $('#rkf-reku').hide(); $h.show();
+          var go = function(){ $h.find('#tc-tabs .tc-vbtn[data-tc="' + tc + '"]').trigger('click'); };
+          if ($h.data('loaded')) { go(); return; }
+          $h.data('loaded', 1).html('<div style="padding:10px 2px;color:#777;font-size:13px">Ładowanie…</div>');
+          $.get('cnt.php?panel=home&tab=default&card=temps&expand=1&_=' + Date.now(), function(html){
+              $h.html(html);
+              execScripts($h[0]);
+              go();
+          });
       }
       var hit = document.getElementById('rkf-hit');
       if (hit) hit.onclick = function() {
@@ -240,7 +268,7 @@
       };
       $('.rkf-vbtn').on('click', function(e) {
           e.stopPropagation();
-          view = window.rkfView = $(this).data('view');
+          view = window.rkfView = ($(this).data('view') || $(this).data('tc'));
           paint(); pull();
       });
   }
