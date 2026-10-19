@@ -11,6 +11,7 @@ $allowed = [
     'tryb_chlodnice'        => ['auto', 'off', 'on'],
     'tryb_chlodnice_nawiew' => ['auto', 'off', 'on'],
     'tryb_freecool'         => ['auto', 'off', 'on'],
+    'tryb_nagrzewnica'      => ['auto', 'off', 'on'],   // pompa nagrzewnicy dev16 (akcje cron 26-29)
     'force_basen'         => ['auto', 'on', 'off'],
     'force_basen_swiatlo' => ['auto', 'on', 'off'],
     'irrigation_enabled'  => ['0', '1'],
@@ -54,7 +55,8 @@ if ($key === 'tryb_klimatu') {
 // swiatla_ruch_mode: warunki 'helper' w akcjach 4/11-20 czyta demon z cache helperow, ktory odswieza
 // sie TYLKO przy reloadzie — bez flagi zmiana zadzialalaby dopiero po 30 min. Bez automatycznego
 // powrotu do AUTO (user 2026-09-07: „bezpiecznik zbedny") — tryb trzyma, az sie go recznie zmieni.
-if ($key === 'swiatla_ruch_mode') {
+// tryb_nagrzewnica: tak samo — akcje 26-29 czytaja go z cache helperow demona.
+if ($key === 'swiatla_ruch_mode' || $key === 'tryb_nagrzewnica') {
     require_once __DIR__ . '/../inc/helpers.inc.php';
     tymos_notify_reload($db);
 }

@@ -7,7 +7,8 @@
 // Coil POST to JEDNA ikona (wezownica) przebarwiana rola — czerwona gdy grzeje, niebieska gdy
 // chlodzi (2026-08-29). Wczesniej stala tam para falka+sniezynka, ale to jedno urzadzenie i para
 // sugerowala dwa; sniezynka zostaje na diagramie tylko jako kontrolka chlodzenia salonu.
-// Pod diagramem JEDEN rzad kontrolek: bieg | bypass, a po prawej cel komfortu | reku-post | chlodnica salonu | kuchnia | podlogowka.
+// Pod diagramem JEDEN rzad kontrolek: bieg | bypass, a po prawej grzanie post | chlodzenie post | chlodnica salonu | kuchnia | podlogowka.
+// Cel komfortu stoi na diagramie, na lewo od wymiennika.
 // Dane z api reku_diagram + klimat_state. v3.
 ?>
 <style>
@@ -15,7 +16,7 @@
 .rkf .val{fill:#f0f0f0;font:600 15.6px sans-serif}
 .rkf .val .h{font-weight:400;fill:#9a9a9a}
 .rkf .sub{fill:#c8c8c8;font:500 12px sans-serif}
-.rkf .komf{fill:#8a8a8a;font:600 17px sans-serif}
+.rkf .komf{fill:#8a8a8a;font:600 14px sans-serif}
 .rkf .pillbg{fill:#1e1e1e;stroke:#333;stroke-width:1}
 .rkf .exch{fill:rgba(255,255,255,0.09);stroke:#8f8f8f;stroke-width:1.8}
 .rkf .top{fill:#bbb;font:600 11px sans-serif}
@@ -38,6 +39,8 @@
    Wczesniej znikalo poza Auto — bez litery nie bylo widac, ze to w ogole da sie oddac automatowi. */
 .rkf .badge{fill:#8a8a8a;opacity:.45;font:700 13px sans-serif}
 .rkf .badge.lit{fill:#4a9eff;opacity:1}
+/* Grzanie ma "A" w swoim kolorze (2026-10-19, user) — niebieskie przy czerwonej ikonie mylilo sie z chlodzeniem. */
+.rkf #grz-reku .badge.lit{fill:#ff7a5c}
 /* Jedna zasada dla wszystkich kontrolek: KOLOR = dziala teraz, SZARY = nie dziala,
    PRZEKRESLENIE = wymuszone OFF z reki. Auto, ktore akurat nie chlodzi/nie dmucha, jest
    szare BEZ kreski — bo jest gotowe, a nie zablokowane. */
@@ -60,6 +63,21 @@
     <symbol id="ic-heat" viewBox="0 0 24 24">
       <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
         <path d="M4 7 q3 -4 6 0 t6 0"/><path d="M4 13 q3 -4 6 0 t6 0"/><path d="M4 19 q3 -4 6 0 t6 0"/>
+      </g>
+    </symbol>
+    <!-- Kontrolki wezownicy nawiewu (2026-10-19): ta sama falka co ic-heat, ale zsunieta w lewo,
+         a z prawej strzalka — W GORE = grzanie (pompa dev16), W DOL = chlodzenie (zawor dev1052).
+         Kolor niesie to samo, ale szare (off / auto bez pracy) odroznia tylko ksztalt. -->
+    <symbol id="ic-coil-heat" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 7 q3 -4 6 0 t6 0"/><path d="M2 13 q3 -4 6 0 t6 0"/><path d="M2 19 q3 -4 6 0 t6 0"/>
+        <path d="M19.5 20V5"/><polyline points="17 7.5 19.5 5 22 7.5"/>
+      </g>
+    </symbol>
+    <symbol id="ic-coil-cool" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 7 q3 -4 6 0 t6 0"/><path d="M2 13 q3 -4 6 0 t6 0"/><path d="M2 19 q3 -4 6 0 t6 0"/>
+        <path d="M19.5 4V19"/><polyline points="17 16.5 19.5 19 22 16.5"/>
       </g>
     </symbol>
     <symbol id="ic-snow" viewBox="0 0 24 24">
@@ -139,12 +157,18 @@
 
   <g id="p_exhaust" transform="translate(628,54)"><rect class="pillbg" x="-80" width="80" height="28" rx="8"/><text id="v_exhaust" x="-11" y="19" class="val" text-anchor="end">—</text></g>
 
+  <!-- Cel komfortu (2026-10-19, user): z rzedu kontrolek z powrotem na diagram, NA LEWO od wymiennika,
+       miedzy rozchodzacymi sie liniami (przy x=296 wolne pasmo y~30..54). Mniejsza czcionka, bez pilla. -->
+  <text id="v_komfort" x="298" y="47" class="komf" text-anchor="end">—</text>
+
   <!-- JEDEN RZAD KONTROLEK, DWIE GRUPY (2026-08-29):
        LEWA = sam rekuperator: bieg wentylatorow | bypass.
-       PRAWA = grzanie / chlodzenie: cel komfortu | wezownica nawiewu (reku-post) | chlodnica salonu | przewiew kuchni | podlogowka.
+       PRAWA = grzanie / chlodzenie: grzanie wezownicy | chlodzenie wezownicy | chlodnica salonu | przewiew kuchni | podlogowka.
        2026-10-12 (user): wezownica przeszla z lewej grupy do chlodnicy salonu (funkcjonalnie jej miejsce),
        a cel komfortu z pola miedzy pillami na lewo od niej. `komfort_target` prowadzi sezonowo
-       ai_rekuperator (zima 21,5 / lato 23,0). Przerwa miedzy grupami niesie te roznice. -->
+       ai_rekuperator (zima 21,5 / lato 23,0). Przerwa miedzy grupami niesie te roznice.
+       2026-10-19 (user): cel komfortu wrocil na diagram, a na jego miejscu stanelo GRZANIE wezownicy
+       (pompa nagrzewnicy dev16, tryb_nagrzewnica, akcje cron 26-29). -->
   <line class="devsep" x1="30" y1="92" x2="650" y2="92"/>
 
   <g class="ctl" id="bieg-ctl">
@@ -162,12 +186,17 @@
     <use class="ico lit" id="byp-off" href="#ic-flowX" x="190" y="97" width="44" height="44"/>
   </g>
 
-  <text id="v_komfort" x="360" y="126" class="komf" text-anchor="end">—</text>
+  <g class="ctl" id="grz-reku" data-key="tryb_nagrzewnica">
+    <rect class="hit" x="288" y="93" width="70" height="54"/>
+    <text class="badge" x="292" y="109">A</text>
+    <use class="ico warm" href="#ic-coil-heat" x="304" y="97" width="44" height="44"/>
+    <line class="slash" x1="303" y1="142" x2="348" y2="98"/>
+  </g>
 
   <g class="ctl" id="chl-reku" data-key="tryb_chlodnice_nawiew">
     <rect class="hit" x="366" y="93" width="70" height="54"/>
     <text class="badge" x="370" y="109">A</text>
-    <use class="ico cool" href="#ic-heat" x="382" y="97" width="44" height="44"/>
+    <use class="ico cool" href="#ic-coil-cool" x="382" y="97" width="44" height="44"/>
     <line class="slash" x1="381" y1="142" x2="426" y2="98"/>
   </g>
 
@@ -310,7 +339,8 @@
       vis('byp-on',  ey === 'on');
       vis('byp-off', ey === 'off');
 
-      [['chl-reku',  'tryb_chlodnice_nawiew', 'nawiew_on'],
+      [['grz-reku',  'tryb_nagrzewnica',      'nagrzewnica_on'],
+       ['chl-reku',  'tryb_chlodnice_nawiew', 'nawiew_on'],
        ['chl-salon', 'tryb_chlodnice',        'chlodnice_on'],
        ['chl-kuch',  'tryb_freecool',         'freecool_on']].forEach(function(p){
           var mode = String(st[p[1]] || 'auto');
@@ -332,7 +362,7 @@
       st[key] = val;
       if (key !== 'reku_bieg_mode' && key !== 'reku_bypass_mode' && val !== 'auto') {
           st[{tryb_chlodnice: 'chlodnice_on', tryb_freecool: 'freecool_on',
-              tryb_chlodnice_nawiew: 'nawiew_on'}[key]] = (val === 'on') ? 1 : 0;
+              tryb_chlodnice_nawiew: 'nawiew_on', tryb_nagrzewnica: 'nagrzewnica_on'}[key]] = (val === 'on') ? 1 : 0;
       }
       draw();
       $.post('api.php', {action: 'klimat_set', key: key, value: val},
@@ -340,6 +370,7 @@
   }
   $c.on('click', '#bieg-ctl',  function(e){ e.stopPropagation(); cycle('reku_bieg_mode', SEQ_BIEG); });
   $c.on('click', '#byp-ctl',   function(e){ e.stopPropagation(); cycle('reku_bypass_mode', SEQ_TRI); });
+  $c.on('click', '#grz-reku',  function(e){ e.stopPropagation(); cycle('tryb_nagrzewnica', SEQ_TRI); });
   $c.on('click', '#chl-reku',  function(e){ e.stopPropagation(); cycle('tryb_chlodnice_nawiew', SEQ_TRI); });
   $c.on('click', '#chl-salon', function(e){ e.stopPropagation(); cycle('tryb_chlodnice', SEQ_TRI); });
   $c.on('click', '#chl-kuch',  function(e){ e.stopPropagation(); cycle('tryb_freecool', SEQ_TRI); });

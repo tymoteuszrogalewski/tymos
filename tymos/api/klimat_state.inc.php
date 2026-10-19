@@ -54,6 +54,8 @@ echo json_encode([
     'chlodnice_on'        => (dstate($db, 1045) === 'ON') ? 1 : 0,
     'tryb_chlodnice_nawiew' => h($db, 'tryb_chlodnice_nawiew') ?: 'auto',
     'nawiew_on'           => (dstate($db, 1052) === 'OPEN') ? 1 : 0,
+    'tryb_nagrzewnica'    => h($db, 'tryb_nagrzewnica') ?: 'auto',
+    'nagrzewnica_on'      => (dstate($db, 16) === 'ON') ? 1 : 0,
     'komfort_target'      => h($db, 'komfort_target'),
     'tryb_freecool'       => h($db, 'tryb_freecool') ?: 'auto',
     'freecool_on'         => (dstate($db, 1044) === 'ON') ? 1 : 0,
