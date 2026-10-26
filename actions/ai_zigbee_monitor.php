@@ -9,6 +9,8 @@
  * pozniejszej analizy, nie powodem do budzenia telefonu. Powod: SNZB-02D bez heartbeatu
  * (dev684) potrafi milczec 3 h przy zdrowej sieci, wiec alert znaczyl tyle co nic.
  * Analiza: SELECT * FROM log WHERE source='ai_zigbee_monitor' AND message LIKE 'ZNIKLO%'.
+ * WYJATKI na Telegram: ALERT_DEVS i Zigbee 230 V (od 2026-10-25) — w nocy na wyciszony czat,
+ * rano (od 7:00, po ciszy nocnej) krotkie przypomnienie na Wazne.
  *
  * Po co, skoro sa `available` i `zigbee_watchdog.php`:
  *   - `availability_check.php` daje bateryjnym timeout 48 h — awaria 2026-08-19 (18 czujek lezalo
@@ -54,6 +56,16 @@ const AGE_EVENT      = 2880;  // min (48 h)
  * zmienic biegu. 2026-09-18 lezalo tak 16 h 47 min (min RSSI + lock AP w UniFi wykopywaly ESP).
  */
 const ALERT_DEVS = [527 => 60];
+
+/**
+ * Urzadzenia Zigbee zasilane z 230 V (gniazdka, przekazniki) — znikniecie i powrot ida na Telegram
+ * (decyzja usera 2026-10-25, po tym jak dwa S60ZBTPF w technicznym wypadly z sieci i migaly ponad dobe).
+ * availability_check.php pinguje je `get` co 5 min, wiec zywe odpowiadaja; 20 min ciszy = 4 pingi bez
+ * odpowiedzi. Zwykle pomaga restart zasilania (wylacz/wlacz gniazdko).
+ */
+const AGE_ZIG_NET = 20;    // min
+/** Wylaczone z alertu 230 V: dev1191 Sypialnia Swiatlo Nika — jeszcze niezamontowane. */
+const ZIG_NET_SKIP = [1191];
 
 $db = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_TYM, DB_PORT);
 if ($db->connect_error) { tymos_log('ERROR', 'ai_zigbee_monitor: DB ' . $db->connect_error); exit(1); }
@@ -101,9 +113,12 @@ while ($row = $r->fetch_assoc()) {
     elseif ($battery && $sensor){ $limit = AGE_BAT_SENSOR; $klasa = 'czujnik bat.'; }
     elseif ($battery)           { $limit = AGE_EVENT;      $klasa = 'bat. zdarzeniowe'; }
     else                        { $limit = AGE_NET;        $klasa = 'sieciowe'; }
+    $zig230 = ($klasa === 'sieciowe' && strpos($row['ieee'], '0x') === 0 && !in_array((int)$row['id'], ZIG_NET_SKIP, true));
+    if ($zig230)                { $limit = AGE_ZIG_NET;    $klasa = 'Zigbee 230V'; }
     if (array_key_exists((int)$row['id'], ALERT_DEVS)) { $limit = ALERT_DEVS[(int)$row['id']]; $klasa = 'krytyczne'; }
 
     $devs[(int)$row['id']] = [
+        'alert' => $zig230 || array_key_exists((int)$row['id'], ALERT_DEVS),
         'name'  => $row['device'],
         'ieee'  => $row['ieee'],
         'model' => (string)($row['model'] ?? ''),
@@ -129,6 +144,10 @@ if ($netFresh !== null && ($now - $netFresh) > NET_ALIVE_SEC) {
 
 $missing = json_decode((string)val("SELECT value FROM helpers WHERE name='zmon_missing' LIMIT 1"), true) ?: [];
 $known   = json_decode((string)val("SELECT value FROM helpers WHERE name='zmon_known'   LIMIT 1"), true) ?: [];
+// Alerty z ciszy nocnej (id => nazwa). W nocy telegram_send.php sam kieruje je na wyciszony czat,
+// a rano (od 7:00, po koncu ciszy) idzie na Wazne krotkie przypomnienie (user 2026-10-25).
+$night   = json_decode((string)val("SELECT value FROM helpers WHERE name='zmon_night'   LIMIT 1"), true) ?: [];
+$isNight = tymos_cisza_nocna();
 
 /**
  * Producent, model i typ urzadzenia z retained `zigbee2mqtt/bridge/devices`. Samo IEEE nic nie mowi,
@@ -164,13 +183,14 @@ foreach ($devs as $id => $d) {
     if ($isMissing && !$wasMissing) {
         $missing[$id] = $d['last'];
         $gone[] = "{$d['name']} — cisza od " . fmtAge($d['age']) . " ({$d['klasa']}, próg " . fmtAge($d['limit']) . ")";
-        if (array_key_exists($id, ALERT_DEVS)) $goneAlert[] = "{$d['name']} — cisza od " . fmtAge($d['age']) . " (próg " . fmtAge($d['limit']) . ")";
+        if ($d['alert']) $goneAlert[] = "{$d['name']} — cisza od " . fmtAge($d['age']) . ($d['klasa'] === 'Zigbee 230V' ? " (zrób restart zasilania)" : " (próg " . fmtAge($d['limit']) . ")");
+        if ($d['alert'] && $isNight) $night[$id] = $d['name'];
         tymos_log('WARN', "ZNIKLO dev{$id} {$d['name']} | cisza {$d['age']} min | {$d['klasa']} | prog {$d['limit']} min");
     } elseif (!$isMissing && $wasMissing) {
         $przerwa = intdiv($now - (int)$missing[$id], 60);
         unset($missing[$id]);
         $back[] = "{$d['name']} — wróciło po " . fmtAge($przerwa);
-        if (array_key_exists($id, ALERT_DEVS)) $backAlert[] = "{$d['name']} — wróciło po " . fmtAge($przerwa);
+        if ($d['alert']) $backAlert[] ="{$d['name']} — wróciło po " . fmtAge($przerwa);
         tymos_log('WARN', "POWROT dev{$id} {$d['name']} | przerwa {$przerwa} min | {$d['klasa']}");
     }
 
@@ -185,6 +205,16 @@ foreach (array_keys($missing) as $id) { if (!isset($devs[$id])) unset($missing[$
 
 setJson('zmon_missing', 'Monitor Zigbee - urzadzenia nieobecne (JSON)', $missing);
 setJson('zmon_known',   'Monitor Zigbee - znane urzadzenia (JSON)', array_values($known));
+
+// Poranne przypomnienie o nocnych zniknieciach — jedna linia na urzadzenie.
+if ($night && !$isNight && (int)date('G') >= 7) {
+    $lines = [];
+    foreach ($night as $id => $name) $lines[] = $name . (isset($missing[$id]) ? ' — nadal brak, restart zasilania' : ' — wróciło');
+    $proc = popen('php /opt/tymos/actions/telegram_send.php > /dev/null 2>&1', 'w');
+    if ($proc) { fwrite($proc, json_encode(['type' => 'text', 'msg' => "🌙 W nocy wypadło:\n· " . implode("\n· ", $lines), 'chat' => 'alert'])); pclose($proc); }
+    $night = [];
+}
+setJson('zmon_night',   'Monitor Zigbee - znikniecia z ciszy nocnej (JSON)', $night ?: new stdClass());
 
 if (!$gone && !$back && !$fresh) exit(0);
 logMsg("znikly=" . count($gone) . " wrocily=" . count($back) . " nowe=" . count($fresh));

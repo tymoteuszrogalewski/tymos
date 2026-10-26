@@ -813,6 +813,11 @@ def _process_message(topic, payload_bytes, retain=False):
         return
 
     # --- Zigbee ---
+    # Podtematy urzadzenia (`<nazwa>/set`, `/get`, `/availability`) to NASZE komendy albo meta Z2M,
+    # nie odczyt z urzadzenia. Bez tego ping `get` z availability_check.php stemplowal `__ts` martwym
+    # gniazdkom i ai_zigbee_monitor byl slepy (2026-10-25: podlogowka lezala ponad dobe bez alertu).
+    if topic.count("/") >= 2:
+        return
     try:
         payload = json.loads(payload_bytes.decode())
     except (json.JSONDecodeError, UnicodeDecodeError):
