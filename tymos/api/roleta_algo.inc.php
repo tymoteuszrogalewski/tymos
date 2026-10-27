@@ -225,6 +225,7 @@ $blocks[] = [
     'id' => 110, 'title' => 'Dzień: zamknij na słońce', 'when' => 'cron 8:15–16:59 co minutę, min. odstęp ' . (int)($a['min_interval'] ?? 0) . ' s',
     'desc' => 'Zasłania, gdy jest gorąco względem komfortu (helper komfort_target, ustawiany sezonowo przez reku) '
             . 'i słońce realnie grzeje (flaga roleta_slonce) LUB salon jest już 2° ponad komfort. '
+            . 'Działa cały rok (bez względu na tryb grzej/chłodź); zimą, gdy Taras jest zimny, wystarczy salon 3° ponad komfort. '
             . 'Po zejściu słońca z elewacji (flaga geometrii = 1) już NIE zamyka. Respektuje blokadę ręczną.',
     'rows' => $rows, 'ok' => $ok && $inWin, 'enabled' => (int)($a['enabled'] ?? 0), 'last' => ra_last(110),
     'verdict' => !$a ? 'brak akcji w bazie' : (!$a['enabled'] ? 'akcja WYŁĄCZONA'
