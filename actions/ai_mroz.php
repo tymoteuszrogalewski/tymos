@@ -21,6 +21,8 @@
  *
  * POMPA OGRODOWA jest twardo gaszona (gniazdko dev906 OFF), bo abisynka, hydrofor i weze stoja
  * na dworze. Publikujemy tylko przy zmianie stanu — zero spamu MQTT.
+ *
+ * Bez Telegrama (od 2026-11-07, user): stan pokazuje sniezynka w pasku ostrzezen na kamerze (api mroz_state).
  */
 
 require_once __DIR__ . '/lib/_log.inc.php';
@@ -46,10 +48,6 @@ function setHelper($name, $v) {
     $e = $db->real_escape_string((string)$v);
     $db->query("INSERT INTO helpers (name, label, type, value) VALUES ('{$name}', 'Blokada mrozowa (1/0)', 'text', '{$e}') "
              . "ON DUPLICATE KEY UPDATE value='{$e}'");
-}
-function telegram($msg) {
-    $p = popen('php /opt/tymos/actions/telegram_send.php > /dev/null 2>&1', 'w');
-    if ($p) { fwrite($p, json_encode(['type' => 'text', 'msg' => $msg, 'chat' => 'alert'])); pclose($p); }
 }
 
 // --- temperatura dworu: cien, potem reku ---
@@ -86,10 +84,8 @@ if ($now !== $was) {
     $tTxt = $T === null ? '—' : number_format($T, 1, ',', '') . '°C';
     if ($now) {
         tymos_log('WARN', "ai_mroz: BLOKADA ON ({$tTxt}, {$src})");
-        telegram("❄️ Blokada mrozowa WŁĄCZONA ({$tTxt})\nPompa ogrodowa wyłączona, podlewanie i basen wstrzymane.\nOdblokowanie dopiero powyżej " . FROST_OFF . "°C.");
     } else {
         tymos_log('WARN', "ai_mroz: BLOKADA OFF ({$tTxt}, {$src})");
-        telegram("✅ Blokada mrozowa zdjęta ({$tTxt}). Pompa i podlewanie znów dostępne.");
     }
 }
 

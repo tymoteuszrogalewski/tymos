@@ -230,7 +230,8 @@ window.camParkingActive = function () {
 })();
 
 // IKONY PO PRAWEJ U GORY = PASEK OSTRZEZEN I STANU.
-// Miejsce na rozne ikony; kolejnosc od prawej wg waznosci. Dzis: awarie grzalek bufora (tylko gdy sa).
+// Miejsce na rozne ikony; kolejnosc od prawej wg waznosci. Dzis: awarie grzalek bufora (tylko gdy sa),
+// na lewo od nich sniezynka blokady mrozowej (tylko gdy trwa).
 // Stan sieci Zigbee (zawsze widoczny) przeszedl na lewa strone, obok zebatki.
 //
 // AWARIA GRZALEK BUFORA — czerwone ikonki grzalek, ktore maja stan ON, ale nie ciagna
@@ -274,6 +275,9 @@ window.camParkingActive = function () {
     var slotGrz = document.createElement('div');  // ostrzezenia grzalek
     slotGrz.style.cssText = 'display:flex;flex-direction:row-reverse;gap:8px;';
     box.appendChild(slotGrz);
+    var slotMroz = document.createElement('div'); // blokada mrozowa — na lewo od grzalek
+    slotMroz.style.cssText = 'display:flex;';
+    box.appendChild(slotMroz);
 
     // Znak ostrzegawczy: czerwony trojkat (rogi zaokraglone obrysem w tym samym kolorze, bez bialej
     // ramki), w srodku waska sylwetka grzalki bojlerowej — rurka zagieta w podwojne U + belka kolnierza,
@@ -373,6 +377,30 @@ window.camParkingActive = function () {
         });
     }
 
+    // BLOKADA MROZOWA (2026-11-07, zamiast Telegrama): sniezynka, dopoki ai_mroz trzyma helper
+    // mroz_blokada=1 (pompa ogrodowa OFF, podlewanie i basen wstrzymane). Informacja, nie alarm —
+    // bez pulsowania i bez kliku. Zrodlo: api mroz_state.
+    function svgMroz() {
+        return '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#7dd3fc" '
+             + 'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+             + '<path d="M12 2v20M3.3 7l17.4 10M3.3 17l17.4-10"/>'
+             + '<path d="M9.5 3.5L12.0 6.0 14.5 3.5M18.1 5.6L17.2 9.0 20.6 9.9M20.6 14.1L17.2 15.0 18.1 18.4M14.5 20.5L12.0 18.0 9.5 20.5M5.9 18.4L6.8 15.0 3.4 14.1M3.4 9.9L6.8 9.0 5.9 5.6"/>'
+             + '</svg>';
+    }
+    function loadMroz() {
+        $.getJSON('api.php?action=mroz_state&_=' + Date.now(), function(d){
+            if (!d || !d.ok) return;
+            if (!d.on) { slotMroz.innerHTML = ''; return; }
+            if (slotMroz.firstChild) return;
+            var m = document.createElement('div');
+            m.title = 'Blokada mrozowa: pompa ogrodowa wyłączona, podlewanie i basen wstrzymane. Zdjęcie powyżej 7°C';
+            m.style.cssText = 'width:44px;height:44px;border-radius:50%;display:flex;align-items:center;'
+                + 'justify-content:center;background:rgba(0,0,0,0.3);';
+            m.innerHTML = svgMroz();
+            slotMroz.appendChild(m);
+        });
+    }
+
     if (!document.getElementById('zbPulseCss')) {
         var st = document.createElement('style');
         st.id = 'zbPulseCss';
@@ -389,6 +417,7 @@ window.camParkingActive = function () {
 
     load();
     loadZigbee();
+    loadMroz();
     // Pasek ostrzezen mowi o DOMU (siec Zigbee, grzalki bufora), a nie o tym, co widac w kadrze —
     // wiec poza parkingiem chowa sie tak samo jak pogoda. Na pozostalych kamerach
     // zostaja tylko rzeczy dotyczace samego obrazu: zebatka, jakosc SD/HD i dzwiek.
@@ -396,7 +425,7 @@ window.camParkingActive = function () {
     v.addEventListener('camswitch', visAlert);
     visAlert();
 
-    window.grzAlertTimer = setInterval(function(){ load(); loadZigbee(); }, 15000);
+    window.grzAlertTimer = setInterval(function(){ load(); loadZigbee(); loadMroz(); }, 15000);
     if (typeof cardOnUnload === 'function') cardOnUnload(function() { clearInterval(window.grzAlertTimer); window.grzAlertTimer = null; });
 })();
 
