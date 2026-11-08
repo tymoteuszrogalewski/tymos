@@ -278,7 +278,7 @@ function tempAt($byTs, $date, $time) {
           if (abs($cx - $mx) >= 2 * $colW) continue;
           if ($cx > $mx) { $anchor = 'start'; $tx = $cx + 3; } else { $anchor = 'end'; $tx = $cx - 3; }
       } ?>
-    <circle cx="<?= round($cx, 1) ?>" cy="<?= round($yOf($t), 1) ?>" r="2.6" fill="<?= $t < 0 ? '#5ab4ff' : '#ff5f45' ?>"/>
+    <circle cx="<?= round($cx, 1) ?>" cy="<?= round($yOf($t), 1) ?>" r="3.6" fill="<?= $t < 0 ? '#5ab4ff' : '#ff5f45' ?>"/>
     <text x="<?= round($tx, 1) ?>" y="<?= round($yOf($t) - 7, 1) ?>" text-anchor="<?= $anchor ?>"
           fill="#e8e8e8"
           style="font:700 <?= $isMax ? 22 : 17 ?>px sans-serif"><?= str_replace('.', ',', (string)round($t)) ?>°</text>
