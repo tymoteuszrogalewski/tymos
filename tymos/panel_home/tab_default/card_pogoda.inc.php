@@ -220,11 +220,18 @@ function tempAt($byTs, $date, $time) {
           stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
   <?php endforeach; ?>
 
-  <?php // TEMPERATURA
+  <?php // TEMPERATURA — ponad zerem czerwona, ponizej zera niebieska. Jedna linia rysowana dwa razy,
+  // kazda przycieta (clipPath) do swojej strony poziomu 0 °C, wiec kolor zmienia sie dokladnie
+  // w miejscu przejscia przez zero, a nie dopiero w najblizszym punkcie godzinowym.
   $pts = [];
-  foreach ($rows as $i => $x) $pts[] = round($xOf($i) + $colW / 2, 1) . ',' . round($yOf((float)$x['temp']), 1); ?>
+  foreach ($rows as $i => $x) $pts[] = round($xOf($i) + $colW / 2, 1) . ',' . round($yOf((float)$x['temp']), 1);
+  $y0 = round(max($Y_PLOT - 40, min($Y_PLOT + $H_PLOT + 40, $yOf(0))), 1); ?>
+  <clipPath id="wxWarm"><rect x="0" y="-100" width="<?= $W ?>" height="<?= $y0 + 100 ?>"/></clipPath>
+  <clipPath id="wxCold"><rect x="0" y="<?= $y0 ?>" width="<?= $W ?>" height="2000"/></clipPath>
   <polyline points="<?= implode(' ', $pts) ?>" fill="none" stroke="#ff5f45" stroke-width="2.6"
-            stroke-linecap="round" stroke-linejoin="round"/>
+            stroke-linecap="round" stroke-linejoin="round" clip-path="url(#wxWarm)"/>
+  <polyline points="<?= implode(' ', $pts) ?>" fill="none" stroke="#5ab4ff" stroke-width="2.6"
+            stroke-linecap="round" stroke-linejoin="round" clip-path="url(#wxCold)"/>
 
   <?php // ETYKIETY NA KRZYWEJ: wschod, dzienne maksimum, zachod — liczba stoi tam, gdzie ta
   // temperatura faktycznie wypada, wiec czyta sie ja wzrokiem z wykresu, a nie z legendy.
@@ -271,7 +278,7 @@ function tempAt($byTs, $date, $time) {
           if (abs($cx - $mx) >= 2 * $colW) continue;
           if ($cx > $mx) { $anchor = 'start'; $tx = $cx + 3; } else { $anchor = 'end'; $tx = $cx - 3; }
       } ?>
-    <circle cx="<?= round($cx, 1) ?>" cy="<?= round($yOf($t), 1) ?>" r="2.6" fill="#ff5f45"/>
+    <circle cx="<?= round($cx, 1) ?>" cy="<?= round($yOf($t), 1) ?>" r="2.6" fill="<?= $t < 0 ? '#5ab4ff' : '#ff5f45' ?>"/>
     <text x="<?= round($tx, 1) ?>" y="<?= round($yOf($t) - 7, 1) ?>" text-anchor="<?= $anchor ?>"
           fill="#e8e8e8"
           style="font:700 <?= $isMax ? 22 : 17 ?>px sans-serif"><?= str_replace('.', ',', (string)round($t)) ?>°</text>
