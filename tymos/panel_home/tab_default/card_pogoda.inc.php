@@ -162,7 +162,12 @@ function tempAt($byTs, $date, $time) {
           $x1 = $clipX($xAt($a)); $x2 = $clipX($xAt($b));
           if ($x2 - $x1 < 0.5) continue; ?>
     <rect x="<?= round($x1, 1) ?>" y="<?= $Y_PLOT ?>" width="<?= round($x2 - $x1, 1) ?>" height="<?= $H_PLOT ?>" fill="#3a3a41"/>
-  <?php endforeach; endforeach; ?>
+  <?php endforeach; endforeach;
+  // strefa mrozu: od 0 °C w dol polprzezroczysty niebieski (jak na meteo.pl), tylko gdy skala schodzi ponizej zera
+  if ($tMin < 0):
+      $yf = round(max($Y_PLOT, min($Y_PLOT + $H_PLOT, $yOf(0))), 1); ?>
+    <rect x="<?= $L ?>" y="<?= $yf ?>" width="<?= $W - $Rr - $L ?>" height="<?= round($Y_PLOT + $H_PLOT - $yf, 1) ?>" fill="#5ab4ff" opacity=".35"/>
+  <?php endif; ?>
 
   <?php // siatka pozioma, rowny krok
   // Krok dobierany do zakresu, celujac w 4-6 wartosci: siatka ma pomagac odczytac wysokosc
