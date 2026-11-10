@@ -25,7 +25,7 @@
 .rkf .devsep{stroke:#2a2a2a;stroke-width:1}
 /* Kontrolki wprost na diagramie, w jednym rzedzie: bieg | bypass | chlodzenie.
    JEDNA ikona = JEDEN przelacznik. Ikona pokazuje AKTUALNY STAN, a klik przewija tryb w kolko
-   (bieg: A -> OFF -> I -> II -> III; reszta: A -> OFF -> ON). Male "A" w indeksie gornym mowi
+   (bieg: A -> AWAY (samolot) -> I -> II -> III; reszta: A -> OFF -> ON). Male "A" w indeksie gornym mowi
    tylko tyle, ze stan ustawil automat. ZERO ramek i teł. Klikalnosc daje NIEWIDZIALNY prostokat
    `.hit`, zeby palec trafial takze w luzy miedzy ikonami. */
 .rkf .ctl{cursor:pointer}
@@ -116,6 +116,10 @@
     <symbol id="ic-fan" viewBox="0 0 24 24">
       <path fill="currentColor" d="M12,11A1,1 0 0,0 11,12A1,1 0 0,0 12,13A1,1 0 0,0 13,12A1,1 0 0,0 12,11M12.5,2C17,2 17.11,5.57 14.75,6.75C13.76,7.24 13.32,8.29 13.13,9.22C13.61,9.42 14.03,9.73 14.35,10.13C18.05,8.13 22.03,8.92 22.03,12.5C22.03,17 18.46,17.1 17.28,14.73C16.78,13.74 15.72,13.3 14.79,13.11C14.59,13.59 14.28,14 13.88,14.34C15.87,18.03 15.08,22 11.5,22C7,22 6.91,18.42 9.27,17.24C10.26,16.75 10.68,15.71 10.87,14.78C10.39,14.58 9.97,14.27 9.65,13.87C5.96,15.86 2,15.07 2,11.5C2,7 5.56,6.89 6.74,9.26C7.24,10.25 8.29,10.68 9.22,10.87C9.41,10.39 9.73,9.97 10.14,9.65C8.15,5.96 8.94,2 12.5,2Z"/>
     </symbol>
+    <!-- Away = samolot (2026-11-10, user): najnizszy bieg, stoi przed I. -->
+    <symbol id="ic-plane" viewBox="0 0 24 24">
+      <path fill="currentColor" d="M20.56 3.91C21.15 4.5 21.15 5.45 20.56 6.03L16.67 9.92L18.79 19.11L17.38 20.53L13.5 13.1L9.6 17L9.96 19.47L8.89 20.53L7.13 17.35L3.94 15.58L5 14.5L7.5 14.87L11.37 11L3.94 7.09L5.36 5.68L14.55 7.8L18.44 3.91C19 3.33 20 3.33 20.56 3.91Z"/>
+    </symbol>
   </defs>
 
   <!-- STRUMIENIE (przerysowane 2026-08-29 wg szkicu usera): poziom u gory -> ukos -> poziom u dolu.
@@ -172,18 +176,19 @@
   <line class="devsep" x1="30" y1="92" x2="650" y2="92"/>
 
   <g class="ctl" id="bieg-ctl">
-    <rect class="hit" x="10" y="93" width="160" height="54"/>
+    <rect class="hit" x="10" y="93" width="176" height="54"/>
     <text class="badge" id="bieg-a" x="14" y="109">A</text>
-    <use class="ico" id="bieg-f1" href="#ic-fan" x="26"  y="97" width="44" height="44"/>
-    <use class="ico" id="bieg-f2" href="#ic-fan" x="72"  y="97" width="44" height="44"/>
-    <use class="ico" id="bieg-f3" href="#ic-fan" x="118" y="97" width="44" height="44"/>
+    <use class="ico" id="bieg-away" href="#ic-plane" x="26"  y="101" width="36" height="36"/>
+    <use class="ico" id="bieg-f1" href="#ic-fan"   x="64"  y="99"  width="40" height="40"/>
+    <use class="ico" id="bieg-f2" href="#ic-fan"   x="104" y="99"  width="40" height="40"/>
+    <use class="ico" id="bieg-f3" href="#ic-fan"   x="144" y="99"  width="40" height="40"/>
   </g>
 
   <g class="ctl" id="byp-ctl">
-    <rect class="hit" x="174" y="93" width="70" height="54"/>
-    <text class="badge" id="byp-a" x="178" y="109">A</text>
-    <use class="ico lit" id="byp-on"  href="#ic-flow"  x="190" y="97" width="44" height="44"/>
-    <use class="ico lit" id="byp-off" href="#ic-flowX" x="190" y="97" width="44" height="44"/>
+    <rect class="hit" x="190" y="93" width="70" height="54"/>
+    <text class="badge" id="byp-a" x="194" y="109">A</text>
+    <use class="ico lit" id="byp-on"  href="#ic-flow"  x="206" y="97" width="44" height="44"/>
+    <use class="ico lit" id="byp-off" href="#ic-flowX" x="206" y="97" width="44" height="44"/>
   </g>
 
   <g class="ctl" id="grz-reku" data-key="tryb_nagrzewnica">
@@ -307,7 +312,7 @@
   // wykresow — bez tego kazde ustawienie biegu otwieraloby albo zamykalo wykresy pod spodem.
   // Wszedzie ta sama kolejnosc: z Auto pierwszy klik WYLACZA. Bez tego bieg gasl, a chlodzenie
   // przy tym samym gescie ruszalo — i palec sie mylil.
-  var SEQ_BIEG = ['auto', 'off', '1', '2', '3'];   // A -> OFF -> I -> II -> III -> A
+  var SEQ_BIEG = ['auto', 'off', '1', '2', '3'];   // A -> AWAY (samolot) -> I -> II -> III -> A
   var SEQ_TRI  = ['auto', 'off', 'on'];            // A -> OFF -> ON -> A
   var st = {};                                     // ostatni klimat_state (do rysowania i do cyklu)
 
@@ -327,8 +332,9 @@
       // Trzy smigla stoja ZAWSZE — szare sa skala, niebieskie odczytem. Widac naraz, ktory bieg
       // chodzi i ile jeszcze zostalo w zapasie; wczesniej brakujace smigla byly ukrywane i przy
       // I biegu nie dalo sie odroznic "najnizszy z trzech" od "jedyny, jaki jest".
-      // OFF (z reki albo z automatu w Away) = trzy szare; kreska dochodzi tylko przy OFF z reki.
+      // 'off' = AWAY (ESP nie ma standby): swieci samolot przed I biegiem, smigla szare (2026-11-10).
       var lvl = ({'1': 1, '2': 2, '3': 3})[eb] || 0;
+      $('#bieg-away').toggleClass('lit', eb === 'off');
       $('#bieg-f1').toggleClass('lit', lvl >= 1);
       $('#bieg-f2').toggleClass('lit', lvl >= 2);
       $('#bieg-f3').toggleClass('lit', lvl >= 3);
