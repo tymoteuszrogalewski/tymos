@@ -3,15 +3,19 @@
 /**
  * smieci_check.php — czy smieci sa wystawione przed wywozem (2026-11-12, user zapomnial).
  *
- * Bez rozpoznawania obiektow: porownujemy wycinek "miejsca na smieci" (trawa na prawo od podjazdu,
- * przy drodze) z obrazem bazowym z TEJ SAMEJ GODZINY (to samo swiatlo latarni / slonca).
- * Cos "wyroslo" na trawie = wystawione. Dwie kamery: parking_hd (z przodu, auto moze zaslonic)
- * i doorbell_hd (z boku, skraj kadru).
+ * Bez rozpoznawania obiektow: porownujemy KONTURY (krawedzie) wycinka "miejsca na smieci" — trawa na
+ * prawo od podjazdu, przy drodze, tuz nad dachem Skody na kamerze parkingu — z PULA pustych wycinkow
+ * ze wszystkich godzin kilku ostatnich dni bez wywozu (bierzemy najbardziej podobny). Kosz/worek
+ * przerywa linie trawa/droga i dodaje wlasny obrys W JEDNYM MIEJSCU; swiatlo, cien i latarnia
+ * zmieniaja kontury slabo i rozlanie. Dlatego liczy sie najgorsze okno OKNO_W x OKNO_H, nie caly wycinek.
+ * (2026-11-19: porownanie kolorow z ta sama godzina dawalo 10-60% roznicy na pustym — odrzucone.
+ * Test na 116 pustych probkach 15-18.11 dzien+noc: max 17,5%; worek papieru 27%.)
+ * Tylko parking_hd: na doorbell_hd miejsce zaslania Renault.
  *
  * Tryby (argument):
- *   baseline — akcja cron co godzine: zapisuje wycinki jako baze dla danej godziny, ALE tylko gdy
- *              miejsce na pewno puste (poza oknem wywozu: od 0:00 dnia przed do 18:00 dnia wywozu —
- *              od 2026-11-19 user moze wystawic juz rano dnia przed, wiec cala ta doba jest zamrozona).
+ *   baseline — akcja cron co godzine: dopisuje wycinek do puli, ALE tylko gdy miejsce na pewno puste
+ *              (poza oknem wywozu: od 0:00 dnia przed do 18:00 dnia wywozu — od 2026-11-19 user moze
+ *              wystawic juz rano dnia przed). Pula: PULA_DNI ostatnich dni z zapisem, starsze kasowane.
  *   check    — akcja cron 21:00, 22:00, 6:00: przed 12:00 sprawdza wywoz DZIS, od 12:00 JUTRO.
  *   person   — akcja na wykrycie osoby na parkingu (dev 144): tylko w dzien wywozu 4:00-8:00, raz.
  *   stan     — akcja cron co 10 min: ikonka na kamerze (kosz w kolorze frakcji + zielony haczyk), gdy
@@ -20,7 +24,7 @@
  *
  * Wynik "pusto" = Telegram Wazne ze zdjeciem. Wynik "stoi" = flaga na ten wywoz, dalsze sprawdzenia milkna.
  * Popiol, wodomierz, tekstylia, gabaryty — ignorowane (TYPY).
- * Strojenie: kazdy pomiar laduje w /root/smieci_probki/pomiary.csv + wycinki jpg (tymczasowo).
+ * Strojenie: kazdy pomiar laduje w /root/smieci_probki/pomiary.csv + szersze wycinki jpg (tymczasowo).
  */
 
 require_once __DIR__ . '/lib/_log.inc.php';
@@ -28,22 +32,24 @@ require_once __DIR__ . '/lib/_log.inc.php';
 // Typy z waste_calendar, ktore wystawiamy na trawe (kosz pionowy albo worki).
 const TYPY = ['zmieszane', 'bio', 'plastik', 'papier', 'szklo'];
 
-// Wycinki [x, y, w, h] w pikselach pelnej klatki HD. Gorna czesc obejmuje kawalek drogi,
-// bo wysoki kosz wystaje ponad trawe. parking: od x=1450, zeby nie lapac kosza sasiada na drodze.
-// doorbell: od x=2300, zeby nie lapac Renault na podjezdzie.
-const KAMERY = [
-    'parking_hd'  => [1450, 150, 470, 180],
-    'doorbell_hd' => [2300, 1000, 250, 200],
-];
+// Wycinek [x, y, w, h] w pikselach pelnej klatki parking_hd (2688x1520): pas drogi + skraj trawy
+// nad dachem Skody, tam gdzie stoja smieci. Nizej zaczyna sie dach auta (stoi roznie).
+const KAMERA  = 'parking_hd';
+const WYCINEK = [1500, 150, 260, 62];
+const PROBKA  = [1450, 150, 470, 180];   // szerszy kadr do probek (strojenie), nie do porownania
 
-const SKALA_W     = 96;   // wycinek zmniejszany do tej szerokosci przed porownaniem (szum, wydajnosc)
-const PROG_PIKSEL = 70;   // suma |dR|+|dG|+|dB| po wyrownaniu jasnosci, powyzej = piksel zmieniony
-const PROG_UDZIAL = 0.025; // udzial zmienionych pikseli, powyzej = cos stoi (test 12.11: worek ~2%, kosz ~4%; stroic z pomiary.csv)
+const SKALA_W     = 128;  // wycinek zmniejszany do tej szerokosci (szum, wydajnosc)
+const PROG_SOBEL  = 80;   // |gx|+|gy| po rozmyciu, powyzej = krawedz
+const OKNO_W      = 24;   // okno, w ktorym szukamy skupionej zmiany konturow (px po zmniejszeniu)
+const OKNO_H      = 20;
+const PROG_UDZIAL = 0.22; // udzial zmienionych krawedzi w najgorszym oknie, powyzej = cos stoi
+const PULA_DNI    = 3;    // ile ostatnich dni z zapisem bazy bierzemy do porownania
+const TRZYMAJ_DNI = 7;    // starsze bazy kasowane
 const KLATKI      = 3;    // ile klatek co KLATKI_ODSTEP s; bierzemy MINIMUM (przejezdzajace auto/przechodzien)
 const KLATKI_ODSTEP = 4;
 
 const GO2RTC  = 'http://127.0.0.1:1984/api/frame.jpeg?src=';
-const BAZA    = '/var/lib/tymos/smieci';   // bazy godzinowe (male jpg, przezywaja reboot)
+const BAZA    = '/var/lib/tymos/smieci';   // pula baz: parking_hd_RRRRMMDD_HH.png (przezywa reboot)
 const PROBKI  = '/root/smieci_probki';     // tymczasowo do strojenia progow
 const TMP     = '/tmp/tymos';              // Apache /snap/ -> tu (zdjecie do Telegrama)
 
@@ -70,86 +76,130 @@ function wywoz($db, $dt) {
 $dzis   = date('Y-m-d');
 $jutro  = date('Y-m-d', strtotime('+1 day'));
 $godz   = (int)date('G');
-$hh     = date('H');
 
-// ---------- klatki i porownanie ----------
+// ---------- klatki i kontury ----------
 
-function klatka($cam) {
-    $jpg = @file_get_contents(GO2RTC . $cam);
+function klatka() {
+    $jpg = @file_get_contents(GO2RTC . KAMERA);
     if ($jpg === false || strlen($jpg) < 1000) return null;
     $im = @imagecreatefromstring($jpg);
     return $im ?: null;
 }
 
-function wytnij($im, $cam) {
-    [$x, $y, $w, $h] = KAMERY[$cam];
+// Wycinek zmniejszony do SKALA_W — to on idzie do puli (png) i do porownania.
+function wytnij($im) {
+    [$x, $y, $w, $h] = WYCINEK;
     $sh = (int)round($h * SKALA_W / $w);
     $out = imagecreatetruecolor(SKALA_W, $sh);
     imagecopyresampled($out, $im, 0, 0, $x, $y, SKALA_W, $sh, $w, $h);
     return $out;
 }
 
-function srednie($im) {
-    $w = imagesx($im); $h = imagesy($im); $s = [0, 0, 0];
+// Mapa krawedzi [y][x] => 1 (Sobel na rozmytej szarosci). null = szara/pusta klatka (zerwany strumien).
+function kontury($wyc) {
+    $im = imagecreatetruecolor(imagesx($wyc), imagesy($wyc));
+    imagecopy($im, $wyc, 0, 0, 0, 0, imagesx($wyc), imagesy($wyc));
+    imagefilter($im, IMG_FILTER_GAUSSIAN_BLUR);
+    $w = imagesx($im); $h = imagesy($im); $g = []; $s = 0; $s2 = 0;
     for ($y = 0; $y < $h; $y++) for ($x = 0; $x < $w; $x++) {
         $c = imagecolorat($im, $x, $y);
-        $s[0] += ($c >> 16) & 255; $s[1] += ($c >> 8) & 255; $s[2] += $c & 255;
+        $v = 0.3 * (($c >> 16) & 255) + 0.59 * (($c >> 8) & 255) + 0.11 * ($c & 255);
+        $g[$y][$x] = $v; $s += $v; $s2 += $v * $v;
     }
     $n = $w * $h;
-    return [max(1, $s[0] / $n), max(1, $s[1] / $n), max(1, $s[2] / $n)];
-}
-
-// Udzial zmienionych pikseli. Jasnosc kazdego kanalu wyrownana do bazy (latarnia/zachmurzenie).
-function roznica($a, $baza) {
-    $w = imagesx($a); $h = imagesy($a);
-    if ($w !== imagesx($baza) || $h !== imagesy($baza)) return null;
-    $ma = srednie($a); $mb = srednie($baza);
-    $k = [$mb[0] / $ma[0], $mb[1] / $ma[1], $mb[2] / $ma[2]];
-    $zm = 0;
-    for ($y = 0; $y < $h; $y++) for ($x = 0; $x < $w; $x++) {
-        $c = imagecolorat($a, $x, $y); $d = imagecolorat($baza, $x, $y);
-        $s = abs((($c >> 16) & 255) * $k[0] - (($d >> 16) & 255))
-           + abs((($c >> 8) & 255) * $k[1] - (($d >> 8) & 255))
-           + abs(($c & 255) * $k[2] - ($d & 255));
-        if ($s > PROG_PIKSEL) $zm++;
+    if (sqrt(max(0, $s2 / $n - ($s / $n) ** 2)) < 4) return null;
+    $e = [];
+    for ($y = 1; $y < $h - 1; $y++) for ($x = 1; $x < $w - 1; $x++) {
+        $gx = ($g[$y-1][$x+1] + 2 * $g[$y][$x+1] + $g[$y+1][$x+1]) - ($g[$y-1][$x-1] + 2 * $g[$y][$x-1] + $g[$y+1][$x-1]);
+        $gy = ($g[$y+1][$x-1] + 2 * $g[$y+1][$x] + $g[$y+1][$x+1]) - ($g[$y-1][$x-1] + 2 * $g[$y-1][$x] + $g[$y-1][$x+1]);
+        if (abs($gx) + abs($gy) > PROG_SOBEL) $e[$y][$x] = 1;
     }
-    return $zm / ($w * $h);
+    return ['e' => $e, 'w' => $w, 'h' => $h];
 }
 
-// Probka do strojenia: wycinek w pelnej rozdzielczosci (nie zmniejszony).
-function probka($im, $cam, $nazwa) {
-    [$x, $y, $w, $h] = KAMERY[$cam];
+function rozszerz($e) {   // krawedz +-1 px: drobne przesuniecie obrazu to nie zmiana
+    $d = [];
+    foreach ($e as $y => $row) foreach ($row as $x => $_)
+        for ($dy = -1; $dy <= 1; $dy++) for ($dx = -1; $dx <= 1; $dx++) $d[$y + $dy][$x + $dx] = 1;
+    return $d;
+}
+
+// Udzial zmienionych krawedzi (nowe w $a albo zniklo z $b) w najgorszym oknie OKNO_W x OKNO_H.
+function roznica($a, $b) {
+    $da = rozszerz($a['e']); $db = rozszerz($b['e']);
+    $w = $a['w']; $h = $a['h'];
+    $I = array_fill(0, $h + 1, array_fill(0, $w + 1, 0));   // obraz calkowy zmian
+    for ($y = 0; $y < $h; $y++) for ($x = 0; $x < $w; $x++) {
+        $z = (isset($a['e'][$y][$x]) && !isset($db[$y][$x])) || (isset($b['e'][$y][$x]) && !isset($da[$y][$x])) ? 1 : 0;
+        $I[$y+1][$x+1] = $z + $I[$y][$x+1] + $I[$y+1][$x] - $I[$y][$x];
+    }
+    $best = 0;
+    for ($y = 0; $y + OKNO_H <= $h; $y++) for ($x = 0; $x + OKNO_W <= $w; $x++) {
+        $c = $I[$y+OKNO_H][$x+OKNO_W] - $I[$y][$x+OKNO_W] - $I[$y+OKNO_H][$x] + $I[$y][$x];
+        if ($c > $best) $best = $c;
+    }
+    return $best / (OKNO_W * OKNO_H);
+}
+
+// Pula: bazy z PULA_DNI ostatnich dni, w ktorych byl zapis (przerwy na wywoz nie oprozniaja puli).
+function pula() {
+    $pliki = glob(BAZA . '/' . KAMERA . '_????????_??.png') ?: [];
+    $dni = array_unique(array_map(fn($f) => substr(basename($f, '.png'), -11, 8), $pliki));
+    rsort($dni);
+    $dni = array_slice($dni, 0, PULA_DNI);
+    $out = [];
+    foreach ($pliki as $f) {
+        if (!in_array(substr(basename($f, '.png'), -11, 8), $dni, true)) continue;
+        $im = @imagecreatefrompng($f);
+        $k = $im ? kontury($im) : null;
+        if ($k) $out[] = $k;
+    }
+    return $out;
+}
+
+function wynik_pula($k, $pula) {
+    if (!$k || !$pula) return null;
+    $min = null;
+    foreach ($pula as $b) { $u = roznica($k, $b); if ($min === null || $u < $min) $min = $u; }
+    return $min;
+}
+
+// Probka do strojenia: szerszy kadr w pelnej rozdzielczosci.
+function probka($im, $nazwa) {
+    [$x, $y, $w, $h] = PROBKA;
     $c = imagecrop($im, ['x' => $x, 'y' => $y, 'width' => $w, 'height' => $h]);
-    if ($c) imagejpeg($c, PROBKI . "/{$nazwa}_{$cam}.jpg", 90);
+    if ($c) imagejpeg($c, PROBKI . "/{$nazwa}_" . KAMERA . '.jpg', 90);
 }
 
-function pomiar_csv($tryb, $cam, $udzial, $info) {
+function pomiar_csv($tryb, $udzial, $info) {
     $f = PROBKI . '/pomiary.csv';
     $nowy = !is_file($f);
     $l = ($nowy ? "czas;tryb;kamera;udzial;info\n" : '')
-       . date('Y-m-d H:i:s') . ";$tryb;$cam;" . ($udzial === null ? '' : round($udzial, 4)) . ";$info\n";
+       . date('Y-m-d H:i:s') . ";$tryb;" . KAMERA . ';' . ($udzial === null ? '' : round($udzial, 4)) . ";$info\n";
     @file_put_contents($f, $l, FILE_APPEND);
 }
 
 // ---------- baseline ----------
 
 if ($tryb === 'baseline') {
-    // Okno wywozu: od 0:00 dnia przed do 18:00 dnia wywozu baza zamrozona (moze cos stac).
     $zamrozone = wywoz($db, $jutro) || ($godz < 18 && wywoz($db, $dzis));
-    foreach (array_keys(KAMERY) as $cam) {
-        $im = klatka($cam);
-        if (!$im) { pomiar_csv('baseline', $cam, null, 'brak klatki'); continue; }
-        $wyc = wytnij($im, $cam);
-        probka($im, $cam, date('Ymd_H'));
-        $plik = BAZA . "/{$cam}_{$hh}.png";
-        $udz = is_file($plik) ? roznica($wyc, imagecreatefrompng($plik)) : null;
-        pomiar_csv('baseline', $cam, $udz, $zamrozone ? 'zamrozone' : 'zapis');
-        if (!$zamrozone) imagepng($wyc, $plik);
+    $im = klatka();
+    if (!$im) { pomiar_csv('baseline', null, 'brak klatki'); exit(0); }
+    probka($im, date('Ymd_H'));
+    $wyc = wytnij($im);
+    $k = kontury($wyc);
+    $udz = wynik_pula($k, pula());   // na pustym powinno byc nisko — kontrola progu
+    pomiar_csv('baseline', $udz, $zamrozone ? 'zamrozone' : ($k ? 'zapis' : 'szara klatka'));
+    if (!$zamrozone && $k) {
+        imagepng($wyc, BAZA . '/' . KAMERA . '_' . date('Ymd_H') . '.png');
+        $granica = date('Ymd', strtotime('-' . TRZYMAJ_DNI . ' days'));
+        foreach (glob(BAZA . '/' . KAMERA . '_????????_??.png') ?: [] as $f)
+            if (substr(basename($f, '.png'), -11, 8) < $granica) @unlink($f);
     }
     exit(0);
 }
 
-// ---------- check / person ----------
+// ---------- check / person / stan ----------
 
 // Stan dla ikonki: json zapisywany atomowo, api smieci_state tylko go czyta.
 function zapisz_stan($st) {
@@ -185,31 +235,20 @@ if ($tryb === 'person') {
     @touch($flaga_p);
 }
 
-$wyniki = [];   // cam => min udzial (null = brak bazy/klatki)
-$ostatnie = []; // cam => pelna klatka (do zdjecia)
-foreach (array_keys(KAMERY) as $cam) {
-    $plik = BAZA . "/{$cam}_{$hh}.png";
-    if (!is_file($plik)) { $wyniki[$cam] = null; pomiar_csv($tryb, $cam, null, "brak bazy $hh"); continue; }
-    $baza = imagecreatefrompng($plik);
-    $min = null;
-    for ($i = 0; $i < KLATKI; $i++) {
-        if ($i) sleep(KLATKI_ODSTEP);
-        $im = klatka($cam);
-        if (!$im) continue;
-        $ostatnie[$cam] = $im;
-        $wyc = wytnij($im, $cam);
-        $u = roznica($wyc, $baza);
-        if ($u !== null && ($min === null || $u < $min)) $min = $u;
-        if ($i === 0 && $tryb !== 'stan') probka($im, $cam, date('Ymd_His') . "_{$tryb}");
-    }
-    $wyniki[$cam] = $min;
-    pomiar_csv($tryb, $cam, $min, implode('+', $typy) . " $dt");
+$pula = pula();
+$min = null; $ostatnia = null;
+for ($i = 0; $i < KLATKI; $i++) {
+    if ($i) sleep(KLATKI_ODSTEP);
+    $im = klatka();
+    if (!$im) continue;
+    $ostatnia = $im;
+    $u = wynik_pula(kontury(wytnij($im)), $pula);
+    if ($u !== null && ($min === null || $u < $min)) $min = $u;
+    if ($i === 0 && $tryb !== 'stan') probka($im, date('Ymd_His') . "_{$tryb}");
 }
-
-$znane = array_filter($wyniki, fn($u) => $u !== null);
-$stoi  = array_filter($znane, fn($u) => $u > PROG_UDZIAL);
-$opis  = implode(', ', array_map(fn($c, $u) => $c . '=' . ($u === null ? '?' : round($u * 100) . '%'),
-                                 array_keys($wyniki), $wyniki));
+$stoi = $min !== null && $min > PROG_UDZIAL;
+$opis = ($min === null ? '?' : round($min * 100) . '%') . ', pula ' . count($pula);
+pomiar_csv($tryb, $min, implode('+', $typy) . " $dt pula=" . count($pula));
 
 if ($tryb === 'stan') {
     // Jedno trafienie moze byc cieniem albo przechodniem — flaga dopiero po 2 kolejnych.
@@ -217,7 +256,7 @@ if ($tryb === 'stan') {
     $traf = $stoi ? ((($old['dt'] ?? '') === $dt ? (int)($old['trafien'] ?? 0) : 0) + 1) : 0;
     if ($traf >= 2) {
         @touch($flaga_ok);
-        foreach ($ostatnie as $cam => $im) probka($im, $cam, date('Ymd_His') . '_stan_ok');
+        if ($ostatnia) probka($ostatnia, date('Ymd_His') . '_stan_ok');
         tymos_log('INFO', "smieci_check(stan): wystawione ($opis) na " . implode('+', $typy) . " $dt");
     }
     zapisz_stan(['dt' => $dt, 'typy' => $typy, 'stoi' => $traf >= 2, 'trafien' => $traf]);
@@ -232,17 +271,16 @@ if ($stoi) {
 
 $kiedy = $dt === $dzis ? 'Dziś' : 'Jutro';
 $co    = implode(' + ', $typy);
-$msg   = $znane
+$msg   = $min !== null
     ? "🗑️ {$kiedy} wywóz: {$co} — nic nie stoi na trawie. Wystaw!"
-    : "🗑️ {$kiedy} wywóz: {$co} — nie mogę sprawdzić (brak obrazu bazowego). Sprawdź sam.";
-tymos_log('INFO', "smieci_check($tryb): " . ($znane ? 'pusto' : 'nieznane') . " ($opis)");
+    : "🗑️ {$kiedy} wywóz: {$co} — nie mogę sprawdzić (brak obrazu albo pustej bazy). Sprawdź sam.";
+tymos_log('INFO', "smieci_check($tryb): " . ($min !== null ? 'pusto' : 'nieznane') . " ($opis)");
 
-// Zdjecie: pelna klatka parkingu (albo dzwonka), zeby od razu bylo widac miejsce.
-$foto = $ostatnie['parking_hd'] ?? ($ostatnie['doorbell_hd'] ?? null);
+// Zdjecie: pelna klatka parkingu, zeby od razu bylo widac miejsce.
 $payload = ['type' => 'text', 'msg' => $msg, 'chat' => 'alert', 'alarm' => true];
-if ($foto) {
+if ($ostatnia) {
     $nazwa = 'smieci_alert.jpg';
-    imagejpeg($foto, TMP . "/{$nazwa}.tmp", 85);
+    imagejpeg($ostatnia, TMP . "/{$nazwa}.tmp", 85);
     @rename(TMP . "/{$nazwa}.tmp", TMP . "/{$nazwa}");
     $payload = ['type' => 'photo', 'url' => 'https://127.0.0.1/snap/' . $nazwa, 'caption' => $msg,
                 'nodelay' => true, 'chat' => 'alert', 'alarm' => true];
