@@ -20,6 +20,8 @@
  *   person   — akcja na wykrycie osoby na parkingu (dev 144): tylko w dzien wywozu 4:00-8:00, raz.
  *   stan     — akcja cron co 10 min: ikonka na kamerze (kosz w kolorze frakcji + zielony haczyk), gdy
  *              wystawione. Bez Telegrama. 2 kolejne trafienia = flaga "stoi" (wieczorny alarm milknie).
+ *              Po wykryciu ikonka trzyma sie, az smieciarka zabierze (2 kolejne puste pomiary = flaga
+ *              "zabrane"), najpozniej do 23:59 dnia PO wywozie (zima smieciarka bywa dzien pozniej).
  *              Wynik w TMP/smieci_stan.json, czyta go api smieci_state.
  *
  * Wynik "pusto" = Telegram Wazne ze zdjeciem. Wynik "stoi" = flaga na ten wywoz, dalsze sprawdzenia milkna.
@@ -181,8 +183,16 @@ function pomiar_csv($tryb, $udzial, $info) {
 
 // ---------- baseline ----------
 
+// Wywoz $d wykryty jako wystawiony, ale smieciarka jeszcze nie zabrala (kamera dalej cos widzi).
+function czeka_na_odbior($db, $d) {
+    return wywoz($db, $d) && is_file(TMP . "/smieci_ok_{$d}") && !is_file(TMP . "/smieci_zabrane_{$d}");
+}
+$wczoraj = date('Y-m-d', strtotime('-1 day'));
+
 if ($tryb === 'baseline') {
-    $zamrozone = wywoz($db, $jutro) || ($godz < 18 && wywoz($db, $dzis));
+    // Zamrozone tez, dopoki po wywozie cos stoi — inaczej pusty kosz trafilby do puli jako "puste miejsce".
+    $zamrozone = wywoz($db, $jutro) || ($godz < 18 && wywoz($db, $dzis))
+              || czeka_na_odbior($db, $dzis) || czeka_na_odbior($db, $wczoraj);
     $im = klatka();
     if (!$im) { pomiar_csv('baseline', null, 'brak klatki'); exit(0); }
     probka($im, date('Ymd_H'));
@@ -212,8 +222,14 @@ if ($tryb === 'person') {
     if ($godz < 4 || $godz >= 8) exit(0);
     $dt = $dzis;
 } elseif ($tryb === 'stan') {
-    // Dzis do 12:00 (po wywozie kosz jeszcze stoi pusty — to juz nie "wystawione"), potem jutro.
-    $dt = ($godz < 12 && wywoz($db, $dzis)) ? $dzis : $jutro;
+    // Kolejnosc: dzisiejszy wywoz jeszcze nie wykryty (rano) -> dzisiejszy czeka na smieciarke
+    // -> jutrzejszy -> wczorajszy czeka na smieciarke (zima bywa dzien pozniej).
+    $odbior = false;
+    if ($godz < 12 && wywoz($db, $dzis) && !is_file(TMP . "/smieci_ok_{$dzis}")) $dt = $dzis;
+    elseif (czeka_na_odbior($db, $dzis))   { $dt = $dzis;    $odbior = true; }
+    elseif (wywoz($db, $jutro))            { $dt = $jutro; }
+    elseif (czeka_na_odbior($db, $wczoraj)) { $dt = $wczoraj; $odbior = true; }
+    else $dt = $jutro;
 } else {
     $dt = $godz >= 12 ? $jutro : $dzis;
 }
@@ -224,11 +240,11 @@ if (!$typy) {
 }
 
 $flaga_ok = TMP . "/smieci_ok_{$dt}";
-if ($tryb === 'stan' && is_file($flaga_ok)) {
+if ($tryb === 'stan' && is_file($flaga_ok) && empty($odbior)) {
     zapisz_stan(['dt' => $dt, 'typy' => $typy, 'stoi' => true, 'trafien' => 2]);
     exit(0);
 }
-if (is_file($flaga_ok)) exit(0);                       // juz widzielismy wystawione
+if (is_file($flaga_ok) && empty($odbior)) exit(0);    // juz widzielismy wystawione
 if ($tryb === 'person') {
     $flaga_p = TMP . "/smieci_person_{$dt}";
     if (is_file($flaga_p)) exit(0);                    // rano sprawdzamy na osobe tylko raz
@@ -250,9 +266,19 @@ $stoi = $min !== null && $min > PROG_UDZIAL;
 $opis = ($min === null ? '?' : round($min * 100) . '%') . ', pula ' . count($pula);
 pomiar_csv($tryb, $min, implode('+', $typy) . " $dt pula=" . count($pula));
 
+$old = @json_decode(@file_get_contents(TMP . '/smieci_stan.json'), true) ?: [];
+if ($tryb === 'stan' && !empty($odbior)) {
+    // Czekamy na smieciarke: ikonka zostaje, az 2 kolejne pomiary nic nie widza (brak obrazu = nic nie zmieniamy).
+    $pudla = ($min !== null && !$stoi) ? ((($old['dt'] ?? '') === $dt ? (int)($old['pudla'] ?? 0) : 0) + 1) : 0;
+    if ($pudla >= 2) {
+        @touch(TMP . "/smieci_zabrane_{$dt}");
+        tymos_log('INFO', "smieci_check(stan): zabrane ($opis) " . implode('+', $typy) . " $dt");
+    }
+    zapisz_stan(['dt' => $dt, 'typy' => $typy, 'stoi' => $pudla < 2, 'trafien' => 2, 'pudla' => $pudla]);
+    exit(0);
+}
 if ($tryb === 'stan') {
     // Jedno trafienie moze byc cieniem albo przechodniem — flaga dopiero po 2 kolejnych.
-    $old = @json_decode(@file_get_contents(TMP . '/smieci_stan.json'), true) ?: [];
     $traf = $stoi ? ((($old['dt'] ?? '') === $dt ? (int)($old['trafien'] ?? 0) : 0) + 1) : 0;
     if ($traf >= 2) {
         @touch($flaga_ok);
