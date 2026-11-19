@@ -231,7 +231,7 @@ window.camParkingActive = function () {
 
 // IKONY PO PRAWEJ U GORY = PASEK OSTRZEZEN I STANU.
 // Miejsce na rozne ikony; kolejnosc od prawej wg waznosci. Dzis: awarie grzalek bufora (tylko gdy sa),
-// na lewo od nich sniezynka blokady mrozowej (tylko gdy trwa).
+// na lewo od nich sniezynka blokady mrozowej (tylko gdy trwa), dalej kosz z haczykiem (smieci wystawione).
 // Stan sieci Zigbee (zawsze widoczny) przeszedl na lewa strone, obok zebatki.
 //
 // AWARIA GRZALEK BUFORA — czerwone ikonki grzalek, ktore maja stan ON, ale nie ciagna
@@ -278,6 +278,9 @@ window.camParkingActive = function () {
     var slotMroz = document.createElement('div'); // blokada mrozowa — na lewo od grzalek
     slotMroz.style.cssText = 'display:flex;';
     box.appendChild(slotMroz);
+    var slotSmieci = document.createElement('div'); // smieci wystawione — na lewo od sniezynki
+    slotSmieci.style.cssText = 'display:flex;flex-direction:row-reverse;gap:8px;';
+    box.appendChild(slotSmieci);
 
     // Znak ostrzegawczy: czerwony trojkat (rogi zaokraglone obrysem w tym samym kolorze, bez bialej
     // ramki), w srodku waska sylwetka grzalki bojlerowej — rurka zagieta w podwojne U + belka kolnierza,
@@ -401,6 +404,40 @@ window.camParkingActive = function () {
         });
     }
 
+    // SMIECI WYSTAWIONE (2026-11-19, user): kosz w kolorze frakcji z zielonym haczykiem — kamery widza
+    // cos na trawie przy drodze przed wywozem (actions/smieci_check.php stan). Potwierdzenie, nie alarm:
+    // brak ikony = nie wiadomo albo nie wystawione; przypomnienie dalej idzie Telegramem 21/22/6.
+    var KOLOR_SMIECI = { papier: '#3b82f6', plastik: '#facc15', bio: '#a16207', szklo: '#22c55e', zmieszane: '#9ca3af' };
+    var NAZWA_SMIECI = { papier: 'papier', plastik: 'plastik', bio: 'bio', szklo: 'szkło', zmieszane: 'zmieszane' };
+    function svgKosz(kolor) {
+        return '<svg width="30" height="30" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">'
+             + '<path d="M9.5 3.6V2.6h5v1" fill="none" stroke="#fff" stroke-width="1.4"/>'
+             + '<rect x="3.6" y="3.6" width="16.8" height="2.6" rx="1" fill="' + kolor + '" stroke="#fff" stroke-width="1"/>'
+             + '<path d="M5.4 7.4h13.2l-1.3 12.8a1.5 1.5 0 0 1-1.5 1.3H8.2a1.5 1.5 0 0 1-1.5-1.3z" '
+             + 'fill="' + kolor + '" stroke="#fff" stroke-width="1"/>'
+             + '<path d="M9.4 10v8.5M12 10v8.5M14.6 10v8.5" stroke="rgba(0,0,0,0.35)" stroke-width="1.2"/>'
+             + '<circle cx="18" cy="18" r="5.2" fill="#16a34a" stroke="#fff" stroke-width="1.2"/>'
+             + '<path d="M15.5 18.1l1.7 1.7 3.2-3.4" fill="none" stroke="#fff" stroke-width="1.8"/>'
+             + '</svg>';
+    }
+    function loadSmieci() {
+        $.getJSON('api.php?action=smieci_state&_=' + Date.now(), function(d){
+            if (!d || !d.ok) return;
+            var klucz = d.on ? d.typy.join(',') : '';
+            if (slotSmieci.dataset.k === klucz) return;
+            slotSmieci.dataset.k = klucz;
+            slotSmieci.innerHTML = '';
+            (d.on ? d.typy : []).forEach(function(t){
+                var m = document.createElement('div');
+                m.title = 'Śmieci wystawione: ' + (NAZWA_SMIECI[t] || t) + ' (wywóz ' + d.dt + ')';
+                m.style.cssText = 'width:44px;height:44px;border-radius:50%;display:flex;align-items:center;'
+                    + 'justify-content:center;background:rgba(0,0,0,0.3);';
+                m.innerHTML = svgKosz(KOLOR_SMIECI[t] || '#9ca3af');
+                slotSmieci.appendChild(m);
+            });
+        });
+    }
+
     if (!document.getElementById('zbPulseCss')) {
         var st = document.createElement('style');
         st.id = 'zbPulseCss';
@@ -418,6 +455,7 @@ window.camParkingActive = function () {
     load();
     loadZigbee();
     loadMroz();
+    loadSmieci();
     // Pasek ostrzezen mowi o DOMU (siec Zigbee, grzalki bufora), a nie o tym, co widac w kadrze —
     // wiec poza parkingiem chowa sie tak samo jak pogoda. Na pozostalych kamerach
     // zostaja tylko rzeczy dotyczace samego obrazu: zebatka, jakosc SD/HD i dzwiek.
@@ -425,7 +463,7 @@ window.camParkingActive = function () {
     v.addEventListener('camswitch', visAlert);
     visAlert();
 
-    window.grzAlertTimer = setInterval(function(){ load(); loadZigbee(); loadMroz(); }, 15000);
+    window.grzAlertTimer = setInterval(function(){ load(); loadZigbee(); loadMroz(); loadSmieci(); }, 15000);
     if (typeof cardOnUnload === 'function') cardOnUnload(function() { clearInterval(window.grzAlertTimer); window.grzAlertTimer = null; });
 })();
 
