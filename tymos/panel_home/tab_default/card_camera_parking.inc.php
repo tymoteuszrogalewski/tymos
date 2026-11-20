@@ -119,9 +119,8 @@ window.camParkingActive = function () {
     wrap.appendChild(b);
 })();
 
-// ZEBATKA (lewy gorny rog) — wchodzi PROSTO do panelu admina. W HOME gorny pasek menu jest
-// schowany (patrz panels.inc.js), zeby oddac miejsce widgetom; w adminie pasek jest widoczny,
-// wiec powrot do HOME idzie normalnie ikona domku.
+// ZEBATKA (lewy gorny rog) — wchodzi PROSTO do panelu admina (gornego paska paneli nie ma).
+// Powrot do HOME: strzalka na poczatku paska zakladek admina (renderSubMenu w panels.inc.js).
 (function(){
     var v = document.getElementById('cam_parking_sd');
     if (!v) return;

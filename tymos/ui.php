@@ -38,16 +38,6 @@ $defaultPanel = array_key_first($panels);
 </head>
 <body>
 
-<div id="divMenu">
-<?php foreach ($panels as $name => $cfg):
-    $cls = 'menu-item' . ($name === 'admin' ? ' menu-item-push' : '');
-?>
-  <div class="<?= $cls ?>" data-panel="<?= htmlspecialchars($name) ?>"
-       data-color="<?= htmlspecialchars($cfg['icon_color'] ?? '') ?>"
-       title="<?= htmlspecialchars($name) ?>"><?= $cfg['icon'] ?></div>
-<?php endforeach; ?>
-</div>
-
 <div id="divSubMenu" class="hidden"></div>
 
 <div id="divMain"></div>
@@ -60,7 +50,6 @@ $defaultPanel = array_key_first($panels);
 include __DIR__ . '/index/webrtc.inc.js';
 include __DIR__ . '/index/panels.inc.js';
 include __DIR__ . '/index/cards.inc.js';
-include __DIR__ . '/index/menu.inc.js';
 include __DIR__ . '/index/swipe.inc.js';
 include __DIR__ . '/index/admin_js.inc.js';
 include __DIR__ . '/index/admin_actions_js.inc.js';

@@ -36,17 +36,6 @@ function loadPanel(panel, tab) {
     $.each(cardTimers, function(_, id) { clearTimeout(id); });
     cardTimers = {};
 
-    // Gorny pasek ikon paneli nie jest juz potrzebny NIGDZIE: do admina wchodzi sie zebatka
-    // z kamery, a z powrotem domkiem w pasku zakladek. Element zostaje w DOM (loadPanel czyta
-    // z niego stan aktywnego panelu), ale jest stale ukryty.
-    $('body').addClass('menu-off');
-
-    $('#divMenu .menu-item').each(function() {
-        var isActive = $(this).data('panel') === panel;
-        $(this).toggleClass('active', isActive);
-        $(this).css('color', (!isActive && $(this).data('color')) ? $(this).data('color') : '');
-    });
-
     var url = 'cnt.php?panel=' + encodeURIComponent(panel);
     if (tab) url += '&tab=' + encodeURIComponent(tab);
 
@@ -66,8 +55,8 @@ function loadPanel(panel, tab) {
 function renderSubMenu(panel, tabs, activeTab) {
     var $el = $('#divSubMenu');
     var multi = tabs && tabs.length > 1;
-    // Poza HOME pasek zakladek pokazujemy ZAWSZE, nawet przy jednej zakladce — siedzi w nim domek
-    // i bez niego nie byloby czym wrocic (gorny pasek paneli jest ukryty na stale).
+    // Poza HOME pasek zakladek pokazujemy ZAWSZE, nawet przy jednej zakladce — siedzi w nim
+    // strzalka powrotu do HOME i bez niej nie byloby czym wrocic (gornego paska paneli nie ma).
     if (panel === 'home' && !multi) { $el.addClass('hidden'); $('body').removeClass('subm-on'); return; }
     $el.removeClass('hidden').empty();
     $('body').addClass('subm-on');

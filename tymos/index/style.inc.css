@@ -2,7 +2,6 @@
 
 :root {
   --bg:          #1a1a1a;
-  --topbar-bg:   #232323;
   --submenu-bg:  #1e1e1e;
   --card-bg:     #232323;
   --border:      rgba(255,255,255,0.08);
@@ -13,7 +12,6 @@
   --green:       #4caf50;
   --red:         #e74c3c;
   --radius:      12px;
-  --topbar-h:    57px;
   --submenu-h:   40px;
 }
 
@@ -30,48 +28,12 @@ body {
   flex-direction: column;
 }
 
-/* ---- TOP MENU ---- */
-#divMenu {
-  /* --sat: wstrzykiwane przez shell (index.php) gdy UI leci w iframe — env() w ramce zwraca 0 */
-  height: calc(var(--topbar-h) + var(--sat, env(safe-area-inset-top)));
-  background: var(--topbar-bg);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  padding: var(--sat, env(safe-area-inset-top)) 10px 0;
-  gap: 2px;
-  flex-shrink: 0;
-}
-
-.menu-item {
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  font-size: 24px;
-  cursor: pointer;
-  color: var(--text-dim);
-  transition: background 0.15s, color 0.15s;
-  user-select: none;
-  -webkit-user-select: none;
-}
-.menu-item:active { background: rgba(255,255,255,0.05); }
-.menu-item.active {
-  background: var(--accent-bg);
-  color: var(--accent);
-}
-.menu-item-push { margin-left: auto; }
-
-/* HOME chodzi BEZ gornego paska — te 48 px + notch dostaja widgety. Menu wraca hamburgerem
-   z lewego gornego rogu kamery (card_camera_parking). Poza HOME pasek jest zawsze, zeby bylo
-   czym wrocic. Odstep pod notchem przejmuje wtedy divMain, bo padding safe-area siedzial w pasku. */
-body.menu-off #divMenu { display: none; }
-/* Odstep pod notchem przejmuje ten pasek, ktory jest akurat na gorze: zakladki (poza HOME)
-   albo sama tresc (HOME, gdzie zakladek nie ma). */
-body.menu-off:not(.subm-on) #divMain { padding-top: var(--sat, env(safe-area-inset-top)); }
-body.menu-off.subm-on #divSubMenu {
+/* ---- GORNY PASEK ----
+   Gornego paska paneli nie ma: HOME to sam kiosk, do admina wchodzi sie zebatka z kamery
+   parkingu, a wraca strzalka w pasku zakladek. Odstep pod notchem bierze to, co jest na gorze:
+   pasek zakladek (poza HOME) albo sama tresc (HOME, gdzie zakladek nie ma). */
+body:not(.subm-on) #divMain { padding-top: var(--sat, env(safe-area-inset-top)); }
+body.subm-on #divSubMenu {
   padding-top: var(--sat, env(safe-area-inset-top));
   height: calc(var(--submenu-h) + var(--sat, env(safe-area-inset-top)));
 }
@@ -116,8 +78,8 @@ body.menu-off.subm-on #divSubMenu {
   /* Gora i dol 0, boki 2 px: na iPadzie kazdy piksel wysokosci to wykres, ale karty stykajace
      sie z lewa i prawa krawedzia wygladaly na uciete. 2 px wystarcza, zeby zaokraglenia
      mialy sie o co oprzec, i nic realnie nie zabiera.
-     Notch NIE traci ochrony — padding-top z safe-area siedzi w regulach `body.menu-off`
-     i `.subm-on` nizej i nadpisuje to zero, gdy pasek menu jest schowany. */
+     Notch NIE traci ochrony — padding-top z safe-area siedzi w regulach `body:not(.subm-on)`
+     i `body.subm-on` (sekcja GORNY PASEK) i nadpisuje to zero. */
   padding: 0 2px;
   -webkit-overflow-scrolling: touch;
   width: 100%;
