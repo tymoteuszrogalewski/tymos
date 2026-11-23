@@ -230,7 +230,7 @@ window.camParkingActive = function () {
 
 // IKONY PO PRAWEJ U GORY = PASEK OSTRZEZEN I STANU.
 // Miejsce na rozne ikony; kolejnosc od prawej wg waznosci. Dzis: awarie grzalek bufora (tylko gdy sa),
-// na lewo od nich sniezynka blokady mrozowej (tylko gdy trwa), dalej kosz z haczykiem (smieci wystawione).
+// na lewo od nich sniezynka blokady mrozowej (tylko gdy trwa), dalej kosz (wywoz: sam = wystaw, z haczykiem = wystawione).
 // Stan sieci Zigbee (zawsze widoczny) przeszedl na lewa strone, obok zebatki.
 //
 // AWARIA GRZALEK BUFORA — czerwone ikonki grzalek, ktore maja stan ON, ale nie ciagna
@@ -403,35 +403,38 @@ window.camParkingActive = function () {
         });
     }
 
-    // SMIECI WYSTAWIONE (2026-11-19, user): kosz w kolorze frakcji z zielonym haczykiem — kamery widza
-    // cos na trawie przy drodze przed wywozem (actions/smieci_check.php stan). Potwierdzenie, nie alarm:
-    // brak ikony = nie wiadomo albo nie wystawione; przypomnienie dalej idzie Telegramem 21/22/6.
+    // SMIECI (2026-11-19, user): kosz w kolorze frakcji od 0:00 dnia przed wywozem = trzeba wystawic;
+    // z zielonym haczykiem = kamera widzi cos na trawie przy drodze (actions/smieci_check.php stan).
+    // Od 2026-11-23 sam kosz tez (user). Brak ikony = brak wywozu albo nieswiezy stan; Telegram 21/22/6.
     var KOLOR_SMIECI = { papier: '#3b82f6', plastik: '#facc15', bio: '#a16207', szklo: '#22c55e', zmieszane: '#9ca3af' };
     var NAZWA_SMIECI = { papier: 'papier', plastik: 'plastik', bio: 'bio', szklo: 'szkło', zmieszane: 'zmieszane' };
-    function svgKosz(kolor) {
+    function svgKosz(kolor, haczyk) {
         return '<svg width="30" height="30" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">'
              + '<path d="M9.5 3.6V2.6h5v1" fill="none" stroke="#fff" stroke-width="1.4"/>'
              + '<rect x="3.6" y="3.6" width="16.8" height="2.6" rx="1" fill="' + kolor + '" stroke="#fff" stroke-width="1"/>'
              + '<path d="M5.4 7.4h13.2l-1.3 12.8a1.5 1.5 0 0 1-1.5 1.3H8.2a1.5 1.5 0 0 1-1.5-1.3z" '
              + 'fill="' + kolor + '" stroke="#fff" stroke-width="1"/>'
              + '<path d="M9.4 10v8.5M12 10v8.5M14.6 10v8.5" stroke="rgba(0,0,0,0.35)" stroke-width="1.2"/>'
-             + '<circle cx="18" cy="18" r="5.2" fill="#16a34a" stroke="#fff" stroke-width="1.2"/>'
-             + '<path d="M15.5 18.1l1.7 1.7 3.2-3.4" fill="none" stroke="#fff" stroke-width="1.8"/>'
+             + (haczyk
+                ? '<circle cx="18" cy="18" r="5.2" fill="#16a34a" stroke="#fff" stroke-width="1.2"/>'
+                + '<path d="M15.5 18.1l1.7 1.7 3.2-3.4" fill="none" stroke="#fff" stroke-width="1.8"/>'
+                : '')
              + '</svg>';
     }
     function loadSmieci() {
         $.getJSON('api.php?action=smieci_state&_=' + Date.now(), function(d){
             if (!d || !d.ok) return;
-            var klucz = d.on ? d.typy.join(',') : '';
+            var klucz = d.on ? d.typy.join(',') + (d.wystawione ? ':ok' : ':czeka') : '';
             if (slotSmieci.dataset.k === klucz) return;
             slotSmieci.dataset.k = klucz;
             slotSmieci.innerHTML = '';
             (d.on ? d.typy : []).forEach(function(t){
                 var m = document.createElement('div');
-                m.title = 'Śmieci wystawione: ' + (NAZWA_SMIECI[t] || t) + ' (wywóz ' + d.dt + ')';
+                m.title = (d.wystawione ? 'Śmieci wystawione: ' : 'Wystaw śmieci: ') + (NAZWA_SMIECI[t] || t) + ' (wywóz ' + d.dt + ')';
                 m.style.cssText = 'width:44px;height:44px;border-radius:50%;display:flex;align-items:center;'
-                    + 'justify-content:center;background:rgba(0,0,0,0.3);';
-                m.innerHTML = svgKosz(KOLOR_SMIECI[t] || '#9ca3af');
+                    + 'justify-content:center;background:rgba(0,0,0,0.3);'
+                    + (d.wystawione ? '' : 'animation:zbPulse 1.6s ease-in-out infinite;');   // pulsuje do wystawienia
+                m.innerHTML = svgKosz(KOLOR_SMIECI[t] || '#9ca3af', d.wystawione);
                 slotSmieci.appendChild(m);
             });
         });

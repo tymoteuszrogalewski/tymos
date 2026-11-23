@@ -18,8 +18,8 @@
  *              wystawic juz rano dnia przed). Pula: PULA_DNI ostatnich dni z zapisem, starsze kasowane.
  *   check    — akcja cron 21:00, 22:00, 6:00: przed 12:00 sprawdza wywoz DZIS, od 12:00 JUTRO.
  *   person   — akcja na wykrycie osoby na parkingu (dev 144): tylko w dzien wywozu 4:00-8:00, raz.
- *   stan     — akcja cron co 10 min: ikonka na kamerze (kosz w kolorze frakcji + zielony haczyk), gdy
- *              wystawione. Bez Telegrama. 2 kolejne trafienia = flaga "stoi" (wieczorny alarm milknie).
+ *   stan     — akcja cron co 10 min: ikonka na kamerze — od 0:00 dnia przed wywozem sam kosz w kolorze
+ *              frakcji (trzeba wystawic), po wykryciu kosz + zielony haczyk (2026-11-23, user). Bez Telegrama. 2 kolejne trafienia = flaga "stoi" (wieczorny alarm milknie).
  *              Po wykryciu ikonka trzyma sie, az smieciarka zabierze (2 kolejne puste pomiary = flaga
  *              "zabrane"), najpozniej do 23:59 dnia PO wywozie (zima smieciarka bywa dzien pozniej).
  *              Wynik w TMP/smieci_stan.json, czyta go api smieci_state.
@@ -274,7 +274,8 @@ if ($tryb === 'stan' && !empty($odbior)) {
         @touch(TMP . "/smieci_zabrane_{$dt}");
         tymos_log('INFO', "smieci_check(stan): zabrane ($opis) " . implode('+', $typy) . " $dt");
     }
-    zapisz_stan(['dt' => $dt, 'typy' => $typy, 'stoi' => $pudla < 2, 'trafien' => 2, 'pudla' => $pudla]);
+    zapisz_stan(['dt' => $dt, 'typy' => $typy, 'stoi' => $pudla < 2, 'trafien' => 2, 'pudla' => $pudla,
+                 'zabrane' => $pudla >= 2]);
     exit(0);
 }
 if ($tryb === 'stan') {
