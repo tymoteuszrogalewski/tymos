@@ -23,7 +23,7 @@
  * zamyka siec od razu, klik przy szarej otwiera BEZ LIMITU CZASU (helper `zrejoin_force`).
  *
  * Bezpieczenstwo: otwarta siec = mozliwosc dolaczenia obcego urzadzenia. Dlatego okno jest krotkie,
- * kazde otwarcie i zamkniecie leci na Telegram WAZNE, a `ai_zigbee_monitor.php` osobno powiadamia
+ * kazde otwarcie i zamkniecie leci na Telegram TymkiBot (wyciszony; user 2026-11-24), a `ai_zigbee_monitor.php` osobno powiadamia
  * o KAZDYM nowym urzadzeniu w bazie.
  */
 
@@ -50,7 +50,7 @@ function permitJoin($sec) {
 }
 function telegram($msg) {
     $proc = popen('php /opt/tymos/actions/telegram_send.php > /dev/null 2>&1', 'w');
-    if ($proc) { fwrite($proc, json_encode(['type' => 'text', 'msg' => $msg, 'chat' => 'alert'])); pclose($proc); }
+    if ($proc) { fwrite($proc, json_encode(['type' => 'text', 'msg' => $msg])); pclose($proc); }
 }
 
 $raw   = shell_exec('timeout 3 mosquitto_sub -h localhost -t zigbee2mqtt/bridge/state -C 1 2>/dev/null');
