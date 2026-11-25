@@ -434,7 +434,36 @@ window.camParkingActive = function () {
                 m.style.cssText = 'width:44px;height:44px;border-radius:50%;display:flex;align-items:center;'
                     + 'justify-content:center;background:rgba(0,0,0,0.3);'
                     + (d.wystawione ? '' : 'animation:zbPulse 1.6s ease-in-out infinite;');   // pulsuje do wystawienia
-                m.innerHTML = svgKosz(KOLOR_SMIECI[t] || '#9ca3af', d.wystawione);
+                var kolor = KOLOR_SMIECI[t] || '#9ca3af';
+                m.innerHTML = svgKosz(kolor, d.wystawione);
+                if (!d.wystawione) {
+                    // 2x dotyk = wystawione recznie (2026-11-25, user): kamera nie rozpozna szybkiej zamiany
+                    // koszy. 1. dotyk = blady haczyk na 3 s, dopiero 2. potwierdza (przypadkowy nie wycisza alarmu).
+                    m.title += ' — dotknij 2×, jeśli wystawione';
+                    m.style.pointerEvents = 'auto';
+                    m.style.cursor = 'pointer';
+                    m.onclick = function() {
+                        if (m.dataset.pewne) {
+                            m.onclick = null;
+                            delete m.dataset.pewne;   // timer podgladu juz nic nie przywraca
+                            m.style.opacity = '';
+                            m.innerHTML = svgKosz(kolor, true);
+                            $.post('api.php', {action: 'smieci_ack'}, function(){ loadSmieci(); }, 'json');
+                            return;
+                        }
+                        m.dataset.pewne = '1';
+                        m.style.animation = 'none';
+                        m.style.opacity = '0.6';
+                        m.innerHTML = svgKosz(kolor, true);
+                        setTimeout(function(){
+                            if (!m.dataset.pewne || !m.isConnected) return;
+                            delete m.dataset.pewne;
+                            m.style.opacity = '';
+                            m.style.animation = 'zbPulse 1.6s ease-in-out infinite';
+                            m.innerHTML = svgKosz(kolor, false);
+                        }, 3000);
+                    };
+                }
                 slotSmieci.appendChild(m);
             });
         });

@@ -23,6 +23,12 @@
  *              Po wykryciu ikonka trzyma sie, az smieciarka zabierze (2 kolejne puste pomiary = flaga
  *              "zabrane"), najpozniej do 23:59 dnia PO wywozie (zima smieciarka bywa dzien pozniej).
  *              Wynik w TMP/smieci_stan.json, czyta go api smieci_state.
+ *              Od 2026-11-25 (falszywy haczyk: pusty kosz po szkle uznany za zmieszane na jutro):
+ *              - po odbiorze poprzedniego wywozu trafienia na nastepny licza sie dopiero, gdy miejsce bylo
+ *                puste PUSTE_PO_ODBIORZE pomiarow z rzedu (kosz musi zniknac i pojawic sie znowu);
+ *              - haczyk sie cofa: PUSTE_ODWOLAJ pustych pomiarow z rzedu przed wywozem kasuje flage "stoi";
+ *              - szybka zamiana koszy (bez pustej chwili) = user klika 2x pulsujacy kosz (api smieci_ack,
+ *                flaga smieci_reczne_<dt>, kamera jej nie odwoluje).
  *
  * Wynik "pusto" = Telegram Wazne ze zdjeciem. Wynik "stoi" = flaga na ten wywoz, dalsze sprawdzenia milkna.
  * Popiol, wodomierz, tekstylia, gabaryty — ignorowane (TYPY).
@@ -49,6 +55,8 @@ const PULA_DNI    = 3;    // ile ostatnich dni z zapisem bazy bierzemy do porown
 const TRZYMAJ_DNI = 7;    // starsze bazy kasowane
 const KLATKI      = 3;    // ile klatek co KLATKI_ODSTEP s; bierzemy MINIMUM (przejezdzajace auto/przechodzien)
 const KLATKI_ODSTEP = 4;
+const PUSTE_PO_ODBIORZE = 3; // tyle pustych pomiarow stan (co 10 min) z rzedu po odbiorze = poprzedni kosz schowany
+const PUSTE_ODWOLAJ     = 2; // tyle pustych z rzedu po wykryciu (przed wywozem) = haczyk odwolany
 
 const GO2RTC  = 'http://127.0.0.1:1984/api/frame.jpeg?src=';
 const BAZA    = '/var/lib/tymos/smieci';   // pula baz: parking_hd_RRRRMMDD_HH.png (przezywa reboot)
@@ -189,6 +197,17 @@ function czeka_na_odbior($db, $d) {
 }
 $wczoraj = date('Y-m-d', strtotime('-1 day'));
 
+// Poprzedni wywoz (do 3 dni przed $dt) z wystawionym koszem, po ktorym miejsce jeszcze nie bylo puste
+// (brak flagi smieci_pusto_po_X). Dopoki jest, trafienia na $dt sie nie licza: pusty kosz po poprzednim
+// wywozie (szklo rano, bio dzien przed zmieszanymi) wyglada dla kamery tak samo jak nowy (2026-11-25).
+function blokada_poprzedni($dt) {
+    for ($i = 1; $i <= 3; $i++) {
+        $x = date('Y-m-d', strtotime("$dt -$i day"));
+        if (is_file(TMP . "/smieci_ok_{$x}")) return is_file(TMP . "/smieci_pusto_po_{$x}") ? null : $x;
+    }
+    return null;
+}
+
 if ($tryb === 'baseline') {
     // Zamrozone tez, dopoki po wywozie cos stoi — inaczej pusty kosz trafilby do puli jako "puste miejsce".
     $zamrozone = wywoz($db, $jutro) || ($godz < 18 && wywoz($db, $dzis))
@@ -240,11 +259,14 @@ if (!$typy) {
 }
 
 $flaga_ok = TMP . "/smieci_ok_{$dt}";
-if ($tryb === 'stan' && is_file($flaga_ok) && empty($odbior)) {
-    zapisz_stan(['dt' => $dt, 'typy' => $typy, 'stoi' => true, 'trafien' => 2]);
+$old = @json_decode(@file_get_contents(TMP . '/smieci_stan.json'), true) ?: [];
+if ($tryb === 'stan' && is_file($flaga_ok) && empty($odbior) && is_file(TMP . "/smieci_reczne_{$dt}")) {
+    // Potwierdzone recznie (klik na ekranie) — kamera tego nie odwoluje.
+    zapisz_stan(['dt' => $dt, 'typy' => $typy, 'stoi' => true, 'trafien' => 2, 'reczne' => true,
+                 'pustych' => (int)($old['pustych'] ?? 0)]);
     exit(0);
 }
-if (is_file($flaga_ok) && empty($odbior)) exit(0);    // juz widzielismy wystawione
+if ($tryb !== 'stan' && is_file($flaga_ok) && empty($odbior)) exit(0);    // juz widzielismy wystawione
 if ($tryb === 'person') {
     $flaga_p = TMP . "/smieci_person_{$dt}";
     if (is_file($flaga_p)) exit(0);                    // rano sprawdzamy na osobe tylko raz
@@ -266,7 +288,8 @@ $stoi = $min !== null && $min > PROG_UDZIAL;
 $opis = ($min === null ? '?' : round($min * 100) . '%') . ', pula ' . count($pula);
 pomiar_csv($tryb, $min, implode('+', $typy) . " $dt pula=" . count($pula));
 
-$old = @json_decode(@file_get_contents(TMP . '/smieci_stan.json'), true) ?: [];
+// Puste pomiary stan z rzedu, niezaleznie od wywozu (brak obrazu = bez zmian).
+$pustych = $min === null ? (int)($old['pustych'] ?? 0) : ($stoi ? 0 : (int)($old['pustych'] ?? 0) + 1);
 if ($tryb === 'stan' && !empty($odbior)) {
     // Czekamy na smieciarke: ikonka zostaje, az 2 kolejne pomiary nic nie widza (brak obrazu = nic nie zmieniamy).
     $pudla = ($min !== null && !$stoi) ? ((($old['dt'] ?? '') === $dt ? (int)($old['pudla'] ?? 0) : 0) + 1) : 0;
@@ -275,22 +298,43 @@ if ($tryb === 'stan' && !empty($odbior)) {
         tymos_log('INFO', "smieci_check(stan): zabrane ($opis) " . implode('+', $typy) . " $dt");
     }
     zapisz_stan(['dt' => $dt, 'typy' => $typy, 'stoi' => $pudla < 2, 'trafien' => 2, 'pudla' => $pudla,
-                 'zabrane' => $pudla >= 2]);
+                 'zabrane' => $pudla >= 2, 'pustych' => $pustych]);
     exit(0);
 }
 if ($tryb === 'stan') {
+    $poprz = blokada_poprzedni($dt);
+    if ($poprz && $pustych >= PUSTE_PO_ODBIORZE) {
+        // Miejsce dluzej puste = kosz po poprzednim wywozie schowany (smieciarka zabrala na pewno).
+        if (!is_file(TMP . "/smieci_zabrane_{$poprz}")) @touch(TMP . "/smieci_zabrane_{$poprz}");
+        @touch(TMP . "/smieci_pusto_po_{$poprz}");
+        tymos_log('INFO', "smieci_check(stan): po wywozie $poprz miejsce puste ($opis), czekamy na " . implode('+', $typy) . " $dt");
+        $poprz = null;
+    }
+    if (is_file($flaga_ok)) {
+        // Wykryte wczesniej, ale miejsce znow puste: falszywe trafienie albo kosz schowany — haczyk odwolany.
+        if ($pustych >= PUSTE_ODWOLAJ) {
+            @unlink($flaga_ok);
+            tymos_log('INFO', "smieci_check(stan): wystawione ODWOLANE ($opis, $pustych puste z rzedu) " . implode('+', $typy) . " $dt");
+            zapisz_stan(['dt' => $dt, 'typy' => $typy, 'stoi' => false, 'trafien' => 0, 'pustych' => $pustych]);
+        } else {
+            zapisz_stan(['dt' => $dt, 'typy' => $typy, 'stoi' => true, 'trafien' => 2, 'pustych' => $pustych]);
+        }
+        exit(0);
+    }
     // Jedno trafienie moze byc cieniem albo przechodniem — flaga dopiero po 2 kolejnych.
-    $traf = $stoi ? ((($old['dt'] ?? '') === $dt ? (int)($old['trafien'] ?? 0) : 0) + 1) : 0;
+    $traf = ($stoi && !$poprz) ? ((($old['dt'] ?? '') === $dt ? (int)($old['trafien'] ?? 0) : 0) + 1) : 0;
     if ($traf >= 2) {
         @touch($flaga_ok);
         if ($ostatnia) probka($ostatnia, date('Ymd_His') . '_stan_ok');
         tymos_log('INFO', "smieci_check(stan): wystawione ($opis) na " . implode('+', $typy) . " $dt");
     }
-    zapisz_stan(['dt' => $dt, 'typy' => $typy, 'stoi' => $traf >= 2, 'trafien' => $traf]);
+    zapisz_stan(['dt' => $dt, 'typy' => $typy, 'stoi' => $traf >= 2, 'trafien' => $traf, 'pustych' => $pustych,
+                 'blokada' => $poprz]);
     exit(0);
 }
 
-if ($stoi) {
+$poprz = $stoi ? blokada_poprzedni($dt) : null;
+if ($stoi && !$poprz) {
     @touch($flaga_ok);
     tymos_log('INFO', "smieci_check($tryb): wystawione ($opis) na " . implode('+', $typy) . " $dt");
     exit(0);
@@ -298,10 +342,13 @@ if ($stoi) {
 
 $kiedy = $dt === $dzis ? 'Dziś' : 'Jutro';
 $co    = implode(' + ', $typy);
-$msg   = $min !== null
+$msg   = $poprz
+    ? "🗑️ {$kiedy} wywóz: {$co} — przy drodze coś stoi, ale to może być pusty kosz po wywozie "
+      . date('d.m', strtotime($poprz)) . ". Jeśli {$co} wystawione — dotknij 2× kosz na ekranie."
+    : ($min !== null
     ? "🗑️ {$kiedy} wywóz: {$co} — nic nie stoi na trawie. Wystaw!"
-    : "🗑️ {$kiedy} wywóz: {$co} — nie mogę sprawdzić (brak obrazu albo pustej bazy). Sprawdź sam.";
-tymos_log('INFO', "smieci_check($tryb): " . ($min !== null ? 'pusto' : 'nieznane') . " ($opis)");
+    : "🗑️ {$kiedy} wywóz: {$co} — nie mogę sprawdzić (brak obrazu albo pustej bazy). Sprawdź sam.");
+tymos_log('INFO', "smieci_check($tryb): " . ($poprz ? "stoi, ale blokada po $poprz" : ($min !== null ? 'pusto' : 'nieznane')) . " ($opis)");
 
 // Zdjecie: pelna klatka parkingu, zeby od razu bylo widac miejsce.
 $payload = ['type' => 'text', 'msg' => $msg, 'chat' => 'alert', 'alarm' => true];
