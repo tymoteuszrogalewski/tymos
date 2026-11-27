@@ -1,4 +1,4 @@
-<?php // POST — sterowanie wieza Technics: op=vol (delta), op=mute (on 0/1), op=src (spotify | cd | opt), op=ctl (previous | next | pause | play).
+<?php // POST — sterowanie wieza Technics: op=vol (delta), op=mute (on 0/1), op=src (spotify | aux | cd | opt), op=ctl (previous | next | pause | play).
 require_once __DIR__ . '/../inc/hifi.inc.php';
 
 $op = $_POST['op'] ?? '';
@@ -43,7 +43,20 @@ if ($op === 'src') {
         echo json_encode(['ok' => $ok]);
         exit;
     }
-    // CD i OPT — glowny procesor wiezy, w API sieciowym ich nie ma (do rozpracowania).
+    if ($src === 'aux') {
+        // Line in (AUX): setData wprost na ui:/auxhw zwraca invalidPath — wiersz AUX z listy ui:
+        // odtwarzamy jak sesje (play z tym wierszem jako mediaRoles). Przycisku w karcie nie ma (AUX nieuzywany).
+        $rows = hifi_req('getRows', ['path' => 'ui:', 'roles' => '@all', 'from' => 0, 'to' => 100]);
+        $aux = null;
+        foreach ((is_array($rows) ? ($rows['rows'] ?? []) : []) as $r) {
+            if (($r['mediaData']['metaData']['serviceID'] ?? '') === 'AUX') { $aux = $r; break; }
+        }
+        if (!$aux) { echo json_encode(['ok' => false, 'error' => 'Brak wejścia AUX']); exit; }
+        $ok = hifi_set('player:player/control', ['control' => 'play', 'mediaRoles' => $aux], 'activate');
+        echo json_encode(['ok' => $ok]);
+        exit;
+    }
+    // CD i OPT — glowny procesor wiezy, w API sieciowym ich nie ma (tylko IR).
     echo json_encode(['ok' => false, 'error' => 'CD/OPT jeszcze nieobsługiwane']);
     exit;
 }
