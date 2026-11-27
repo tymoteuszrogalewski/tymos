@@ -40,6 +40,13 @@ function hifi_get($path) {
  * Odpowiedz: {"result":0,"apiname":...,"arg":"<base64>"} (result 0 = OK).
  * $bytes — surowe bajty argumentu, np. "\x02\x12"; zwraca bajty odpowiedzi albo null przy bledzie.
  */
+const HIFI_VOL_TV    = 21;   // TV przez OPT jest ciche — glosnosc po wlaczeniu TV (user 2026-11-27)
+const HIFI_VOL_MUSIC = 16;   // start muzyki (Spotify); tez glosnosc w czuwaniu (hifi_volume_reset START_VOL)
+
+function hifi_volume_set($v) {
+    return hifi_set('player:volume', ['type' => 'i32_', 'i32_' => (int)$v]);
+}
+
 const HIFI_POWER_ON  = "\x01";
 const HIFI_POWER_OFF = "\x00";
 const HIFI_SRC = [            // SetSelector / GetSelector

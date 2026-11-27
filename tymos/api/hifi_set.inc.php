@@ -42,6 +42,7 @@ if ($op === 'src') {
             hifi_alljoyn('SetPower', HIFI_POWER_ON);
             for ($i = 0; $i < 20 && hifi_alljoyn('GetPower') !== HIFI_POWER_ON; $i++) usleep(500000);
         }
+        hifi_volume_set(HIFI_VOL_MUSIC);   // muzyka startuje z 16 (np. po TV na 21)
         if (spotify_resume_on_hifi()) { echo json_encode(['ok' => true]); exit; }
         // 2) Zapas: wznowienie sesji StreamSDK (startuje od utworu, od ktorego sesja przyszla z telefonu).
         //    Bez zapamietanej sesji trzeba raz puscic Spotify z telefonu albo Maca.

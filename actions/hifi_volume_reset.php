@@ -44,6 +44,8 @@ if ($prev !== $now) {
 $why = null;
 if (!$on && $v !== START_VOL)                 $why = 'czuwanie';
 elseif ($on && $prev === '0' && $v !== START_VOL) $why = 'wlaczenie';
+// Wlaczenie przez TV (OPT) ma wlasna glosnosc HIFI_VOL_TV (tv_hifi_watch.php) — nie nadpisujemy jej.
+if ($why === 'wlaczenie' && hifi_source() === 'opt') { logMsg("wlaczona na OPT (TV), glosnosc {$v} - zostawiam"); exit(0); }
 
 if ($why === null) { logMsg(($on ? 'wlaczona' : 'czuwanie') . ", glosnosc {$v} - bez zmian"); exit(0); }
 

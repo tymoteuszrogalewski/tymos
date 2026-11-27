@@ -14,7 +14,9 @@
  * Na starcie uslugi przyjmujemy biezacy stan bez akcji (restart przy wlaczonym TV nie przelacza wiezy).
  *
  * Akcja przy wlaczeniu TV: SetPower ON (jesli wieza w czuwaniu), czekanie az wstanie, SetSelector OPT
- * i sprawdzenie GetSelector. Glosnosci nie ruszamy — w czuwaniu ustawia ja hifi_volume_reset.php (16).
+ * i sprawdzenie GetSelector, potem glosnosc HIFI_VOL_TV (21 — TV jest ciche).
+ * Przejscie wiezy na Spotify (stream) z innego zrodla, np. przelaczenie z telefonu po TV: glosnosc
+ * HIFI_VOL_MUSIC (16). PLAY w TymOS ustawia 16 sam (api hifi_set).
  * Wylaczenie TV: jesli wieza jest wlaczona i NADAL na OPT — wylaczamy ja (SetPower OFF). Jesli user
  * przelaczyl na inne zrodlo (np. Spotify, zeby sluchac muzyki), zostawiamy.
  */
@@ -89,7 +91,8 @@ function tv_turned_on() {
         if (hifi_source() === 'opt') {
             $s = round(microtime(true) - $t0, 1);
             tymos_log('INFO', "tv_hifi_watch: TV wlaczony -> HiFi wlaczona na OPT ({$s} s, proba {$i})");
-            logMsg("HiFi na OPT ({$s} s, proba {$i})");
+            $vol = hifi_volume_set(HIFI_VOL_TV);
+            logMsg("HiFi na OPT ({$s} s, proba {$i}), glosnosc " . HIFI_VOL_TV . ($vol ? '' : ' BLAD'));
             return;
         }
         sleep(1);
@@ -119,10 +122,20 @@ logMsg('start, TV ' . ($on ? 'wlaczony' : 'wylaczony'));
 $loop = 0;
 $stby = 0;
 $last = '';
+$prevSrc = hifi_source();
 while (true) {
     sleep(POLL_S);
-    if (++$loop % SPOTIFY_EVERY === 0) hifi_spotify_remember();
-    if ($loop % SPOTIFY_API_EVERY === 0 && hifi_source() === 'stream') spotify_remember();
+    if (++$loop % SPOTIFY_EVERY === 0) {
+        hifi_spotify_remember();
+        // Wieza przeszla na Spotify z innego zrodla (np. z telefonu po ogladaniu TV na 21) => 16
+        $src = hifi_source();
+        if ($src === 'stream' && $prevSrc !== null && $prevSrc !== 'stream' && hifi_power_on()) {
+            hifi_volume_set(HIFI_VOL_MUSIC);
+            logMsg("zrodlo {$prevSrc} -> stream, glosnosc " . HIFI_VOL_MUSIC);
+        }
+        if ($src !== null) $prevSrc = $src;
+    }
+    if ($loop % SPOTIFY_API_EVERY === 0 && $prevSrc === 'stream') spotify_remember();
     $st = tv_state();
     if ($st !== $last) { logMsg("TV: {$st}"); $last = $st; }
     if ($st === 'on') {
