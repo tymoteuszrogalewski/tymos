@@ -35,8 +35,16 @@ if ($op === 'ctl') {
 if ($op === 'src') {
     $src = $_POST['src'] ?? '';
     if ($src === 'spotify') {
-        // Wznowienie ostatniego odtwarzania Spotify (zapamietane przez hifi_state). Bez zapamietanego
-        // trzeba raz puscic Spotify z telefonu albo Maca.
+        // 1) Spotify Web API: ta sama playlista, utwor i sekunda, co ostatnio na wiezy (spotify_remember
+        //    w usludze tymos-tv-hifi). Wieza musi byc wlaczona, zeby byla widoczna w Spotify Connect.
+        require_once __DIR__ . '/../inc/spotify.inc.php';
+        if (hifi_alljoyn('GetPower') === HIFI_POWER_OFF) {
+            hifi_alljoyn('SetPower', HIFI_POWER_ON);
+            for ($i = 0; $i < 20 && hifi_alljoyn('GetPower') !== HIFI_POWER_ON; $i++) usleep(500000);
+        }
+        if (spotify_resume_on_hifi()) { echo json_encode(['ok' => true]); exit; }
+        // 2) Zapas: wznowienie sesji StreamSDK (startuje od utworu, od ktorego sesja przyszla z telefonu).
+        //    Bez zapamietanej sesji trzeba raz puscic Spotify z telefonu albo Maca.
         $mr = json_decode((string)@file_get_contents('/tmp/tymos/hifi_spotify.json'), true);
         if (!$mr) { echo json_encode(['ok' => false, 'error' => 'Puść raz Spotify z telefonu']); exit; }
         $ok = hifi_set('player:player/control', ['control' => 'play', 'mediaRoles' => $mr], 'activate');

@@ -69,6 +69,37 @@ function hifi_source() {
     return $k === false ? null : $k;
 }
 
+/**
+ * Zapamietanie ostatniego odtwarzania Spotify — przycisk SPOTIFY (api hifi_set src=spotify) wznawia je
+ * bez telefonu. Wola to usluga tymos-tv-hifi co kilka sekund. Plik w tmpfs: po restarcie Pi wystarczy
+ * raz puscic Spotify z telefonu.
+ * mediaRoles to sesja z chwili przejecia z telefonu: w adresie (preset) jest na sztywno trackUri utworu
+ * startowego i nie zmienia sie przy kolejnych utworach — wznowienie zaczynalo zawsze od niego (user
+ * 2026-11-27: "codziennie od tego samego utworu"). Podmieniamy go na biezacy (metaData.trackId).
+ */
+const HIFI_SPOTIFY_FILE = '/tmp/tymos/hifi_spotify.json';
+
+function hifi_spotify_remember() {
+    $pd = hifi_get('player:player/data');
+    if (!$pd || ($pd['state'] ?? '') !== 'playing' || empty($pd['mediaRoles'])) return;
+    $meta = $pd['trackRoles']['mediaData']['metaData'] ?? [];
+    if (($meta['serviceID'] ?? '') !== 'spotify') return;
+    $mr  = $pd['mediaRoles'];
+    $cur = $meta['trackId'] ?? '';
+    if (preg_match('/^spotify:track:[A-Za-z0-9]+$/', $cur)) {
+        foreach ($mr['mediaData']['resources'] ?? [] as $i => $res) {
+            $mr['mediaData']['resources'][$i]['uri'] = preg_replace(
+                '/(trackUri%22:%22)spotify:track:[A-Za-z0-9]+/', '${1}' . $cur, (string)($res['uri'] ?? ''));
+        }
+    }
+    $json = json_encode($mr);
+    if ($json !== @file_get_contents(HIFI_SPOTIFY_FILE)) {
+        @mkdir(dirname(HIFI_SPOTIFY_FILE), 0777, true);
+        @file_put_contents(HIFI_SPOTIFY_FILE, $json);
+        @chmod(HIFI_SPOTIFY_FILE, 0666);
+    }
+}
+
 // Sukces = wieza odpowiedziala i NIE zwrocila bledu. Zmiana wartosci zwraca `true`, a polecenia
 // odtwarzacza (role=activate) `null` — 2026-10-08 karta pokazywala przez to „Nie udało się wznowić", a muzyka grala.
 function hifi_set($path, $value, $role = 'value') {

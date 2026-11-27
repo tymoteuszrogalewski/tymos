@@ -3,6 +3,8 @@
 /**
  * tv_hifi_watch.php — wlaczenie TV => wlaczenie wiezy Technics na wejsciu OPT (dzwiek TV przez HiFi).
  * Dziala ciagle jako usluga systemd tymos-tv-hifi (cron co minute bylby za wolny).
+ * Przy okazji co SPOTIFY_EVERY obiegow zapamietuje biezace odtwarzanie Spotify (hifi_spotify_remember)
+ * dla przycisku SPOTIFY/PLAY w TymOS — niezaleznie od tego, czy jakis kiosk jest otwarty.
  *
  * Wykrywanie TV: co POLL_S sekund proba polaczenia TCP z TV na port Cast 8009. Wylaczony TV (po ~1 min
  * czuwania sieciowego) w ogole nie odpowiada, wlaczony odpowiada od razu.
@@ -22,12 +24,15 @@
 
 require_once __DIR__ . '/lib/_log.inc.php';
 require_once '/opt/tymos/tymos/inc/hifi.inc.php';
+require_once '/opt/tymos/tymos/inc/spotify.inc.php';
 
 const TV_IP      = '192.168.1.48';   // Sharp Google TV
 const TV_PORT    = 8009;              // Cast (TLS) — samo polaczenie TCP wystarczy
 const POLL_S     = 2;
 const OFF_FAILS  = 30;                // 30 x 2 s = 60 s bez odpowiedzi => TV wylaczony (wlaczony TV po starcie potrafi milczec >10 s)
 const WAKE_MAX_S = 20;                // ile czekamy, az wieza wstanie z czuwania
+const SPOTIFY_EVERY = 2;              // co 2 obiegi (4 s) zapis biezacego utworu Spotify (sesja StreamSDK, zapas)
+const SPOTIFY_API_EVERY = 5;          // co 5 obiegow (10 s) zapis miejsca przez Spotify Web API (gdy wieza na sieci)
 
 function logMsg($s) { echo date('Y-m-d H:i:s') . " | {$s}\n"; }
 
@@ -86,8 +91,11 @@ $on    = tv_alive();
 $fails = 0;
 logMsg('start, TV ' . ($on ? 'wlaczony' : 'wylaczony'));
 
+$loop = 0;
 while (true) {
     sleep(POLL_S);
+    if (++$loop % SPOTIFY_EVERY === 0) hifi_spotify_remember();
+    if ($loop % SPOTIFY_API_EVERY === 0 && hifi_source() === 'stream') spotify_remember();
     if (tv_alive()) {
         $fails = 0;
         if (!$on) {

@@ -9,11 +9,8 @@ $pd   = hifi_get('player:player/data') ?? [];
 $meta = $pd['trackRoles']['mediaData']['metaData'] ?? ($pd['mediaRoles']['mediaData']['metaData'] ?? []);
 $svc  = $meta['serviceID'] ?? '';
 
-// Ostatnie odtwarzanie Spotify zapamietujemy — przycisk SPOTIFY wznawia je po przelaczeniu na inne
-// zrodlo (bez telefonu). Plik w tmpfs, po restarcie Pi wystarczy raz puscic Spotify z telefonu.
-if ($svc === 'spotify' && !empty($pd['mediaRoles'])) {
-    @file_put_contents('/tmp/tymos/hifi_spotify.json', json_encode($pd['mediaRoles']));
-}
+// Ostatnie odtwarzanie Spotify (dla przycisku SPOTIFY) zapamietuje usluga tymos-tv-hifi na Pi
+// (hifi_spotify_remember), niezaleznie od tego, czy jakis kiosk jest otwarty.
 // Ostatni grany utwor — tez w tmpfs, zeby karta pokazywala go po zatrzymaniu, po wylaczeniu wiezy
 // i po przeladowaniu kiosku (do restartu Pi). Gdy gra CD / OPT, modul sieciowy i tak nie wie, co gra.
 $lastFile = '/tmp/tymos/hifi_last.json';
