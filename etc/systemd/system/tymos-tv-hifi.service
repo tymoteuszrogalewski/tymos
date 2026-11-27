@@ -1,0 +1,17 @@
+[Unit]
+Description=TymOS TV -> HiFi (wlaczenie TV wlacza wieze na OPT)
+After=network-online.target mariadb.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/tymos
+ExecStart=/usr/bin/php /opt/tymos/actions/tv_hifi_watch.php
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=tymos-tv-hifi
+
+[Install]
+WantedBy=multi-user.target
